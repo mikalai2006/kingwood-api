@@ -1,0 +1,267 @@
+package service
+
+import (
+	"time"
+
+	"github.com/mikalai2006/kingwood-api/graph/model"
+	"github.com/mikalai2006/kingwood-api/internal/config"
+	"github.com/mikalai2006/kingwood-api/internal/domain"
+	"github.com/mikalai2006/kingwood-api/internal/repository"
+	"github.com/mikalai2006/kingwood-api/internal/utils"
+	"github.com/mikalai2006/kingwood-api/pkg/auths"
+	"github.com/mikalai2006/kingwood-api/pkg/hasher"
+)
+
+type Action interface {
+	FindAction(params domain.RequestParams) (domain.Response[model.Action], error)
+	GetAllAction(params domain.RequestParams) (domain.Response[model.Action], error)
+	CreateAction(userID string, data *model.ActionInput) (*model.Action, error)
+	UpdateAction(id string, userID string, data *model.ActionInput) (*model.Action, error)
+	DeleteAction(id string) (model.Action, error)
+}
+
+type Authorization interface {
+	CreateAuth(auth *domain.AuthInput) (string, error)
+	GetAuth(id string) (domain.Auth, error)
+	SignIn(input *domain.AuthInput) (domain.ResponseTokens, error)
+	ExistAuth(auth *domain.AuthInput) (domain.Auth, error)
+	CreateSession(auth *domain.Auth) (domain.ResponseTokens, error)
+	VerificationCode(userID string, code string) error
+	RefreshTokens(refreshToken string) (domain.ResponseTokens, error)
+	RemoveRefreshTokens(refreshToken string) (string, error)
+	UpdateAuth(id string, auth *domain.AuthInput) (domain.User, error)
+}
+
+type Product interface {
+	FindProduct(params *model.ProductFilter) (domain.Response[model.Product], error)
+	CreateProduct(userID string, node *model.ProductInputData) (*model.Product, error)
+	UpdateProduct(id string, userID string, data *model.Product) (*model.Product, error)
+	DeleteProduct(id string) (model.Product, error)
+}
+
+type Message interface {
+	CreateMessage(userID string, message *model.MessageInput) (*model.Message, error)
+	FindMessage(params *model.MessageFilter) (domain.Response[model.Message], error)
+	UpdateMessage(id string, userID string, data *model.MessageInput) (*model.Message, error)
+	DeleteMessage(id string) (model.Message, error)
+	GetGroupForUser(userID string) ([]model.MessageGroupForUser, error)
+}
+
+type MessageRoom interface {
+	CreateMessageRoom(userID string, message *model.MessageRoom) (*model.MessageRoom, error)
+	FindMessageRoom(params *model.MessageRoomFilter) (domain.Response[model.MessageRoom], error)
+	UpdateMessageRoom(id string, userID string, data *model.MessageRoom) (*model.MessageRoom, error)
+	DeleteMessageRoom(id string) (model.MessageRoom, error)
+	// GetGroupForUser(userID string) ([]model.MessageGroupForUser, error)
+}
+
+type Offer interface {
+	CreateOffer(userID string, data *model.OfferInput) (*model.Offer, error)
+	FindOffer(params *model.OfferFilter) (domain.Response[model.Offer], error)
+	UpdateOffer(id string, userID string, data *model.Offer) (*model.Offer, error)
+	DeleteOffer(id string) (model.Offer, error)
+}
+
+type Order interface {
+	CreateOrder(userID string, data *domain.Order) (*domain.Order, error)
+	FindOrder(params domain.RequestParams) (domain.Response[domain.Order], error)
+	UpdateOrder(id string, userID string, data *domain.OrderInput) (*domain.Order, error)
+	DeleteOrder(id string) (*domain.Order, error)
+
+	GetAllOrder(params domain.RequestParams) (domain.Response[domain.Order], error)
+}
+
+type Operation interface {
+	CreateOperation(userID string, data *domain.Operation) (*domain.Operation, error)
+	FindOperation(params domain.RequestParams) (domain.Response[domain.Operation], error)
+	UpdateOperation(id string, userID string, data *domain.OperationInput) (*domain.Operation, error)
+	DeleteOperation(id string) (*domain.Operation, error)
+}
+
+type Object interface {
+	CreateObject(userID string, data *domain.Object) (*domain.Object, error)
+	FindObject(input *domain.ObjectFilter) (domain.Response[domain.Object], error)
+	UpdateObject(id string, userID string, data *domain.ObjectInput) (*domain.Object, error)
+	DeleteObject(id string) (*domain.Object, error)
+}
+
+type Task interface {
+	CreateTask(userID string, data *domain.Task) (*domain.Task, error)
+	FindTask(params domain.RequestParams) (domain.Response[domain.Task], error)
+	UpdateTask(id string, userID string, data *domain.TaskInput) (*domain.Task, error)
+	DeleteTask(id string) (*domain.Task, error)
+}
+
+type TaskWorker interface {
+	FindTaskWorkerPopulate(params domain.RequestParams) (domain.Response[domain.TaskWorker], error)
+	CreateTaskWorker(userID string, data *domain.TaskWorker) (*domain.TaskWorker, error)
+	FindTaskWorker(params domain.RequestParams) (domain.Response[domain.TaskWorker], error)
+	UpdateTaskWorker(id string, userID string, data *domain.TaskWorkerInput) (*domain.TaskWorker, error)
+	DeleteTaskWorker(id string) (*domain.TaskWorker, error)
+}
+
+type TaskStatus interface {
+	FindTaskStatus(params domain.RequestParams) (domain.Response[domain.TaskStatus], error)
+	CreateTaskStatus(userID string, data *domain.TaskStatus) (*domain.TaskStatus, error)
+	UpdateTaskStatus(id string, userID string, data *domain.TaskStatusInput) (*domain.TaskStatus, error)
+	DeleteTaskStatus(id string) (domain.TaskStatus, error)
+}
+
+type User interface {
+	GetUser(id string) (domain.User, error)
+	FindUser(params domain.RequestParams) (domain.Response[domain.User], error)
+	CreateUser(userID string, user *domain.User) (*domain.User, error)
+	DeleteUser(id string) (domain.User, error)
+	UpdateUser(id string, user *domain.UserInput) (domain.User, error)
+	Iam(userID string) (domain.User, error)
+}
+
+type Pay interface {
+	CreatePay(userID string, data *domain.Pay) (*domain.Pay, error)
+	FindPay(params domain.RequestParams) (domain.Response[domain.Pay], error)
+	UpdatePay(id string, userID string, data *domain.PayInput) (*domain.Pay, error)
+	DeletePay(id string) (*domain.Pay, error)
+}
+
+type Image interface {
+	CreateImage(userID string, data *domain.ImageInput) (domain.Image, error)
+	GetImage(id string) (domain.Image, error)
+	GetImageDirs(id string) ([]interface{}, error)
+	FindImage(params domain.RequestParams) (domain.Response[domain.Image], error)
+	DeleteImage(id string) (domain.Image, error)
+}
+type Country interface {
+	CreateCountry(userID string, data *domain.CountryInput) (domain.Country, error)
+	GetCountry(id string) (domain.Country, error)
+	FindCountry(params domain.RequestParams) (domain.Response[domain.Country], error)
+	UpdateCountry(id string, data interface{}) (domain.Country, error)
+	DeleteCountry(id string) (domain.Country, error)
+}
+
+type Role interface {
+	CreateRole(userID string, data *domain.RoleInput) (domain.Role, error)
+	GetRole(id string) (domain.Role, error)
+	FindRole(params domain.RequestParams) (domain.Response[domain.Role], error)
+	UpdateRole(id string, data interface{}) (domain.Role, error)
+	DeleteRole(id string) (domain.Role, error)
+}
+
+type Lang interface {
+	CreateLanguage(userID string, data *domain.LanguageInput) (domain.Language, error)
+	GetLanguage(id string) (domain.Language, error)
+	FindLanguage(params domain.RequestParams) (domain.Response[domain.Language], error)
+	UpdateLanguage(id string, data interface{}) (domain.Language, error)
+	DeleteLanguage(id string) (domain.Language, error)
+}
+
+type Question interface {
+	FindQuestion(params *model.QuestionFilter) (domain.Response[model.Question], error)
+	CreateQuestion(userID string, question *model.QuestionInput) (*model.Question, error)
+	UpdateQuestion(id string, userID string, data *model.QuestionInput) (*model.Question, error)
+	DeleteQuestion(id string, userID string) (model.Question, error)
+}
+type Ticket interface {
+	FindTicket(params domain.RequestParams) (domain.Response[model.Ticket], error)
+	GetAllTicket(params domain.RequestParams) (domain.Response[model.Ticket], error)
+	CreateTicket(userID string, ticket *model.Ticket) (*model.Ticket, error)
+	CreateTicketMessage(userID string, message *model.TicketMessage) (*model.TicketMessage, error)
+	DeleteTicket(id string) (model.Ticket, error)
+}
+
+type Post interface {
+	FindPost(params domain.RequestParams) (domain.Response[domain.Post], error)
+	GetAllPost(params domain.RequestParams) (domain.Response[domain.Post], error)
+	CreatePost(userID string, Post *domain.Post) (*domain.Post, error)
+	UpdatePost(id string, userID string, data *domain.PostInput) (*domain.Post, error)
+	DeletePost(id string) (domain.Post, error)
+}
+
+type Services struct {
+	Action
+	Post
+	Authorization
+	Lang
+	Country
+	Role
+	Image
+	Order
+	User
+	Product
+	Message
+	MessageRoom
+	Offer
+	Question
+	Ticket
+	Task
+	TaskWorker
+	TaskStatus
+	Operation
+	Pay
+	Object
+}
+
+type ConfigServices struct {
+	Repositories           *repository.Repositories
+	Hasher                 hasher.PasswordHasher
+	TokenManager           auths.TokenManager
+	OtpGenerator           utils.Generator
+	AccessTokenTTL         time.Duration
+	RefreshTokenTTL        time.Duration
+	VerificationCodeLength int
+	I18n                   config.I18nConfig
+	ImageService           config.IImageConfig
+	Hub                    *Hub
+}
+
+func NewServices(cfgService *ConfigServices) *Services {
+	User := NewUserService(cfgService.Repositories.User, cfgService.Hub)
+	Authorization := NewAuthService(
+		cfgService.Repositories.Authorization,
+		cfgService.Hasher,
+		cfgService.TokenManager,
+		cfgService.RefreshTokenTTL,
+		cfgService.AccessTokenTTL,
+		cfgService.OtpGenerator,
+		cfgService.VerificationCodeLength,
+		User,
+		cfgService.Hub,
+	)
+	Action := NewActionService(cfgService.Repositories.Action, cfgService.I18n)
+	Post := NewPostService(cfgService.Repositories.Post, cfgService.I18n)
+	TaskStatus := NewTaskStatusService(cfgService.Repositories.TaskStatus, cfgService.I18n)
+	// Review := NewReviewService(cfgService.Repositories.Review)
+	Lang := NewLangService(cfgService.Repositories, cfgService.I18n)
+	Country := NewCountryService(cfgService.Repositories, cfgService.I18n)
+	Role := NewRoleService(cfgService.Repositories, cfgService.I18n)
+	Image := NewImageService(cfgService.Repositories.Image, cfgService.ImageService)
+	Product := NewProductService(cfgService.Repositories.Product, User, cfgService.Hub)
+	MessageRoom := NewMessageRoomService(cfgService.Repositories.MessageRoom, cfgService.Hub)
+	Message := NewMessageService(cfgService.Repositories.Message, cfgService.Hub, MessageRoom)
+	Question := NewQuestionService(cfgService.Repositories.Question, cfgService.Hub)
+	Ticket := NewTicketService(cfgService.Repositories.Ticket)
+	Task := NewTaskService(cfgService.Repositories.Task, cfgService.Hub, User, TaskStatus)
+
+	return &Services{
+		Authorization: Authorization,
+		Action:        Action,
+		Post:          Post,
+		User:          User,
+		Lang:          Lang,
+		Country:       Country,
+		Image:         Image,
+		Product:       Product,
+		Message:       Message,
+		MessageRoom:   MessageRoom,
+		Offer:         NewOfferService(cfgService.Repositories.Offer, User, cfgService.Hub, Message, MessageRoom),
+		Question:      Question,
+		Ticket:        Ticket,
+		Order:         NewOrderService(cfgService.Repositories.Order, User),
+		Task:          Task,
+		TaskWorker:    NewTaskWorkerService(cfgService.Repositories.TaskWorker, User, TaskStatus, Task, cfgService.Hub),
+		Operation:     NewOperationService(cfgService.Repositories.Operation, User),
+		Role:          Role,
+		TaskStatus:    TaskStatus,
+		Pay:           NewPayService(cfgService.Repositories.Pay, User, cfgService.Hub),
+		Object:        NewObjectService(cfgService.Repositories.Object, cfgService.Hub, User),
+	}
+}

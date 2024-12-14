@@ -1,0 +1,114 @@
+package main_test
+
+import (
+	"context"
+	"encoding/json"
+	"io"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
+	"strings"
+
+	"github.com/gin-gonic/gin"
+	"github.com/mikalai2006/kingwood-api/internal/domain"
+	"github.com/mikalai2006/kingwood-api/pkg/logger"
+)
+
+// func CreateShop(t *testing.T, db *mongo.Database) {
+// 	coll := db.Collection("shops")
+// 	err := coll.Drop(context.Background())
+// 	require.NoError(t, err)
+
+// 	{
+// 		// Start Example 1
+
+// 		result, err := coll.InsertOne(
+// 			context.TODO(),
+// 			domain.Shop{
+// 				Title:       "Test title shop",
+// 				Description: "Description",
+// 				Seo:         "seo",
+// 				CreatedAt:   time.Now(),
+// 			})
+
+// 		// End Example 1
+
+// 		require.NoError(t, err)
+// 		require.NotNil(t, result.InsertedID)
+// 	}
+
+// }
+
+func (s *TestSuite) TestCreateShopNotAuthUser() {
+	router := gin.New()
+	// router.Use(
+	// 	gin.Recovery(),
+	// 	gin.Logger(),
+	// )
+	s.handler.Init(router.Group("/api"))
+	r := s.Require()
+
+	data := strings.NewReader(`{"title": "Test", "description": "Test description"}`)
+
+	req, err := http.NewRequest(http.MethodPost, "/api/v1/shops/", data)
+	if err != nil {
+		logger.Errorf("Error test %s", err)
+	}
+	s.NoError(err)
+	req.Header.Set("Content-type", "application/json")
+
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	response := w.Result()
+	defer response.Body.Close()
+
+	r.Equal(http.StatusUnauthorized, response.StatusCode)
+}
+
+func (s *TestSuite) TestFindShopWithLimit() {
+	router := gin.New()
+	s.handler.Init(router.Group("/api"))
+	r := s.Require()
+
+	pathRequest, err := url.Parse("/api/v1/shops/")
+	if err != nil {
+		s.Fail(err.Error())
+	}
+	params := url.Values{}
+	params.Add("$limit", "5")
+	pathRequest.RawQuery = params.Encode()
+
+	req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, pathRequest.String(), http.NoBody)
+	// req.Header.Set("Content-type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	response := w.Result()
+	defer response.Body.Close()
+
+	r.Equal(http.StatusOK, response.StatusCode)
+
+	var resultResponse domain.Response[domain.Shop]
+
+	respData, err := io.ReadAll(response.Body)
+	s.NoError(err)
+
+	err = json.Unmarshal(respData, &resultResponse)
+	s.NoError(err)
+	r.Equal(5, resultResponse.Limit)
+}
+
+// // Helper function to process a request and test its response
+// func testHTTPResponse(s *APITestSuite, r *gin.Engine, req *http.Request, f func(w *httptest.ResponseRecorder) bool) {
+
+// 	// Create a response recorder
+// 	w := httptest.NewRecorder()
+
+// 	// Create the service and process the above request.
+// 	r.ServeHTTP(w, req)
+
+// 	if !f(w) {
+// 		s.Fail("Failure http test")
+// 	}
+// }

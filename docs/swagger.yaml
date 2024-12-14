@@ -1,0 +1,1106 @@
+basePath: /
+definitions:
+  domain.Auth:
+    properties:
+      apple_id:
+        type: string
+      created_at:
+        type: string
+      email:
+        type: string
+      github_id:
+        type: string
+      google_id:
+        type: string
+      id:
+        description: swagger:ignore
+        type: string
+      login:
+        type: string
+      password:
+        type: string
+      session:
+        $ref: '#/definitions/domain.Session'
+      strategy:
+        type: string
+      updated_at:
+        type: string
+      verification:
+        $ref: '#/definitions/domain.Verification'
+      vk_id:
+        type: string
+    required:
+    - login
+    - password
+    type: object
+  domain.Component:
+    properties:
+      _id:
+        type: string
+      created_at:
+        type: string
+      group:
+        items:
+          type: string
+        type: array
+      groups:
+        items:
+          $ref: '#/definitions/domain.ComponentGroup'
+        type: array
+      is_global:
+        type: boolean
+      is_layout:
+        type: boolean
+      is_page:
+        type: boolean
+      name:
+        type: string
+      publish:
+        type: boolean
+      schema:
+        items:
+          $ref: '#/definitions/domain.ComponentSchema'
+        type: array
+      setting: {}
+      sort_order:
+        type: integer
+      status:
+        type: boolean
+      title:
+        type: string
+      tpl:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: string
+    type: object
+  domain.ComponentGroup:
+    properties:
+      _id:
+        type: string
+      created_at:
+        type: string
+      description:
+        additionalProperties: true
+        type: object
+      title:
+        additionalProperties: true
+        type: object
+      updated_at:
+        type: string
+    type: object
+  domain.ComponentSchema:
+    properties:
+      _id:
+        type: string
+      componentId:
+        type: string
+      created_at:
+        type: string
+      data:
+        additionalProperties: true
+        type: object
+      library:
+        items:
+          $ref: '#/definitions/domain.Library'
+        type: array
+      libraryId:
+        type: string
+      schema_data:
+        items:
+          $ref: '#/definitions/domain.ComponentSchemaData'
+        type: array
+      updated_at:
+        type: string
+    type: object
+  domain.ComponentSchemaData:
+    properties:
+      _id:
+        type: string
+      componentId:
+        type: string
+      created_at:
+        type: string
+      data:
+        additionalProperties: true
+        type: object
+      historyId:
+        type: integer
+      name:
+        type: string
+      publish:
+        type: boolean
+      schemaId:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: string
+    type: object
+  domain.ErrorResponse:
+    properties:
+      code:
+        type: integer
+      message:
+        type: string
+    type: object
+  domain.Library:
+    properties:
+      _id:
+        type: string
+      created_at:
+        type: string
+      groups:
+        type: string
+      icon:
+        type: string
+      name:
+        type: string
+      title:
+        type: string
+      tree: {}
+      updated_at:
+        type: string
+    type: object
+  domain.Page:
+    properties:
+      _id:
+        type: string
+      component_id:
+        type: string
+      created_at:
+        type: string
+      name:
+        type: string
+      path:
+        type: string
+      publish:
+        type: boolean
+      setting: {}
+      slug:
+        type: string
+      slug_full:
+        type: string
+      sort_order:
+        type: integer
+      title:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: string
+    type: object
+  domain.RefreshInput:
+    properties:
+      token:
+        type: string
+    required:
+    - token
+    type: object
+  domain.ResponseTokens:
+    properties:
+      access_token:
+        type: string
+      refresh_token:
+        type: string
+    type: object
+  domain.Session:
+    properties:
+      expiresAt:
+        type: string
+      refreshToken:
+        type: string
+    type: object
+  domain.Shop:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      seo:
+        type: string
+      title:
+        type: string
+      user_id:
+        type: string
+    type: object
+  domain.SignInInput:
+    properties:
+      email:
+        type: string
+      login:
+        type: string
+      password:
+        type: string
+      strategy:
+        type: string
+    type: object
+  domain.User:
+    properties:
+      _id:
+        type: string
+      created_at:
+        type: string
+      currency:
+        type: string
+      lang:
+        type: string
+      last_time:
+        type: string
+      login:
+        type: string
+      name:
+        type: string
+      online:
+        type: boolean
+      type:
+        type: string
+      uid:
+        type: string
+      updated_at:
+        type: string
+      verify:
+        type: boolean
+    required:
+    - login
+    - name
+    type: object
+  domain.Verification:
+    properties:
+      code:
+        type: string
+      verified:
+        type: boolean
+    type: object
+host: localhost:8000
+info:
+  contact: {}
+  description: API Server for Template App
+  title: Template API
+  version: "1.0"
+paths:
+  /api/component/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete component
+      parameters:
+      - description: component id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Component'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Delete component
+      tags:
+      - component
+    get:
+      consumes:
+      - application/json
+      description: get component info
+      parameters:
+      - description: component id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Component'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      summary: Get component by Id
+      tags:
+      - component
+    put:
+      consumes:
+      - application/json
+      description: Update component
+      parameters:
+      - description: component id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: body for update component
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/domain.Component'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Component'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update component
+      tags:
+      - component
+  /api/component/find:
+    get:
+      consumes:
+      - application/json
+      description: Input params for search components
+      parameters:
+      - in: query
+        name: $limit
+        type: integer
+      - in: query
+        name: $skip
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.Component'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Find few components
+      tags:
+      - component
+  /api/component/populate:
+    get:
+      consumes:
+      - application/json
+      description: Input params for search components
+      parameters:
+      - in: query
+        name: $limit
+        type: integer
+      - in: query
+        name: $skip
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.Component'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Find few components and populate
+      tags:
+      - component
+  /api/library/:
+    get:
+      consumes:
+      - application/json
+      description: Input params for search librarys
+      parameters:
+      - in: query
+        name: $limit
+        type: integer
+      - in: query
+        name: $skip
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.Library'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Find few library and populate
+      tags:
+      - library
+  /api/page/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete page
+      parameters:
+      - description: page id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Page'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Delete page
+      tags:
+      - page
+    get:
+      consumes:
+      - application/json
+      description: get page info
+      parameters:
+      - description: page id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Page'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      summary: Get page by Id
+      tags:
+      - page
+    put:
+      consumes:
+      - application/json
+      description: Update page
+      parameters:
+      - description: page id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: body for update page
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/domain.Page'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Page'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update page
+      tags:
+      - page
+  /api/page/find:
+    get:
+      consumes:
+      - application/json
+      description: Input params for search pages
+      parameters:
+      - in: query
+        name: $limit
+        type: integer
+      - in: query
+        name: $skip
+        type: integer
+      - in: query
+        name: _id
+        type: string
+      - in: query
+        name: component_id
+        type: string
+      - in: query
+        name: created_at
+        type: string
+      - in: query
+        name: name
+        type: string
+      - in: query
+        name: path
+        type: string
+      - in: query
+        name: publish
+        type: boolean
+      - in: query
+        name: slug
+        type: string
+      - in: query
+        name: slug_full
+        type: string
+      - in: query
+        name: sort_order
+        type: integer
+      - in: query
+        name: title
+        type: string
+      - in: query
+        name: updated_at
+        type: string
+      - in: query
+        name: user_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.Page'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Find few pages
+      tags:
+      - page
+  /api/shops:
+    get:
+      consumes:
+      - application/json
+      description: Input params for search shops
+      parameters:
+      - in: query
+        name: $limit
+        type: integer
+      - in: query
+        name: $skip
+        type: integer
+      - in: query
+        name: created_at
+        type: string
+      - in: query
+        name: description
+        type: string
+      - in: query
+        name: seo
+        type: string
+      - in: query
+        name: title
+        type: string
+      - in: query
+        name: user_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.Shop'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Find shops by params
+      tags:
+      - shop
+  /api/user:
+    get:
+      consumes:
+      - application/json
+      description: Input params for search users
+      parameters:
+      - in: query
+        name: $limit
+        type: integer
+      - in: query
+        name: $skip
+        type: integer
+      - in: query
+        name: _id
+        type: string
+      - in: query
+        name: created_at
+        type: string
+      - in: query
+        name: currency
+        type: string
+      - in: query
+        name: lang
+        type: string
+      - in: query
+        name: last_time
+        type: string
+      - in: query
+        name: login
+        required: true
+        type: string
+      - in: query
+        name: name
+        required: true
+        type: string
+      - in: query
+        name: online
+        type: boolean
+      - in: query
+        name: type
+        type: string
+      - in: query
+        name: uid
+        type: string
+      - in: query
+        name: updated_at
+        type: string
+      - in: query
+        name: verify
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.User'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Find few users
+      tags:
+      - user
+  /api/user/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete user
+      parameters:
+      - description: user id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.User'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Delete user
+      tags:
+      - user
+    get:
+      consumes:
+      - application/json
+      description: get user info
+      parameters:
+      - description: user id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.User'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      summary: Get user by Id
+      tags:
+      - user
+    put:
+      consumes:
+      - application/json
+      description: Update user
+      parameters:
+      - description: user id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: body for update user
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/domain.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.User'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update user
+      tags:
+      - user
+  /auth/sign-in:
+    post:
+      consumes:
+      - application/json
+      description: Login user
+      operationId: signin-account
+      parameters:
+      - description: credentials
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/domain.SignInInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: integer
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      summary: SignIn
+      tags:
+      - auth
+  /auth/sign-up:
+    post:
+      consumes:
+      - application/json
+      description: Create account
+      operationId: create-account
+      parameters:
+      - description: account info
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/domain.Auth'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: integer
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      summary: SignUp
+      tags:
+      - auth
+  /users/auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: user refresh tokens
+      parameters:
+      - description: sign up info
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/domain.RefreshInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.ResponseTokens'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      summary: User Refresh Tokens
+      tags:
+      - users-auth
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

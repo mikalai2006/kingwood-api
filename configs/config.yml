@@ -1,0 +1,32 @@
+db:
+  dbname: "kingwood_api_db"
+  sslmode: "disable"
+mongodb:
+  dbname: "kingwood_api_db"
+  dbtest: "kingwood_api_db_test"
+  sslmode: false
+auth:
+  accessTokenTTL: 1440m # in minutes: default 1440m
+  refreshTokenTTL: 43200m #30 days
+# oauth:
+#   timeExpireCookie: 86400 #24h
+i18n:
+  prefix: __i18n__
+  default: en
+images:
+  sizes:
+    # - size: 30
+    #   prefix: "thumb"
+    #   quality: 40
+    # - size: 320
+    #   prefix: "xs"
+    #   quality: 70
+    # - size: 768
+    #   prefix: "md"
+    #   quality: 50
+    # - size: 1024
+    #   prefix: "lg"
+    #   quality: 70
+    # - size: 1280
+    #   prefix: "xl"
+    #   quality: 70

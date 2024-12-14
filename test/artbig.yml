@@ -1,0 +1,78 @@
+config:
+  target: 'http://localhost:8000'
+  phases:
+    - duration: 60
+      arrivalRate: 50
+scenarios:
+  - flow:
+    - post:
+        url: "/api/v1/gql/query"
+        json:
+          query: |
+            query findNodesForMap($filter: [NodeFilterTag]!, $center:[Float], $latA: Float!,$limit:Int, $latB: Float!, $lonA: Float!, $lonB: Float!, $c: [String]!) {
+                nodes(
+                    limit:$limit,
+                    input: {
+                        latA: $latA,
+                        latB: $latB,
+                        lonA: $lonA,
+                        lonB: $lonB,
+                        center: $center,
+                        filter: $filter,
+                        c: $c
+                    }
+                    ) {
+                    total
+                    limit
+                    data {
+                        id
+                        # osmId
+                        type
+                        lat
+                        lon
+                        name
+                        # props
+                        # address {
+                            # id
+                            # osmId
+                        #     userId
+                        #     address
+                        #     dAddress
+                        #     props
+                        # }
+                        data {
+                            #   nodeId
+                            tagId
+                        #      tagoptId
+                            value
+                            #   tag {
+                            #       key
+                            #       title
+                            #       description
+                            #   }
+                            #   tagopt {
+                            #     title
+                            #     value
+                            #   }
+                        }
+                        # reviews {
+                        #     rate
+                        #     userId
+                        #     review
+                        # }
+                    }
+                }
+            }
+          variables:
+            "limit": 1000000
+            "filter": []
+            "latA": -86.00669476043257
+            "latB": 87.87683126888442
+            "lonA": -159.60937500000003
+            "lonB": 155.39062500000003
+            "center": [
+                17.811456088564483,
+                -2.1093750000000004
+            ]
+            "query": ""
+            "c": ["de"]
