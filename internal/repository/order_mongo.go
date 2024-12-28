@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/mikalai2006/kingwood-api/internal/config"
@@ -20,7 +21,7 @@ func NewOrderMongo(db *mongo.Database, i18n config.I18nConfig) *OrderMongo {
 	return &OrderMongo{db: db, i18n: i18n}
 }
 
-func (r *OrderMongo) FindOrder(params domain.RequestParams) (domain.Response[domain.Order], error) {
+func (r *OrderMongo) FindOrder(input *domain.OrderFilter) (domain.Response[domain.Order], error) {
 	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
 	defer cancel()
 
@@ -48,10 +49,10 @@ func (r *OrderMongo) FindOrder(params domain.RequestParams) (domain.Response[dom
 	// // }
 	// copy(resultSlice, results)
 
-	pipe, err := CreatePipeline(params, &r.i18n)
-	if err != nil {
-		return domain.Response[domain.Order]{}, err
-	}
+	// pipe, err := CreatePipeline(params, &r.i18n)
+	// if err != nil {
+	// 	return domain.Response[domain.Order]{}, err
+	// }
 	// pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
 	// 	"from": "users",
 	// 	"as":   "usera",
@@ -77,6 +78,33 @@ func (r *OrderMongo) FindOrder(params domain.RequestParams) (domain.Response[dom
 	// 	},
 	// }}})
 	// pipe = append(pipe, bson.D{{Key: "$set", Value: bson.M{"user": bson.M{"$first": "$usera"}}}})
+	q := bson.D{}
+
+	// Filters
+	if input.Name != nil && *input.Name != "" {
+		strName := primitive.Regex{Pattern: fmt.Sprintf("%v", *input.Name), Options: "i"}
+		q = append(q, bson.E{"name", bson.D{{"$regex", strName}}})
+	}
+	if input.Group != nil && len(input.Group) > 0 {
+		q = append(q, bson.E{"group", bson.M{"$elemMatch": bson.D{{"$in", input.Group}}}})
+	}
+	if input.Status != nil {
+		q = append(q, bson.E{"status", input.Status})
+	}
+	if input.ObjectIds != nil {
+		objectIds := []primitive.ObjectID{}
+		for key, _ := range input.ObjectIds {
+			idObjectPrimitive, err := primitive.ObjectIDFromHex(input.ObjectIds[key])
+			if err != nil {
+				return response, err
+			}
+			objectIds = append(objectIds, idObjectPrimitive)
+		}
+		q = append(q, bson.E{"objectId", bson.D{{"$in", objectIds}}})
+	}
+
+	pipe := mongo.Pipeline{}
+	pipe = append(pipe, bson.D{{"$match", q}})
 	pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
 		"from": tblObject,
 		"as":   "objecta",
@@ -90,6 +118,26 @@ func (r *OrderMongo) FindOrder(params domain.RequestParams) (domain.Response[dom
 	}}})
 	pipe = append(pipe, bson.D{{Key: "$set", Value: bson.M{"object": bson.M{"$first": "$objecta"}}}})
 
+	if input.Sort != nil && len(input.Sort) > 0 {
+		sortParam := bson.D{}
+		for i := range input.Sort {
+			sortParam = append(sortParam, bson.E{*input.Sort[i].Key, *input.Sort[i].Value})
+		}
+		pipe = append(pipe, bson.D{{"$sort", sortParam}})
+		// fmt.Println("sortParam: ", len(input.Sort), sortParam, pipe)
+	}
+
+	skip := 0
+	limit := 10
+	if input.Skip != nil {
+		pipe = append(pipe, bson.D{{"$skip", input.Skip}})
+		skip = *input.Skip
+	}
+	if input.Limit != nil {
+		pipe = append(pipe, bson.D{{"$limit", input.Limit}})
+		limit = *input.Limit
+	}
+
 	cursor, err := r.db.Collection(TblOrder).Aggregate(ctx, pipe) // Find(ctx, params.Filter, opts)
 	// cursor, err := r.db.Collection(TblNode).Find(ctx, filter, opts)
 	if err != nil {
@@ -101,15 +149,15 @@ func (r *OrderMongo) FindOrder(params domain.RequestParams) (domain.Response[dom
 		return response, er
 	}
 
-	count, err := r.db.Collection(TblOrder).CountDocuments(ctx, params.Filter)
-	if err != nil {
-		return response, err
-	}
+	// count, err := r.db.Collection(TblOrder).CountDocuments(ctx, params.Filter)
+	// if err != nil {
+	// 	return response, err
+	// }
 
 	response = domain.Response[domain.Order]{
-		Total: int(count),
-		Skip:  int(params.Options.Skip),
-		Limit: int(params.Options.Limit),
+		Total: 0,
+		Skip:  skip,
+		Limit: limit,
 		Data:  results,
 	}
 	return response, nil
@@ -254,7 +302,10 @@ func (r *OrderMongo) CreateOrder(userID string, data *domain.Order) (*domain.Ord
 		ConstructorId: data.ConstructorId,
 		Priority:      data.Priority,
 		Term:          data.Term,
+		TermMontaj:    data.TermMontaj,
 		Status:        data.Status,
+		Group:         data.Group,
+		// NeedMontaj:    data.NeedMontaj,
 
 		CreatedAt: updatedAt,
 		UpdatedAt: updatedAt,
@@ -313,16 +364,25 @@ func (r *OrderMongo) UpdateOrder(id string, userID string, data *domain.OrderInp
 	if !data.Term.IsZero() {
 		newData["term"] = data.Term
 	}
+	if !data.TermMontaj.IsZero() {
+		newData["termMontaj"] = data.TermMontaj
+	}
 	if data.Priority != nil {
 		newData["priority"] = data.Priority
 	}
 	if data.Description != "" {
 		newData["description"] = data.Description
 	}
+	// if data.NeedMontaj != nil {
+	// 	newData["needMontaj"] = data.NeedMontaj
+	// }
 	if !data.ConstructorId.IsZero() {
 		newData["constructorId"] = data.ConstructorId
 	}
-	if len(data.Status) > 0 {
+	if len(data.Group) > 0 {
+		newData["group"] = data.Group
+	}
+	if data.Status != nil {
 		newData["status"] = data.Status
 	}
 	newData["updatedAt"] = time.Now()

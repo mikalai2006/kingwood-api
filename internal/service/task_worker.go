@@ -1,8 +1,11 @@
 package service
 
 import (
+	"fmt"
+
 	"github.com/mikalai2006/kingwood-api/internal/domain"
 	"github.com/mikalai2006/kingwood-api/internal/repository"
+	"github.com/mikalai2006/kingwood-api/internal/utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -86,7 +89,9 @@ func (s *TaskWorkerService) UpdateTaskWorker(id string, userID string, data *dom
 
 	isProcess := false
 	for i := range taskWorkers.Data {
-		taskWorkersStatus = append(taskWorkersStatus, taskWorkers.Data[i].Status)
+		if !utils.Contains(taskWorkersStatus, taskWorkers.Data[i].Status) {
+			taskWorkersStatus = append(taskWorkersStatus, taskWorkers.Data[i].Status)
+		}
 		if taskWorkers.Data[i].Status == "process" {
 			isProcess = true
 		}
@@ -102,8 +107,14 @@ func (s *TaskWorkerService) UpdateTaskWorker(id string, userID string, data *dom
 	// }
 
 	// if one worker, change task status.
+	fmt.Println("update taskWorker: ", len(taskWorkersStatus), taskWorkersStatus, isProcess)
 	if len(taskWorkersStatus) == 1 || (len(taskWorkersStatus) > 1 && isProcess) {
-		task, err := s.taskService.UpdateTask(result.TaskId.Hex(), userID, &domain.TaskInput{StatusId: result.StatusId, Status: result.Status})
+		active := int64(1)
+		if result.Status == "finish" {
+			active = int64(0)
+		}
+
+		task, err := s.taskService.UpdateTask(result.TaskId.Hex(), userID, &domain.TaskInput{StatusId: result.StatusId, Status: result.Status, Active: &active})
 
 		if err != nil {
 			return result, err

@@ -216,7 +216,7 @@ func (r *TaskMongo) CreateTask(userID string, data *domain.Task) (*domain.Task, 
 		// OperationId: data.OperationId,
 		Name: data.Name,
 		// WorkerId: data.WorkerId,
-		SortOder:  &nextSortOrder,
+		SortOrder: &nextSortOrder,
 		StatusId:  data.StatusId,
 		Active:    data.Active,
 		StartAt:   data.StartAt,
@@ -225,6 +225,7 @@ func (r *TaskMongo) CreateTask(userID string, data *domain.Task) (*domain.Task, 
 		From:      data.From,
 		To:        data.To,
 		TypeGo:    data.TypeGo,
+		// OperationId: data.OperationId,
 
 		CreatedAt: updatedAt,
 		UpdatedAt: updatedAt,
@@ -296,8 +297,8 @@ func (r *TaskMongo) UpdateTask(id string, userID string, data *domain.TaskInput)
 		newData["autoCheck"] = data.AutoCheck
 	}
 	newData["updatedAt"] = time.Now()
-	if data.SortOder != nil {
-		newData["sortOrder"] = data.SortOder
+	if data.SortOrder != nil {
+		newData["sortOrder"] = data.SortOrder
 	}
 	if data.Status != "" {
 		newData["status"] = data.Status

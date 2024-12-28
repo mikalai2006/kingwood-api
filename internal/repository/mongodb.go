@@ -39,6 +39,7 @@ const (
 
 	tblPartner    = "partners"
 	tblTask       = "task"
+	tblTaskMontaj = "taskMontaj"
 	tblTaskWorker = "taskWorker"
 	tblOperation  = "operation"
 	tblTaskStatus = "taskStatus"

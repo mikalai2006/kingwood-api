@@ -108,9 +108,12 @@ func (s *TestSuite) SetupSuite() {
 		I18n:                   cfg.I18n,
 	})
 
+	hub := service.NewHub()
+	go hub.Run()
+
 	s.repos = repos
 	s.services = services
-	s.handler = v1.NewHandler(services, &cfg.Oauth, &cfg.I18n, &cfg.IImage)
+	s.handler = v1.NewHandler(services, repos, s.db, &cfg.Oauth, &cfg.Auth, &cfg.I18n, &cfg.IImage, *hub)
 	s.hasher = hasherP
 	s.tokenManager = tokenManager
 }

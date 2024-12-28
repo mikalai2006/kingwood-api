@@ -271,16 +271,21 @@ func (r *TaskWorkerMongo) CreateTaskWorker(userID string, data *domain.TaskWorke
 
 	sortOrder := int64(0)
 
+	from := time.Now()
+	if !data.From.IsZero() {
+		from = data.From
+	}
+
 	newTaskWorker := domain.TaskWorkerInput{
-		UserID:   userIDPrimitive,
-		TaskId:   data.TaskId,
-		SortOder: &sortOrder,
-		StatusId: data.StatusId,
-		WorkerId: data.WorkerId,
-		Status:   data.Status,
-		From:     data.From,
-		To:       data.To,
-		TypeGo:   data.TypeGo,
+		UserID:    userIDPrimitive,
+		TaskId:    data.TaskId,
+		SortOrder: &sortOrder,
+		StatusId:  data.StatusId,
+		WorkerId:  data.WorkerId,
+		Status:    data.Status,
+		From:      from,
+		To:        data.To,
+		TypeGo:    data.TypeGo,
 
 		CreatedAt: updatedAt,
 		UpdatedAt: updatedAt,
@@ -336,8 +341,8 @@ func (r *TaskWorkerMongo) UpdateTaskWorker(id string, userID string, data *domai
 	if !data.WorkerId.IsZero() {
 		newData["workerId"] = data.WorkerId
 	}
-	if data.SortOder != nil {
-		newData["sortOrder"] = data.SortOder
+	if data.SortOrder != nil {
+		newData["sortOrder"] = data.SortOrder
 	}
 	if !data.StatusId.IsZero() {
 		newData["statusId"] = data.StatusId

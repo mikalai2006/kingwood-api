@@ -15,8 +15,8 @@ func NewOrderService(repo repository.Order, userService *UserService) *OrderServ
 	return &OrderService{repo: repo, userService: userService}
 }
 
-func (s *OrderService) FindOrder(params domain.RequestParams) (domain.Response[domain.Order], error) {
-	return s.repo.FindOrder(params)
+func (s *OrderService) FindOrder(input *domain.OrderFilter) (domain.Response[domain.Order], error) {
+	return s.repo.FindOrder(input)
 }
 
 func (s *OrderService) GetAllOrder(params domain.RequestParams) (domain.Response[domain.Order], error) {

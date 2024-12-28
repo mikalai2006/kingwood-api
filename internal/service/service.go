@@ -64,7 +64,7 @@ type Offer interface {
 
 type Order interface {
 	CreateOrder(userID string, data *domain.Order) (*domain.Order, error)
-	FindOrder(params domain.RequestParams) (domain.Response[domain.Order], error)
+	FindOrder(input *domain.OrderFilter) (domain.Response[domain.Order], error)
 	UpdateOrder(id string, userID string, data *domain.OrderInput) (*domain.Order, error)
 	DeleteOrder(id string) (*domain.Order, error)
 
@@ -90,6 +90,13 @@ type Task interface {
 	FindTask(params domain.RequestParams) (domain.Response[domain.Task], error)
 	UpdateTask(id string, userID string, data *domain.TaskInput) (*domain.Task, error)
 	DeleteTask(id string) (*domain.Task, error)
+}
+
+type TaskMontaj interface {
+	CreateTaskMontaj(userID string, data *domain.TaskMontaj) (*domain.TaskMontaj, error)
+	FindTaskMontaj(input domain.TaskMontajFilter) (domain.Response[domain.TaskMontaj], error)
+	UpdateTaskMontaj(id string, userID string, data *domain.TaskMontajInput) (*domain.TaskMontaj, error)
+	DeleteTaskMontaj(id string) (*domain.TaskMontaj, error)
 }
 
 type TaskWorker interface {
@@ -193,6 +200,7 @@ type Services struct {
 	Question
 	Ticket
 	Task
+	TaskMontaj
 	TaskWorker
 	TaskStatus
 	Operation
@@ -239,7 +247,9 @@ func NewServices(cfgService *ConfigServices) *Services {
 	Message := NewMessageService(cfgService.Repositories.Message, cfgService.Hub, MessageRoom)
 	Question := NewQuestionService(cfgService.Repositories.Question, cfgService.Hub)
 	Ticket := NewTicketService(cfgService.Repositories.Ticket)
-	Task := NewTaskService(cfgService.Repositories.Task, cfgService.Hub, User, TaskStatus)
+	Order := NewOrderService(cfgService.Repositories.Order, User)
+	Task := NewTaskService(cfgService.Repositories.Task, cfgService.Hub, User, TaskStatus, Order)
+	TaskMontaj := NewTaskMontajService(cfgService.Repositories.TaskMontaj, cfgService.Hub, User, TaskStatus)
 
 	return &Services{
 		Authorization: Authorization,
@@ -255,12 +265,13 @@ func NewServices(cfgService *ConfigServices) *Services {
 		Offer:         NewOfferService(cfgService.Repositories.Offer, User, cfgService.Hub, Message, MessageRoom),
 		Question:      Question,
 		Ticket:        Ticket,
-		Order:         NewOrderService(cfgService.Repositories.Order, User),
+		Order:         Order,
 		Task:          Task,
 		TaskWorker:    NewTaskWorkerService(cfgService.Repositories.TaskWorker, User, TaskStatus, Task, cfgService.Hub),
 		Operation:     NewOperationService(cfgService.Repositories.Operation, User),
 		Role:          Role,
 		TaskStatus:    TaskStatus,
+		TaskMontaj:    TaskMontaj,
 		Pay:           NewPayService(cfgService.Repositories.Pay, User, cfgService.Hub),
 		Object:        NewObjectService(cfgService.Repositories.Object, cfgService.Hub, User),
 	}

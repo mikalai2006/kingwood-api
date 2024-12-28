@@ -63,7 +63,7 @@ type Offer interface {
 }
 
 type Order interface {
-	FindOrder(params domain.RequestParams) (domain.Response[domain.Order], error)
+	FindOrder(input *domain.OrderFilter) (domain.Response[domain.Order], error)
 	GetAllOrder(params domain.RequestParams) (domain.Response[domain.Order], error)
 	CreateOrder(userID string, Order *domain.Order) (*domain.Order, error)
 	UpdateOrder(id string, userID string, data *domain.OrderInput) (*domain.Order, error)
@@ -83,6 +83,14 @@ type Task interface {
 	CreateTask(userID string, Order *domain.Task) (*domain.Task, error)
 	UpdateTask(id string, userID string, data *domain.TaskInput) (*domain.Task, error)
 	DeleteTask(id string) (*domain.Task, error)
+}
+
+type TaskMontaj interface {
+	FindTaskMontaj(input domain.TaskMontajFilter) (domain.Response[domain.TaskMontaj], error)
+	FindTaskMontajWithWorkers(params domain.TaskMontajFilter) (domain.Response[domain.TaskMontaj], error)
+	CreateTaskMontaj(userID string, Order *domain.TaskMontaj) (*domain.TaskMontaj, error)
+	UpdateTaskMontaj(id string, userID string, data *domain.TaskMontajInput) (*domain.TaskMontaj, error)
+	DeleteTaskMontaj(id string) (*domain.TaskMontaj, error)
 }
 
 type Object interface {
@@ -198,6 +206,7 @@ type Repositories struct {
 	Question
 	Ticket
 	Task
+	TaskMontaj
 	TaskStatus
 	TaskWorker
 	Operation
@@ -226,6 +235,7 @@ func NewRepositories(mongodb *mongo.Database, i18n config.I18nConfig) *Repositor
 		Task:       NewTaskMongo(mongodb, i18n),
 		TaskWorker: NewTaskWorkerMongo(mongodb, i18n),
 		TaskStatus: NewTaskStatusMongo(mongodb, i18n),
+		TaskMontaj: NewTaskMontajMongo(mongodb, i18n),
 		Operation:  NewOperationMongo(mongodb, i18n),
 		Pay:        NewPayMongo(mongodb, i18n),
 		Object:     NewObjectMongo(mongodb, i18n),

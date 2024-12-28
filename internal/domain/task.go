@@ -14,11 +14,12 @@ type Task struct {
 	// OperationId primitive.ObjectID `json:"operationId" bson:"operationId" primitive:"true"`
 	Name string `json:"name" bson:"name"`
 	// WorkerId primitive.ObjectID `json:"workerId" bson:"workerId" primitive:"true"`
-	StartAt  time.Time          `json:"startAt" bson:"startAt"`
-	SortOder *int64             `json:"sortOrder" bson:"sortOrder"`
-	StatusId primitive.ObjectID `json:"statusId" bson:"statusId"`
-	Status   string             `json:"status" bson:"status"`
-	Active   *int64             `json:"active" bson:"active" form:"active"`
+	StartAt   time.Time          `json:"startAt" bson:"startAt"`
+	SortOrder *int64             `json:"sortOrder" bson:"sortOrder"`
+	StatusId  primitive.ObjectID `json:"statusId" bson:"statusId"`
+	// OperationId primitive.ObjectID `json:"operationId" bson:"operationId"`
+	Status string `json:"status" bson:"status"`
+	Active *int64 `json:"active" bson:"active" form:"active"`
 
 	AutoCheck *int64       `json:"autoCheck" bson:"autoCheck" form:"autoCheck"`
 	Workers   []TaskWorker `json:"-" bson:"workers"`
@@ -39,10 +40,11 @@ type TaskInput struct {
 	Name    string             `json:"name" bson:"name"`
 	// OperationId primitive.ObjectID `json:"operationId" bson:"operationId" primitive:"true"`
 	// WorkerId primitive.ObjectID `json:"workerId" bson:"workerId" primitive:"true"`
-	StartAt  time.Time          `json:"startAt" bson:"startAt"`
-	SortOder *int64             `json:"sortOrder" bson:"sortOrder"`
-	StatusId primitive.ObjectID `json:"statusId" bson:"statusId"`
-	Status   string             `json:"status" bson:"status"`
+	StartAt   time.Time          `json:"startAt" bson:"startAt"`
+	SortOrder *int64             `json:"sortOrder" bson:"sortOrder"`
+	StatusId  primitive.ObjectID `json:"statusId" bson:"statusId"`
+	// OperationId primitive.ObjectID `json:"operationId" bson:"operationId"`
+	Status string `json:"status" bson:"status"`
 
 	Active    *int64    `json:"active" bson:"active" form:"active"`
 	AutoCheck *int64    `json:"autoCheck" bson:"autoCheck" form:"autoCheck"`
@@ -62,7 +64,7 @@ type TaskInputData struct {
 	// WorkerId    string    `json:"workerId" bson:"workerId" primitive:"true"`
 	// StartAt     time.Time `json:"startAt" bson:"startAt"`
 	Status    string `json:"status" bson:"status"`
-	SortOder  *int64 `json:"sortOrder" bson:"sortOrder"`
+	SortOrder *int64 `json:"sortOrder" bson:"sortOrder"`
 	Active    *int64 `json:"active" bson:"active" form:"active"`
 	AutoCheck *int64 `json:"autoCheck" bson:"autoCheck" form:"autoCheck"`
 	// Status   string `json:"status" bson:"status"`

@@ -13,17 +13,16 @@ import (
 	"github.com/mikalai2006/kingwood-api/pkg/app"
 )
 
-func (h *HandlerV1) registerTask(router *gin.RouterGroup) {
-	route := router.Group("/task")
-	route.POST("", h.CreateTask)
-	route.GET("", h.FindTask)
-	route.PATCH("/:id", h.SetUserFromRequest, h.UpdateTask)
-	route.POST("/list", h.CreateTaskList)
-	route.POST("/sort", h.SortTaskList)
-	route.DELETE("/:id", h.SetUserFromRequest, h.DeleteTask)
+func (h *HandlerV1) registerTaskMontaj(router *gin.RouterGroup) {
+	route := router.Group("/task_montaj")
+	route.POST("", h.CreateTaskMontaj)
+	route.GET("", h.FindTaskMontaj)
+	route.PATCH("/:id", h.SetUserFromRequest, h.UpdateTaskMontaj)
+	route.POST("/list", h.CreateTaskMontajList)
+	route.POST("/sort", h.SortTaskMontajList)
 }
 
-func (h *HandlerV1) CreateTask(c *gin.Context) {
+func (h *HandlerV1) CreateTaskMontaj(c *gin.Context) {
 	appG := app.Gin{C: c}
 	// userID, err := middleware.GetUID(c)
 	// if err != nil {
@@ -32,13 +31,13 @@ func (h *HandlerV1) CreateTask(c *gin.Context) {
 	// 	return
 	// }
 
-	var input *domain.Task
+	var input *domain.TaskMontaj
 	if er := c.BindJSON(&input); er != nil {
 		appG.ResponseError(http.StatusBadRequest, er, nil)
 		return
 	}
 
-	Task, err := h.CreateOrExistTask(c, input) //h.services.Task.CreateTask(userID, input)
+	Task, err := h.CreateOrExistTaskMontaj(c, input) //h.services.Task.CreateTask(userID, input)
 	if err != nil {
 		appG.ResponseError(http.StatusBadRequest, err, nil)
 		return
@@ -47,7 +46,7 @@ func (h *HandlerV1) CreateTask(c *gin.Context) {
 	c.JSON(http.StatusOK, Task)
 }
 
-func (h *HandlerV1) CreateTaskList(c *gin.Context) {
+func (h *HandlerV1) CreateTaskMontajList(c *gin.Context) {
 	appG := app.Gin{C: c}
 	userID, err := middleware.GetUID(c)
 	if err != nil || userID == "" {
@@ -56,7 +55,7 @@ func (h *HandlerV1) CreateTaskList(c *gin.Context) {
 		return
 	}
 
-	var input []*domain.Task
+	var input []*domain.TaskMontaj
 	if er := c.BindJSON(&input); er != nil {
 		appG.ResponseError(http.StatusBadRequest, er, nil)
 		return
@@ -67,9 +66,9 @@ func (h *HandlerV1) CreateTaskList(c *gin.Context) {
 		return
 	}
 
-	var result []*domain.Task
+	var result []*domain.TaskMontaj
 	for i := range input {
-		Task, err := h.CreateOrExistTask(c, input[i]) //h.services.Task.CreateTask(userID, input)
+		Task, err := h.CreateOrExistTaskMontaj(c, input[i]) //h.services.Task.CreateTask(userID, input)
 		if err != nil {
 			appG.ResponseError(http.StatusBadRequest, err, nil)
 			return
@@ -80,7 +79,7 @@ func (h *HandlerV1) CreateTaskList(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
-func (h *HandlerV1) SortTaskList(c *gin.Context) {
+func (h *HandlerV1) SortTaskMontajList(c *gin.Context) {
 	appG := app.Gin{C: c}
 	userID, err := middleware.GetUID(c)
 	if err != nil || userID == "" {
@@ -89,7 +88,7 @@ func (h *HandlerV1) SortTaskList(c *gin.Context) {
 		return
 	}
 
-	var input []*domain.Task
+	var input []*domain.TaskMontaj
 	if er := c.BindJSON(&input); er != nil {
 		appG.ResponseError(http.StatusBadRequest, er, nil)
 		return
@@ -100,10 +99,10 @@ func (h *HandlerV1) SortTaskList(c *gin.Context) {
 		return
 	}
 
-	var result []*domain.Task
+	var result []*domain.TaskMontaj
 	for i := range input {
-		Task, err := h.Services.Task.UpdateTask(input[i].ID.Hex(), userID, &domain.TaskInput{
-			SortOrder: input[i].SortOrder,
+		Task, err := h.Services.TaskMontaj.UpdateTaskMontaj(input[i].ID.Hex(), userID, &domain.TaskMontajInput{
+			SortOder: input[i].SortOder,
 		})
 		if err != nil {
 			appG.ResponseError(http.StatusBadRequest, err, nil)
@@ -128,16 +127,21 @@ func (h *HandlerV1) SortTaskList(c *gin.Context) {
 // @Failure 500 {object} domain.ErrorResponse
 // @Failure default {object} domain.ErrorResponse
 // @Router /api/Task [get].
-func (h *HandlerV1) FindTask(c *gin.Context) {
+func (h *HandlerV1) FindTaskMontaj(c *gin.Context) {
 	appG := app.Gin{C: c}
 
-	params, err := utils.GetParamsFromRequest(c, domain.TaskInputData{}, &h.i18n)
-	if err != nil {
-		appG.ResponseError(http.StatusBadRequest, err, nil)
+	// params, err := utils.GetParamsFromRequest(c, domain.TaskMontajInputData{}, &h.i18n)
+	// if err != nil {
+	// 	appG.ResponseError(http.StatusBadRequest, err, nil)
+	// 	return
+	// }
+	var input *domain.TaskMontajFilter
+	if er := c.BindJSON(&input); er != nil {
+		appG.ResponseError(http.StatusBadRequest, er, nil)
 		return
 	}
 
-	Tasks, err := h.Services.Task.FindTask(params)
+	Tasks, err := h.Services.TaskMontaj.FindTaskMontaj(*input)
 	if err != nil {
 		appG.ResponseError(http.StatusBadRequest, err, nil)
 		return
@@ -146,11 +150,7 @@ func (h *HandlerV1) FindTask(c *gin.Context) {
 	c.JSON(http.StatusOK, Tasks)
 }
 
-func (h *HandlerV1) GetTaskByID(c *gin.Context) {
-
-}
-
-func (h *HandlerV1) UpdateTask(c *gin.Context) {
+func (h *HandlerV1) UpdateTaskMontaj(c *gin.Context) {
 	appG := app.Gin{C: c}
 	userID, err := middleware.GetUID(c)
 	if err != nil {
@@ -183,13 +183,13 @@ func (h *HandlerV1) UpdateTask(c *gin.Context) {
 		appG.ResponseError(http.StatusBadRequest, er, nil)
 		return
 	}
-	data, er := utils.BindJSON2[domain.TaskInput](a)
+	data, er := utils.BindJSON2[domain.TaskMontajInput](a)
 	if er != nil {
 		appG.ResponseError(http.StatusBadRequest, er, nil)
 		return
 	}
 
-	document, err := h.Services.Task.UpdateTask(id, userID, &data)
+	document, err := h.Services.TaskMontaj.UpdateTaskMontaj(id, userID, &data)
 	if err != nil {
 		appG.ResponseError(http.StatusInternalServerError, err, nil)
 		return
@@ -198,33 +198,11 @@ func (h *HandlerV1) UpdateTask(c *gin.Context) {
 	c.JSON(http.StatusOK, document)
 }
 
-func (h *HandlerV1) DeleteTask(c *gin.Context) {
-	appG := app.Gin{C: c}
-	// userID, err := middleware.GetUID(c)
-	// if err != nil {
-	// 	// c.AbortWithError(http.StatusUnauthorized, err)
-	// 	appG.ResponseError(http.StatusUnauthorized, err, gin.H{"hello": "world"})
-	// 	return
-	// }
+func (h *HandlerV1) DeleteTaskMontaj(c *gin.Context) {
 
-	id := c.Param("id")
-	if id == "" {
-		// c.AbortWithError(http.StatusBadRequest, errors.New("for remove need id"))
-		appG.ResponseError(http.StatusBadRequest, errors.New("for remove need id"), nil)
-		return
-	}
-
-	user, err := h.Services.Task.DeleteTask(id) // , input
-	if err != nil {
-		// c.AbortWithError(http.StatusBadRequest, err)
-		appG.ResponseError(http.StatusBadRequest, err, nil)
-		return
-	}
-
-	c.JSON(http.StatusOK, user)
 }
 
-func (h *HandlerV1) CreateOrExistTask(c *gin.Context, input *domain.Task) (*domain.Task, error) {
+func (h *HandlerV1) CreateOrExistTaskMontaj(c *gin.Context, input *domain.TaskMontaj) (*domain.TaskMontaj, error) {
 	appG := app.Gin{C: c}
 	userID, err := middleware.GetUID(c)
 	if err != nil {
@@ -232,7 +210,7 @@ func (h *HandlerV1) CreateOrExistTask(c *gin.Context, input *domain.Task) (*doma
 		appG.ResponseError(http.StatusUnauthorized, err, gin.H{"hello": "world"})
 		return nil, err
 	}
-	var result *domain.Task
+	var result *domain.TaskMontaj
 
 	// userIDPrimitive, err := primitive.ObjectIDFromHex(userID)
 	// if err != nil {
@@ -254,7 +232,7 @@ func (h *HandlerV1) CreateOrExistTask(c *gin.Context, input *domain.Task) (*doma
 	// 	return &existTasks.Data[0], nil
 	// }
 
-	result, err = h.Services.Task.CreateTask(userID, input)
+	result, err = h.Services.TaskMontaj.CreateTaskMontaj(userID, input)
 	if err != nil {
 		appG.ResponseError(http.StatusBadRequest, err, nil)
 		return result, err

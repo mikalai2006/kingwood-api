@@ -15,7 +15,7 @@ import (
 
 func (h *HandlerV1) registerOrder(router *gin.RouterGroup) {
 	route := router.Group("/order")
-	route.GET("", h.FindOrder)
+	route.POST("/find", h.FindOrder)
 	route.POST("", h.CreateOrder)
 	route.PATCH("/:id", h.SetUserFromRequest, h.UpdateOrder)
 	route.POST("/list", h.CreateOrderList)
@@ -124,13 +124,18 @@ func (h *HandlerV1) GetAllOrder(c *gin.Context) {
 func (h *HandlerV1) FindOrder(c *gin.Context) {
 	appG := app.Gin{C: c}
 
-	params, err := utils.GetParamsFromRequest(c, domain.OrderInputData{}, &h.i18n)
-	if err != nil {
-		appG.ResponseError(http.StatusBadRequest, err, nil)
+	// params, err := utils.GetParamsFromRequest(c, domain.OrderInputData{}, &h.i18n)
+	// if err != nil {
+	// 	appG.ResponseError(http.StatusBadRequest, err, nil)
+	// 	return
+	// }
+	var input *domain.OrderFilter
+	if er := c.BindJSON(&input); er != nil {
+		appG.ResponseError(http.StatusBadRequest, er, nil)
 		return
 	}
 
-	Orders, err := h.Services.Order.FindOrder(params)
+	Orders, err := h.Services.Order.FindOrder(input)
 	if err != nil {
 		appG.ResponseError(http.StatusBadRequest, err, nil)
 		return
