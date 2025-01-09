@@ -58,6 +58,23 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
+      - name: Create .ENV
+        run: |
+          touch .env
+          echo HOST_DATA=${{ secrets.HOST_DATA }} >> .env
+          echo MONGODB_HOST=${{ secrets.MONGODB_HOST }} >> .env
+          echo MONGODB_PORT=${{ secrets.MONGODB_PORT }} >> .env
+          echo PORT=${{ secrets.PORT }} >> .env
+          echo MONGODB_USER=${{ secrets.MONGODB_USER }} >> .env
+          echo MONGODB_PASSWORD=${{ secrets.MONGODB_PASSWORD }} >> .env
+          echo VK_CLIENT_ID=${{ secrets.VK_CLIENT_ID }} >> .env
+          echo VK_CLIENT_SECRET=${{ secrets.VK_CLIENT_SECRET }} >> .env
+          echo GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} >> .env
+          echo GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }} >> .env
+          echo SALT=${{ secrets.SALT }} >> .env
+          echo SIGNING_KEY=${{ secrets.SIGNING_KEY }} >> .env
+          echo NAME_COOKIE_REFRESH=${{ secrets.NAME_COOKIE_REFRESH }} >> .env
+          cat .env
       - name: copy file .env on server
         uses: garygrossgarten/github-action-scp@release
         with:
