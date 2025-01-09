@@ -7,7 +7,7 @@ services:
   #   environment:
   #     - POSTGRES_PASSWORD=${PG_PASSWORD}
   #   volumes:
-  #     - ${HOST_DATA}/postgres:/data/handmade
+  #     - ${HOST_DATA}/postgres:/data/kingwood-api
   #   ports:
   #     - ${PG_PORT}:${PG_PORT}
   #   restart: always
@@ -15,34 +15,40 @@ services:
   #     - my-network
   mongodb:
     image: mongo
-    container_name: mongodb-api
+    container_name: mongodb_kingwood-api
     environment:
-      - PUID=1000
-      - PGID=1000
-      - AUTH=yes
+      # - PUID=1000
+      # - PGID=1000
+      # - AUTH=yes
       - MONGO_INITDB_ROOT_USERNAME=${MONGODB_USER}
       - MONGO_INITDB_ROOT_PASSWORD=${MONGODB_PASSWORD}
+      # - MONGO_INITDB_DATABASE=api_prod_db
     volumes:
-      - ${HOST_DATA}/mongodata:/data/db
+      - dbdata:/data/db
+      # - ${HOST_DATA}/mongodata:/data/db
     ports:
       - ${MONGODB_PORT}:${MONGODB_PORT}
     restart: always
-    # networks:
-    #   - my-network
+    networks:
+      - my-network
+    env_file:
+      - .env
 
   app:
-    image: mikalai2006/kingwood-api
-    container_name: kingwood-api-from-image
+    # image: cosmtrek/air
+    container_name: kingwood-api
     # working_dir value has to be the same of mapped volume
-    # working_dir: /app
-    # build:
-    #   dockerfile: Dockerfile
-    #   context: .
-    # target: dev
+    working_dir: /go/bin
+    build:
+      dockerfile: Dockerfile
+      context: .
+      # target: dev
     ports:
       - ${PORT}:${PORT}
     volumes:
-      - ./:/app
+      - appdata:/go/bin/public
+      - dbdata:/data/db
+      # ${HOST_DATA}/assets/public:/go/bin/public
     links:
       - mongodb
     depends_on:
@@ -58,7 +64,10 @@ services:
     #   - MONGO_PASSWORD=
     #   - MONGO_PORT=
     #   - MONGO_DATABASE=
-# networks:
-#   my-network:
-# volumes:
-#   my-datavolume:
+    networks:
+      - my-network
+networks:
+  my-network:
+volumes:
+  appdata:
+  dbdata:
