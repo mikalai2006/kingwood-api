@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"time"
+	_ "time/tzdata"
 
 	"github.com/mikalai2006/kingwood-api/internal/app"
 )
