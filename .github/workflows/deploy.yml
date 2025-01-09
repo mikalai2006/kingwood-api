@@ -11,6 +11,7 @@ jobs:
       - name: Create .ENV
         run: |
           touch .env
+          echo HOST=${{ secrets.HOST }} >> .env
           echo HOST_DATA=${{ secrets.HOST_DATA }} >> .env
           echo MONGODB_HOST=${{ secrets.MONGODB_HOST }} >> .env
           echo MONGODB_PORT=${{ secrets.MONGODB_PORT }} >> .env
@@ -63,6 +64,7 @@ jobs:
           touch .env
           echo HOST_DATA=${{ secrets.HOST_DATA }} >> .env
           echo MONGODB_HOST=${{ secrets.MONGODB_HOST }} >> .env
+          echo HOST=${{ secrets.HOST }} >> .env
           echo MONGODB_PORT=${{ secrets.MONGODB_PORT }} >> .env
           echo PORT=${{ secrets.PORT }} >> .env
           echo MONGODB_USER=${{ secrets.MONGODB_USER }} >> .env
