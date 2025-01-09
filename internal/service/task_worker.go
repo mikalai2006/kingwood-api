@@ -98,7 +98,7 @@ func (s *TaskWorkerService) CreateTaskWorker(userID string, data *domain.TaskWor
 			if err != nil {
 				return result, err
 			}
-			// fmt.Println("allTaskForObject length: ", len(allTaskForObject.Data))
+			fmt.Println("allTaskForObject length: ", len(allTaskForObject.Data))
 			if len(allTaskForObject.Data) > 0 {
 				for i := range allTaskForObject.Data {
 					workerIds := []string{}
