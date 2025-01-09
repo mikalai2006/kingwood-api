@@ -1,7 +1,7 @@
 FROM golang:1.19.1-alpine AS builder
 ARG VERSION=dev
 
-ENV APP_HOME /go/src/kingwood-api
+ENV APP_HOME=/go/src/kingwood-api
 WORKDIR "$APP_HOME"
 
 COPY . .
@@ -17,7 +17,7 @@ LABEL org.opencontainers.image.source=https://github.com/mikalai2006/kingwood-ap
 LABEL org.opencontainers.image.description="Template REST API"
 LABEL org.opencontainers.image.licenses=MIT
 
-ENV APP_HOME /go/src/kingwood-api
+ENV APP_HOME=/go/src/kingwood-api
 RUN mkdir -p "$APP_HOME"
 WORKDIR "$APP_HOME"
 
