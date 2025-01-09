@@ -68,7 +68,7 @@ jobs:
       #     local: .env
       #     remote: mikalai2006/.env_
       - name: "Run deploy on server"
-        uses: appleboy/ssh-action@master
+        uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.SSH_SITE_HOST }}
           username: ${{ secrets.SSH_SITE_USERNAME }}
