@@ -1,6 +1,6 @@
 # Template for rest API
 
-![example event parameter](https://github.com/mikalai2006/kingwood-api/actions/workflows/push.yml/badge.svg?branch=main&event=push)
+![example event parameter](https://github.com/mikalai2006/kingwood-api/actions/workflows/deploy.yml/badge.svg?branch=main&event=push)
 
 For start project, need to create file .env in parent directory
 
