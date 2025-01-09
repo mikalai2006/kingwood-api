@@ -1,8 +1,13 @@
 package service
 
 import (
+	"fmt"
+	"time"
+
 	"github.com/mikalai2006/kingwood-api/internal/domain"
 	"github.com/mikalai2006/kingwood-api/internal/repository"
+	"github.com/mikalai2006/kingwood-api/internal/utils"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -12,6 +17,7 @@ type TaskService struct {
 	userService  *UserService
 	taskStatus   *TaskStatusService
 	orderService *OrderService
+	Services     *Services
 }
 
 func NewTaskService(repo repository.Task, hub *Hub, userService *UserService, TaskStatus *TaskStatusService, OrderService *OrderService) *TaskService {
@@ -22,8 +28,8 @@ func (s *TaskService) FindTask(params domain.RequestParams) (domain.Response[dom
 	return s.repo.FindTask(params)
 }
 
-func (s *TaskService) FindTaskWithWorkers(params domain.RequestParams) (domain.Response[domain.Task], error) {
-	return s.repo.FindTaskWithWorkers(params)
+func (s *TaskService) FindTaskPopulate(filter domain.TaskFilter) (domain.Response[domain.Task], error) {
+	return s.repo.FindTaskPopulate(filter)
 }
 
 func (s *TaskService) CreateTask(userID string, data *domain.Task) (*domain.Task, error) {
@@ -33,28 +39,6 @@ func (s *TaskService) CreateTask(userID string, data *domain.Task) (*domain.Task
 	if err != nil {
 		return nil, err
 	}
-	// existReview, err := s.repo.FindReview(domain.RequestParams{
-	// 	Filter:  bson.M{"node_id": review.NodeID, "user_id": userIDPrimitive},
-	// 	Options: domain.Options{Limit: 1},
-	// })
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	// if len(existReview.Data) > 0 {
-	// 	updateReview := &domain.TaskInput{
-	// 		Rate:   review.Rate,
-	// 		Review: review.Review,
-	// 	}
-	// 	result, err = s.UpdateReview(existReview.Data[0].ID.Hex(), userID, updateReview)
-	// } else {
-	// 	result, err = s.repo.CreateReview(userID, review)
-
-	// 	// set user stat
-	// 	if err == nil {
-	// 		_, _ = s.userService.SetStat(userID, domain.UserStat{AddReview: 1})
-	// 	}
-	// }
 
 	result, err = s.repo.CreateTask(userID, data)
 	if err != nil {
@@ -64,6 +48,63 @@ func (s *TaskService) CreateTask(userID string, data *domain.Task) (*domain.Task
 	// if err == nil {
 	// 	_, _ = s.userService.SetStat(userID, domain.UserStat{AddReview: 1})
 	// }
+
+	_, err = s.CheckStatusOrder(userID, result)
+	if err != nil {
+		return result, err
+	}
+
+	// add taskWorker for all users by work on the object.
+	allOperation, err := s.orderService.operationService.FindOperation(domain.RequestParams{Filter: bson.D{}})
+	if err != nil {
+		return result, err
+	}
+	var currentOperation *domain.Operation
+	for i := range allOperation.Data {
+		if allOperation.Data[i].ID.Hex() == result.OperationId.Hex() {
+			currentOperation = &allOperation.Data[i]
+		}
+	}
+	// fmt.Println("allOperation length: ", len(allOperation.Data), currentOperation.Group)
+	if currentOperation.Group == "5" {
+		objectId := result.ObjectId.Hex()
+		operationId := result.OperationId.Hex()
+		date := time.Now().Local()
+		allTaskWorkerForObject, err := s.Services.TaskWorker.FindTaskWorkerPopulate(&domain.TaskWorkerFilter{
+			ObjectId:    []*string{&objectId},
+			OperationId: []*string{&operationId},
+			Date:        &date,
+		})
+		if err != nil {
+			return result, err
+		}
+		// fmt.Println("allTaskWorkerForObject length: ", len(allTaskWorkerForObject.Data))
+		createdWorkers := []string{}
+		if len(allTaskWorkerForObject.Data) > 0 {
+			for i := range allTaskWorkerForObject.Data {
+				if !utils.Contains(createdWorkers, allTaskWorkerForObject.Data[i].WorkerId.Hex()) {
+					newTaskWorker := domain.TaskWorker{
+						ObjectId:    allTaskWorkerForObject.Data[i].ObjectId,
+						OrderId:     result.OrderId,
+						TaskId:      result.ID,
+						OperationId: result.OperationId,
+						WorkerId:    allTaskWorkerForObject.Data[i].WorkerId,
+						SortOrder:   allTaskWorkerForObject.Data[i].SortOrder,
+						StatusId:    result.StatusId,
+						Status:      result.Status,
+						From:        allTaskWorkerForObject.Data[i].From,
+						To:          allTaskWorkerForObject.Data[i].To,
+						TypeGo:      allTaskWorkerForObject.Data[i].TypeGo,
+					}
+					insertTaskWorker, err := s.Services.TaskWorker.CreateTaskWorker(userID, &newTaskWorker, 0)
+					if err != nil {
+						return result, err
+					}
+					createdWorkers = append(createdWorkers, insertTaskWorker.WorkerId.Hex())
+				}
+			}
+		}
+	}
 
 	return result, err
 }
@@ -179,11 +220,117 @@ func (s *TaskService) UpdateTask(id string, userID string, data *domain.TaskInpu
 	// 	fmt.Println(response.PushMessage.To, "failed")
 	// }
 
+	_, err = s.CheckStatusOrder(userID, result)
+	if err != nil {
+		return result, err
+	}
+
+	s.Hub.HandleMessage(domain.Message{Type: "message", Method: "PATCH", Sender: userID, Recipient: "sobesednikID.Hex()", Content: result, ID: "room1", Service: "task"})
+
 	return result, err
 }
 
 func (s *TaskService) DeleteTask(id string) (*domain.Task, error) {
 	result, err := s.repo.DeleteTask(id)
+
+	_, err = s.CheckStatusOrder("userID", result)
+	if err != nil {
+		return result, err
+	}
+
+	s.Hub.HandleMessage(domain.Message{Type: "message", Method: "DELETE", Sender: "userID", Recipient: "sobesednikID.Hex()", Content: result, ID: "room1", Service: "task"})
+
+	return result, err
+}
+
+func (s *TaskService) CheckStatusOrder(userID string, result *domain.Task) (*domain.Task, error) {
+	// check all tasks for change status order.
+	orderId := result.OrderId.Hex()
+	tasksForOrder, err := s.FindTaskPopulate(domain.TaskFilter{OrderId: []*string{&orderId}})
+
+	type CheckedStruct struct {
+		Status      int64
+		CountFinish int
+		CountAll    int
+	}
+
+	stolyarComplete := CheckedStruct{
+		Status:      0,
+		CountFinish: 0,
+		CountAll:    0,
+	}
+	malyarComplete := CheckedStruct{
+		Status:      0,
+		CountFinish: 0,
+		CountAll:    0,
+	}
+	montajComplete := CheckedStruct{
+		Status:      0,
+		CountFinish: 0,
+		CountAll:    0,
+	}
+	// var stolyarComplete int64
+	// stolyarComplete = 1
+
+	// var malyarComplete int64
+	// malyarComplete = 1
+
+	// var montajComplete int64
+	// montajComplete = 1
+
+	for i := range tasksForOrder.Data {
+		fmt.Println("range ", i, ":", tasksForOrder.Data[i].Status, tasksForOrder.Data[i].Operation.Group)
+		if tasksForOrder.Data[i].Operation.Group == "2" {
+			stolyarComplete.CountAll = stolyarComplete.CountAll + 1
+			if utils.Contains([]string{"finish", "autofinish"}, tasksForOrder.Data[i].Status) {
+				stolyarComplete.CountFinish += 1
+			}
+			// stolyarComplete.Status = 0
+		}
+		if tasksForOrder.Data[i].Operation.Group == "3" {
+			malyarComplete.CountAll = malyarComplete.CountAll + 1
+			if utils.Contains([]string{"finish", "autofinish"}, tasksForOrder.Data[i].Status) {
+				malyarComplete.CountFinish += 1
+			}
+			// malyarComplete.Status = 0
+		}
+		if tasksForOrder.Data[i].Operation.Group == "5" {
+			montajComplete.CountAll = montajComplete.CountAll + 1
+			if utils.Contains([]string{"finish", "autofinish"}, tasksForOrder.Data[i].Status) {
+				montajComplete.CountFinish += 1
+			}
+			// montajComplete.Status = 0
+		}
+	}
+
+	if stolyarComplete.CountAll == stolyarComplete.CountFinish && stolyarComplete.CountAll > 0 {
+		stolyarComplete.Status = 1
+	}
+	if malyarComplete.CountAll == malyarComplete.CountFinish && malyarComplete.CountAll > 0 {
+		malyarComplete.Status = 1
+	}
+	if montajComplete.CountAll == montajComplete.CountFinish && montajComplete.CountAll > 0 {
+		montajComplete.Status = 1
+	}
+	fmt.Println(stolyarComplete, malyarComplete, montajComplete)
+
+	dataUpdateOrder := &domain.OrderInput{}
+	// if result.Task.Operation.Group == "2" {
+	dataUpdateOrder.StolyarComplete = &stolyarComplete.Status
+	// }
+	// if result.Task.Operation.Group == "3" {
+	dataUpdateOrder.MalyarComplete = &malyarComplete.Status
+	// }
+	// if result.Task.Operation.Group == "5" {
+	dataUpdateOrder.MontajComplete = &montajComplete.Status
+	// }
+
+	// fmt.Println("update taskWorker dataUpdateOrder: ", *dataUpdateOrder.StolyarComplete, *dataUpdateOrder.MalyarComplete)
+
+	_, err = s.orderService.UpdateOrder(result.OrderId.Hex(), userID, dataUpdateOrder)
+	if err != nil {
+		return result, err
+	}
 
 	return result, err
 }

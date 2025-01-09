@@ -88,6 +88,7 @@ type Object interface {
 type Task interface {
 	CreateTask(userID string, data *domain.Task) (*domain.Task, error)
 	FindTask(params domain.RequestParams) (domain.Response[domain.Task], error)
+	FindTaskPopulate(filter domain.TaskFilter) (domain.Response[domain.Task], error)
 	UpdateTask(id string, userID string, data *domain.TaskInput) (*domain.Task, error)
 	DeleteTask(id string) (*domain.Task, error)
 }
@@ -99,11 +100,35 @@ type TaskMontaj interface {
 	DeleteTaskMontaj(id string) (*domain.TaskMontaj, error)
 }
 
+type WorkTime interface {
+	CreateWorkTime(userID string, data *domain.WorkTime) (*domain.WorkTime, error)
+	FindWorkTime(input domain.WorkTimeFilter) (domain.Response[domain.WorkTime], error)
+	FindWorkTimePopulate(input domain.WorkTimeFilter) (domain.Response[domain.WorkTime], error)
+	UpdateWorkTime(id string, userID string, data *domain.WorkTimeInput) (*domain.WorkTime, error)
+	DeleteWorkTime(id string) (*domain.WorkTime, error)
+}
+
+type TaskHistory interface {
+	CreateTaskHistory(userID string, data *domain.TaskHistory) (*domain.TaskHistory, error)
+	FindTaskHistory(input domain.TaskHistoryFilter) (domain.Response[domain.TaskHistory], error)
+	FindTaskHistoryPopulate(input domain.TaskHistoryFilter) (domain.Response[domain.TaskHistory], error)
+	UpdateTaskHistory(id string, userID string, data *domain.TaskHistoryInput) (*domain.TaskHistory, error)
+	DeleteTaskHistory(id string) (*domain.TaskHistory, error)
+}
+
+type TaskMontajWorker interface {
+	FindTaskMontajWorkerPopulate(input *domain.TaskMontajWorkerFilter) (domain.Response[domain.TaskMontajWorker], error)
+	CreateTaskMontajWorker(userID string, data *domain.TaskMontajWorker) (*domain.TaskMontajWorker, error)
+	FindTaskMontajWorker(params domain.RequestParams) (domain.Response[domain.TaskMontajWorker], error)
+	UpdateTaskMontajWorker(id string, userID string, data *domain.TaskMontajWorkerInput) (*domain.TaskMontajWorker, error)
+	DeleteTaskMontajWorker(id string) (*domain.TaskMontajWorker, error)
+}
+
 type TaskWorker interface {
-	FindTaskWorkerPopulate(params domain.RequestParams) (domain.Response[domain.TaskWorker], error)
-	CreateTaskWorker(userID string, data *domain.TaskWorker) (*domain.TaskWorker, error)
-	FindTaskWorker(params domain.RequestParams) (domain.Response[domain.TaskWorker], error)
-	UpdateTaskWorker(id string, userID string, data *domain.TaskWorkerInput) (*domain.TaskWorker, error)
+	CreateTaskWorker(userID string, data *domain.TaskWorker, autoCreate int) (*domain.TaskWorker, error)
+	FindTaskWorkerPopulate(input *domain.TaskWorkerFilter) (domain.Response[domain.TaskWorker], error)
+	// FindTaskWorker(params domain.RequestParams) (domain.Response[domain.TaskWorker], error)
+	UpdateTaskWorker(id string, userID string, data *domain.TaskWorkerInput, autoUpdate int) (*domain.TaskWorker, error)
 	DeleteTaskWorker(id string) (*domain.TaskWorker, error)
 }
 
@@ -200,12 +225,15 @@ type Services struct {
 	Question
 	Ticket
 	Task
-	TaskMontaj
 	TaskWorker
 	TaskStatus
+	TaskMontaj
+	TaskMontajWorker
 	Operation
 	Pay
 	Object
+	WorkTime
+	TaskHistory
 }
 
 type ConfigServices struct {
@@ -247,32 +275,42 @@ func NewServices(cfgService *ConfigServices) *Services {
 	Message := NewMessageService(cfgService.Repositories.Message, cfgService.Hub, MessageRoom)
 	Question := NewQuestionService(cfgService.Repositories.Question, cfgService.Hub)
 	Ticket := NewTicketService(cfgService.Repositories.Ticket)
-	Order := NewOrderService(cfgService.Repositories.Order, User)
+	Operation := NewOperationService(cfgService.Repositories.Operation, User)
+	Order := NewOrderService(cfgService.Repositories.Order, User, cfgService.Hub, Operation)
+	WorkTime := NewWorkTimeService(cfgService.Repositories.WorkTime, cfgService.Hub, User, TaskStatus)
 	Task := NewTaskService(cfgService.Repositories.Task, cfgService.Hub, User, TaskStatus, Order)
+	TaskWorker := NewTaskWorkerService(cfgService.Repositories.TaskWorker, User, TaskStatus, Task, cfgService.Hub)
 	TaskMontaj := NewTaskMontajService(cfgService.Repositories.TaskMontaj, cfgService.Hub, User, TaskStatus)
+	TaskHistory := NewTaskHistoryService(cfgService.Repositories.TaskHistory, cfgService.Hub, User, TaskStatus)
 
-	return &Services{
-		Authorization: Authorization,
-		Action:        Action,
-		Post:          Post,
-		User:          User,
-		Lang:          Lang,
-		Country:       Country,
-		Image:         Image,
-		Product:       Product,
-		Message:       Message,
-		MessageRoom:   MessageRoom,
-		Offer:         NewOfferService(cfgService.Repositories.Offer, User, cfgService.Hub, Message, MessageRoom),
-		Question:      Question,
-		Ticket:        Ticket,
-		Order:         Order,
-		Task:          Task,
-		TaskWorker:    NewTaskWorkerService(cfgService.Repositories.TaskWorker, User, TaskStatus, Task, cfgService.Hub),
-		Operation:     NewOperationService(cfgService.Repositories.Operation, User),
-		Role:          Role,
-		TaskStatus:    TaskStatus,
-		TaskMontaj:    TaskMontaj,
-		Pay:           NewPayService(cfgService.Repositories.Pay, User, cfgService.Hub),
-		Object:        NewObjectService(cfgService.Repositories.Object, cfgService.Hub, User),
+	services := &Services{
+		Authorization:    Authorization,
+		Action:           Action,
+		Post:             Post,
+		User:             User,
+		Lang:             Lang,
+		Country:          Country,
+		Image:            Image,
+		Product:          Product,
+		Message:          Message,
+		MessageRoom:      MessageRoom,
+		Offer:            NewOfferService(cfgService.Repositories.Offer, User, cfgService.Hub, Message, MessageRoom),
+		Question:         Question,
+		Ticket:           Ticket,
+		Order:            Order,
+		Task:             Task,
+		TaskWorker:       TaskWorker,
+		Operation:        Operation,
+		Role:             Role,
+		TaskStatus:       TaskStatus,
+		TaskMontaj:       TaskMontaj,
+		TaskMontajWorker: NewTaskMontajWorkerService(cfgService.Repositories.TaskMontajWorker, User, TaskStatus, Task, cfgService.Hub),
+		Pay:              NewPayService(cfgService.Repositories.Pay, User, cfgService.Hub),
+		Object:           NewObjectService(cfgService.Repositories.Object, cfgService.Hub, User),
+		WorkTime:         WorkTime,
+		TaskHistory:      TaskHistory,
 	}
+	Task.Services = services
+	TaskWorker.Services = services
+	return services
 }

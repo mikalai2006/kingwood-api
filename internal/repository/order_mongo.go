@@ -81,6 +81,17 @@ func (r *OrderMongo) FindOrder(input *domain.OrderFilter) (domain.Response[domai
 	q := bson.D{}
 
 	// Filters
+	if input.ID != nil && len(input.ID) > 0 {
+		ids := []primitive.ObjectID{}
+		for key, _ := range input.ID {
+			idObjectPrimitive, err := primitive.ObjectIDFromHex(*input.ID[key])
+			if err != nil {
+				return response, err
+			}
+			ids = append(ids, idObjectPrimitive)
+		}
+		q = append(q, bson.E{"_id", bson.D{{"$in", ids}}})
+	}
 	if input.Name != nil && *input.Name != "" {
 		strName := primitive.Regex{Pattern: fmt.Sprintf("%v", *input.Name), Options: "i"}
 		q = append(q, bson.E{"name", bson.D{{"$regex", strName}}})
@@ -91,16 +102,22 @@ func (r *OrderMongo) FindOrder(input *domain.OrderFilter) (domain.Response[domai
 	if input.Status != nil {
 		q = append(q, bson.E{"status", input.Status})
 	}
-	if input.ObjectIds != nil {
+	if input.ObjectId != nil {
 		objectIds := []primitive.ObjectID{}
-		for key, _ := range input.ObjectIds {
-			idObjectPrimitive, err := primitive.ObjectIDFromHex(input.ObjectIds[key])
+		for key, _ := range input.ObjectId {
+			idObjectPrimitive, err := primitive.ObjectIDFromHex(input.ObjectId[key])
 			if err != nil {
 				return response, err
 			}
 			objectIds = append(objectIds, idObjectPrimitive)
 		}
 		q = append(q, bson.E{"objectId", bson.D{{"$in", objectIds}}})
+	}
+	if input.StolyarComplete != nil {
+		q = append(q, bson.E{"stolyarComplete", input.StolyarComplete})
+	}
+	if input.MalyarComplete != nil {
+		q = append(q, bson.E{"malyarComplete", input.MalyarComplete})
 	}
 
 	pipe := mongo.Pipeline{}
@@ -204,67 +221,67 @@ func (r *OrderMongo) GetAllOrder(params domain.RequestParams) (domain.Response[d
 	return response, nil
 }
 
-func (r *OrderMongo) GqlGetOrders(params domain.RequestParams) ([]*domain.Order, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
-	defer cancel()
+// func (r *OrderMongo) GqlGetOrders(params domain.RequestParams) ([]*domain.Order, error) {
+// 	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
+// 	defer cancel()
 
-	var results []*domain.Order
-	pipe, err := CreatePipeline(params, &r.i18n)
-	if err != nil {
-		return results, err
-	}
+// 	var results []*domain.Order
+// 	pipe, err := CreatePipeline(params, &r.i18n)
+// 	if err != nil {
+// 		return results, err
+// 	}
 
-	pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
-		"from": "users",
-		"as":   "usera",
-		"let":  bson.D{{Key: "userId", Value: "$user_id"}},
-		"pipeline": mongo.Pipeline{
-			bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$_id", "$$userId"}}}}},
-			bson.D{{"$limit", 1}},
-			bson.D{{
-				Key: "$lookup",
-				Value: bson.M{
-					"from": tblImage,
-					"as":   "images",
-					"let":  bson.D{{Key: "serviceId", Value: bson.D{{"$toString", "$_id"}}}},
-					"pipeline": mongo.Pipeline{
-						bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$service_id", "$$serviceId"}}}}},
-					},
-				},
-			}},
-		},
-	}}})
-	pipe = append(pipe, bson.D{{Key: "$set", Value: bson.M{"user": bson.M{"$first": "$usera"}}}})
+// 	pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
+// 		"from": "users",
+// 		"as":   "usera",
+// 		"let":  bson.D{{Key: "userId", Value: "$user_id"}},
+// 		"pipeline": mongo.Pipeline{
+// 			bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$_id", "$$userId"}}}}},
+// 			bson.D{{"$limit", 1}},
+// 			bson.D{{
+// 				Key: "$lookup",
+// 				Value: bson.M{
+// 					"from": tblImage,
+// 					"as":   "images",
+// 					"let":  bson.D{{Key: "serviceId", Value: bson.D{{"$toString", "$_id"}}}},
+// 					"pipeline": mongo.Pipeline{
+// 						bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$service_id", "$$serviceId"}}}}},
+// 					},
+// 				},
+// 			}},
+// 		},
+// 	}}})
+// 	pipe = append(pipe, bson.D{{Key: "$set", Value: bson.M{"user": bson.M{"$first": "$usera"}}}})
 
-	cursor, err := r.db.Collection(TblOrder).Aggregate(ctx, pipe) // Find(ctx, params.Filter, opts)
-	if err != nil {
-		return results, err
-	}
-	defer cursor.Close(ctx)
+// 	cursor, err := r.db.Collection(TblOrder).Aggregate(ctx, pipe) // Find(ctx, params.Filter, opts)
+// 	if err != nil {
+// 		return results, err
+// 	}
+// 	defer cursor.Close(ctx)
 
-	if er := cursor.All(ctx, &results); er != nil {
-		return results, er
-	}
+// 	if er := cursor.All(ctx, &results); er != nil {
+// 		return results, er
+// 	}
 
-	resultSlice := make([]*domain.Order, len(results))
-	// for i, d := range results {
-	// 	resultSlice[i] = d
-	// }
-	copy(resultSlice, results)
+// 	resultSlice := make([]*domain.Order, len(results))
+// 	// for i, d := range results {
+// 	// 	resultSlice[i] = d
+// 	// }
+// 	copy(resultSlice, results)
 
-	// count, err := r.db.Collection(TblOrder).CountDocuments(ctx, bson.M{})
-	// if err != nil {
-	// 	return results, err
-	// }
+// 	// count, err := r.db.Collection(TblOrder).CountDocuments(ctx, bson.M{})
+// 	// if err != nil {
+// 	// 	return results, err
+// 	// }
 
-	// results = []*domain.Order{
-	// 	Total: int(count),
-	// 	Skip:  int(params.Options.Skip),
-	// 	Limit: int(params.Options.Limit),
-	// 	Data:  resultSlice,
-	// }
-	return results, nil
-}
+// 	// results = []*domain.Order{
+// 	// 	Total: int(count),
+// 	// 	Skip:  int(params.Options.Skip),
+// 	// 	Limit: int(params.Options.Limit),
+// 	// 	Data:  resultSlice,
+// 	// }
+// 	return results, nil
+// }
 
 func (r *OrderMongo) CreateOrder(userID string, data *domain.Order) (*domain.Order, error) {
 	var result *domain.Order
@@ -316,9 +333,15 @@ func (r *OrderMongo) CreateOrder(userID string, data *domain.Order) (*domain.Ord
 		return nil, err
 	}
 
-	err = r.db.Collection(TblOrder).FindOne(ctx, bson.M{"_id": res.InsertedID}).Decode(&result)
+	insertedID := res.InsertedID.(primitive.ObjectID).Hex()
+	insertedItem, err := r.FindOrder(&domain.OrderFilter{ID: []*string{&insertedID}})
+	// r.db.Collection(TblOrder).FindOne(ctx, bson.M{"_id": res.InsertedID}).Decode(&result)
 	if err != nil {
 		return nil, err
+	}
+
+	if len(insertedItem.Data) > 0 {
+		result = &insertedItem.Data[0]
 	}
 	// } else {
 	// 	updatedAt := Order.UpdatedAt
@@ -373,6 +396,22 @@ func (r *OrderMongo) UpdateOrder(id string, userID string, data *domain.OrderInp
 	if data.Description != "" {
 		newData["description"] = data.Description
 	}
+	if data.StolyarComplete != nil {
+		newData["stolyarComplete"] = data.StolyarComplete
+	}
+	if data.MalyarComplete != nil {
+		newData["malyarComplete"] = data.MalyarComplete
+	}
+	if data.GoComplete != nil {
+		newData["goComplete"] = data.GoComplete
+	}
+	if data.MontajComplete != nil {
+		newData["montajComplete"] = data.MontajComplete
+	}
+
+	if !data.DateOtgruzka.IsZero() {
+		newData["dateOtgruzka"] = data.DateOtgruzka
+	}
 	// if data.NeedMontaj != nil {
 	// 	newData["needMontaj"] = data.NeedMontaj
 	// }
@@ -391,10 +430,38 @@ func (r *OrderMongo) UpdateOrder(id string, userID string, data *domain.OrderInp
 	if err != nil {
 		return result, err
 	}
+	// collection.FindOneAndUpdate(ctx, filter, bson.M{"$set": newData}).Decode(&result)
+	// // if err != nil {
+	// // 	return result, err
+	// // }
+	// if data.StolyarComplete != nil ||
+	// 	data.MalyarComplete != nil ||
+	// 	data.MontajComplete != nil {
+	// 	statusCompleted := int64(1)
+	// 	dataUpdate := bson.M{}
+	// 	// if result.MalyarComplete == &statusCompleted  && result.StolyarComplete == &statusCompleted {
+	// 	// 	dataUpdate["goComplete"] = 1
+	// 	// }
+	// 	if result.MalyarComplete == &statusCompleted && result.StolyarComplete == &statusCompleted && result.MontajComplete == &statusCompleted {
+	// 		dataUpdate["status"] = 100
+	// 	} else {
+	// 		dataUpdate["status"] = 1
+	// 	}
 
-	err = collection.FindOne(ctx, filter).Decode(&result)
+	// 	_, err = collection.UpdateOne(ctx, filter, bson.M{"$set": newData})
+	// 	if err != nil {
+	// 		return result, err
+	// 	}
+	// }
+
+	orders, err := r.FindOrder(&domain.OrderFilter{ID: []*string{&id}})
+	// collection.FindOne(ctx, filter).Decode(&result)
 	if err != nil {
 		return result, err
+	}
+
+	if len(orders.Data) > 0 {
+		result = &orders.Data[0]
 	}
 
 	return result, nil

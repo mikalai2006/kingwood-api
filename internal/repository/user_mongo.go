@@ -45,6 +45,7 @@ func (r *UserMongo) Iam(userID string) (domain.User, error) {
 	}
 
 	// add populate.
+	// images.
 	pipe = append(pipe, bson.D{{
 		Key: "$lookup",
 		Value: bson.M{
@@ -58,6 +59,34 @@ func (r *UserMongo) Iam(userID string) (domain.User, error) {
 			},
 		},
 	}})
+	// post.
+	pipe = append(pipe, bson.D{{
+		Key: "$lookup",
+		Value: bson.M{
+			"from": TblPost,
+			"as":   "posts",
+			// "localField":   "_id",
+			// "foreignField": "service_id",
+			"let": bson.D{{Key: "postId", Value: "$postId"}},
+			"pipeline": mongo.Pipeline{
+				bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$_id", "$$postId"}}}}},
+			},
+		},
+	}})
+	pipe = append(pipe, bson.D{{Key: "$set", Value: bson.M{"postObject": bson.M{"$first": "$posts"}}}})
+	// role.
+	pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
+		"from": TblRole,
+		"as":   "rolea",
+		// "localField":   "user_id",
+		// "foreignField": "_id",
+		"let": bson.D{{Key: "roleId", Value: "$roleId"}},
+		"pipeline": mongo.Pipeline{
+			bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$_id", "$$roleId"}}}}},
+			bson.D{{"$limit", 1}},
+		},
+	}}})
+	pipe = append(pipe, bson.D{{Key: "$set", Value: bson.M{"roleObject": bson.M{"$first": "$rolea"}}}})
 
 	// add populate.
 	// pipe = append(pipe, bson.D{{
@@ -477,7 +506,7 @@ func (r *UserMongo) UpdateUser(id string, user *domain.UserInput) (domain.User, 
 	if user.Phone != "" {
 		newData["phone"] = user.Phone
 	}
-	if user.Birthday.String() != "" {
+	if user.Birthday != nil {
 		newData["birthday"] = user.Birthday
 	}
 	if user.Oklad != nil {

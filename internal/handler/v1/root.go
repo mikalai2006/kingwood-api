@@ -45,6 +45,9 @@ func (h *HandlerV1) Init(api *gin.RouterGroup) {
 		h.RegisterCountry(v1)
 		h.registerQuestion(v1)
 		h.registerWs(v1)
+		h.registerOperation(v1)
+		h.registerTaskStatus(v1)
+		h.registerObject(v1)
 
 		authenticated := v1.Group("", h.SetUserFromRequest)
 		{
@@ -54,15 +57,16 @@ func (h *HandlerV1) Init(api *gin.RouterGroup) {
 			// h.registerMessage(authenticated)
 			// h.registerMessageRoom(authenticated)
 			h.registerOrder(authenticated)
-			h.registerTaskStatus(authenticated)
 			// h.registerOffer(authenticated)
-			h.registerOperation(authenticated)
+			// h.registerOperation(authenticated)
 			h.registerTask(authenticated)
 			h.registerTaskWorker(authenticated)
-			h.registerTaskMontaj(authenticated)
+			// h.registerTaskMontaj(authenticated)
+			// h.registerTaskMontajWorker(authenticated)
 			// h.registerTicket(authenticated)
 			h.RegisterUser(authenticated)
-			h.registerObject(authenticated)
+			h.registerWorkTime(authenticated)
+			h.registerTaskHistory(authenticated)
 		}
 
 		v1.GET("/", func(c *gin.Context) {

@@ -16,10 +16,11 @@ import (
 func (h *HandlerV1) registerTaskWorker(router *gin.RouterGroup) {
 	route := router.Group("/task_worker")
 	route.POST("", h.CreateTaskWorker)
-	route.GET("", h.FindTaskWorker)
-	route.GET("/populate", h.FindTaskWorkerPopulate)
+	// route.GET("", h.FindTaskWorker)
+	route.POST("/populate", h.FindTaskWorkerPopulate)
 	route.PATCH("/:id", h.SetUserFromRequest, h.UpdateTaskWorker)
 	route.POST("/list", h.CreateTaskWorkerList)
+	route.DELETE("/:id", h.DeleteTaskWorker)
 }
 
 func (h *HandlerV1) CreateTaskWorker(c *gin.Context) {
@@ -92,34 +93,37 @@ func (h *HandlerV1) CreateTaskWorkerList(c *gin.Context) {
 // @Failure 500 {object} domain.ErrorResponse
 // @Failure default {object} domain.ErrorResponse
 // @Router /api/TaskWorker [get].
-func (h *HandlerV1) FindTaskWorker(c *gin.Context) {
-	appG := app.Gin{C: c}
+// func (h *HandlerV1) FindTaskWorker(c *gin.Context) {
+// 	appG := app.Gin{C: c}
 
-	params, err := utils.GetParamsFromRequest(c, domain.TaskWorkerInputData{}, &h.i18n)
-	if err != nil {
-		appG.ResponseError(http.StatusBadRequest, err, nil)
-		return
-	}
+// 	params, err := utils.GetParamsFromRequest(c, domain.TaskWorkerInputData{}, &h.i18n)
+// 	if err != nil {
+// 		appG.ResponseError(http.StatusBadRequest, err, nil)
+// 		return
+// 	}
 
-	TaskWorkers, err := h.Services.TaskWorker.FindTaskWorker(params)
-	if err != nil {
-		appG.ResponseError(http.StatusBadRequest, err, nil)
-		return
-	}
+// 	TaskWorkers, err := h.Services.TaskWorker.FindTaskWorker(params)
+// 	if err != nil {
+// 		appG.ResponseError(http.StatusBadRequest, err, nil)
+// 		return
+// 	}
 
-	c.JSON(http.StatusOK, TaskWorkers)
-}
-
+//		c.JSON(http.StatusOK, TaskWorkers)
+//	}
 func (h *HandlerV1) FindTaskWorkerPopulate(c *gin.Context) {
 	appG := app.Gin{C: c}
-
-	params, err := utils.GetParamsFromRequest(c, domain.TaskWorkerInputData{}, &h.i18n)
-	if err != nil {
-		appG.ResponseError(http.StatusBadRequest, err, nil)
+	// params, err := utils.GetParamsFromRequest(c, domain.TaskWorkerInputData{}, &h.i18n)
+	// if err != nil {
+	// 	appG.ResponseError(http.StatusBadRequest, err, nil)
+	// 	return
+	// }
+	var input *domain.TaskWorkerFilter
+	if er := c.BindJSON(&input); er != nil {
+		appG.ResponseError(http.StatusBadRequest, er, nil)
 		return
 	}
 
-	TaskWorkers, err := h.Services.TaskWorker.FindTaskWorkerPopulate(params)
+	TaskWorkers, err := h.Services.TaskWorker.FindTaskWorkerPopulate(input)
 	if err != nil {
 		appG.ResponseError(http.StatusBadRequest, err, nil)
 		return
@@ -167,17 +171,13 @@ func (h *HandlerV1) UpdateTaskWorker(c *gin.Context) {
 		return
 	}
 
-	document, err := h.Services.TaskWorker.UpdateTaskWorker(id, userID, &data)
+	document, err := h.Services.TaskWorker.UpdateTaskWorker(id, userID, &data, 1)
 	if err != nil {
 		appG.ResponseError(http.StatusInternalServerError, err, nil)
 		return
 	}
 
 	c.JSON(http.StatusOK, document)
-}
-
-func (h *HandlerV1) DeleteTaskWorker(c *gin.Context) {
-
 }
 
 func (h *HandlerV1) CreateOrExistTaskWorker(c *gin.Context, input *domain.TaskWorker) (*domain.TaskWorker, error) {
@@ -210,10 +210,30 @@ func (h *HandlerV1) CreateOrExistTaskWorker(c *gin.Context, input *domain.TaskWo
 	// 	return &existTaskWorkers.Data[0], nil
 	// }
 
-	result, err = h.Services.TaskWorker.CreateTaskWorker(userID, input)
+	result, err = h.Services.TaskWorker.CreateTaskWorker(userID, input, 1)
 	if err != nil {
 		appG.ResponseError(http.StatusBadRequest, err, nil)
 		return result, err
 	}
 	return result, nil
+}
+
+func (h *HandlerV1) DeleteTaskWorker(c *gin.Context) {
+	appG := app.Gin{C: c}
+
+	id := c.Param("id")
+	if id == "" {
+		// c.AbortWithError(http.StatusBadRequest, errors.New("for remove need id"))
+		appG.ResponseError(http.StatusBadRequest, errors.New("for remove need id"), nil)
+		return
+	}
+
+	user, err := h.Services.TaskWorker.DeleteTaskWorker(id) // , input
+	if err != nil {
+		// c.AbortWithError(http.StatusBadRequest, err)
+		appG.ResponseError(http.StatusBadRequest, err, nil)
+		return
+	}
+
+	c.JSON(http.StatusOK, user)
 }

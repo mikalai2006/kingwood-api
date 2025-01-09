@@ -13,15 +13,17 @@ import (
 	"github.com/mikalai2006/kingwood-api/pkg/app"
 )
 
-func (h *HandlerV1) registerOrder(router *gin.RouterGroup) {
-	route := router.Group("/order")
-	route.POST("/find", h.FindOrder)
-	route.POST("", h.CreateOrder)
-	route.PATCH("/:id", h.SetUserFromRequest, h.UpdateOrder)
-	route.POST("/list", h.CreateOrderList)
+func (h *HandlerV1) registerTaskMontajWorker(router *gin.RouterGroup) {
+	route := router.Group("/task_montaj_worker")
+	route.POST("", h.CreateTaskMontajWorker)
+	route.GET("", h.FindTaskMontajWorker)
+	route.POST("/populate", h.FindTaskMontajWorkerPopulate)
+	route.PATCH("/:id", h.SetUserFromRequest, h.UpdateTaskMontajWorker)
+	route.POST("/list", h.CreateTaskMontajWorkerList)
+	route.DELETE("/:id", h.DeleteTaskMontajWorker)
 }
 
-func (h *HandlerV1) CreateOrder(c *gin.Context) {
+func (h *HandlerV1) CreateTaskMontajWorker(c *gin.Context) {
 	appG := app.Gin{C: c}
 	// userID, err := middleware.GetUID(c)
 	// if err != nil {
@@ -30,22 +32,22 @@ func (h *HandlerV1) CreateOrder(c *gin.Context) {
 	// 	return
 	// }
 
-	var input *domain.Order
+	var input *domain.TaskMontajWorker
 	if er := c.BindJSON(&input); er != nil {
 		appG.ResponseError(http.StatusBadRequest, er, nil)
 		return
 	}
 
-	Order, err := h.CreateOrExistOrder(c, input) //h.services.Order.CreateOrder(userID, input)
+	TaskMontajWorker, err := h.CreateOrExistTaskMontajWorker(c, input) //h.services.TaskMontajWorker.CreateTaskMontajWorker(userID, input)
 	if err != nil {
 		appG.ResponseError(http.StatusBadRequest, err, nil)
 		return
 	}
 
-	c.JSON(http.StatusOK, Order)
+	c.JSON(http.StatusOK, TaskMontajWorker)
 }
 
-func (h *HandlerV1) CreateOrderList(c *gin.Context) {
+func (h *HandlerV1) CreateTaskMontajWorkerList(c *gin.Context) {
 	appG := app.Gin{C: c}
 	userID, err := middleware.GetUID(c)
 	if err != nil || userID == "" {
@@ -54,7 +56,7 @@ func (h *HandlerV1) CreateOrderList(c *gin.Context) {
 		return
 	}
 
-	var input []*domain.Order
+	var input []*domain.TaskMontajWorker
 	if er := c.BindJSON(&input); er != nil {
 		appG.ResponseError(http.StatusBadRequest, er, nil)
 		return
@@ -65,90 +67,74 @@ func (h *HandlerV1) CreateOrderList(c *gin.Context) {
 		return
 	}
 
-	var result []*domain.Order
+	var result []*domain.TaskMontajWorker
 	for i := range input {
-		Order, err := h.CreateOrExistOrder(c, input[i]) //h.services.Order.CreateOrder(userID, input)
+		TaskMontajWorker, err := h.CreateOrExistTaskMontajWorker(c, input[i]) //h.services.TaskMontajWorker.CreateTaskMontajWorker(userID, input)
 		if err != nil {
 			appG.ResponseError(http.StatusBadRequest, err, nil)
 			return
 		}
-		result = append(result, Order)
+		result = append(result, TaskMontajWorker)
 	}
 
 	c.JSON(http.StatusOK, result)
 }
 
-// @Summary Order Get all Orders
+// @Summary Find TaskMontajWorkers by params
 // @Security ApiKeyAuth
-// @Tags Order
-// @Description get all Orders
-// @ModuleID Order
+// @Tags TaskMontajWorker
+// @Description Input params for search TaskMontajWorkers
+// @ModuleID TaskMontajWorker
 // @Accept  json
 // @Produce  json
-// @Success 200 {object} []domain.Order
+// @Param input query TaskMontajWorkerInput true "params for search TaskMontajWorker"
+// @Success 200 {object} []domain.TaskMontajWorker
 // @Failure 400,404 {object} domain.ErrorResponse
 // @Failure 500 {object} domain.ErrorResponse
 // @Failure default {object} domain.ErrorResponse
-// @Router /api/Order [get].
-// func (h *HandlerV1) GetAllOrder(c *gin.Context) {
-// 	appG := app.Gin{C: c}
-
-// 	params, err := utils.GetParamsFromRequest(c, domain.Order{}, &h.i18n)
-// 	if err != nil {
-// 		appG.ResponseError(http.StatusBadRequest, err, nil)
-// 		return
-// 	}
-
-// 	Orders, err := h.Services.Order.GetAllOrder(params)
-// 	if err != nil {
-// 		appG.ResponseError(http.StatusBadRequest, err, nil)
-// 		return
-// 	}
-
-// 	c.JSON(http.StatusOK, Orders)
-// }
-
-// @Summary Find Orders by params
-// @Security ApiKeyAuth
-// @Tags Order
-// @Description Input params for search Orders
-// @ModuleID Order
-// @Accept  json
-// @Produce  json
-// @Param input query OrderInput true "params for search Order"
-// @Success 200 {object} []domain.Order
-// @Failure 400,404 {object} domain.ErrorResponse
-// @Failure 500 {object} domain.ErrorResponse
-// @Failure default {object} domain.ErrorResponse
-// @Router /api/Order [get].
-func (h *HandlerV1) FindOrder(c *gin.Context) {
+// @Router /api/TaskMontajWorker [get].
+func (h *HandlerV1) FindTaskMontajWorker(c *gin.Context) {
 	appG := app.Gin{C: c}
 
-	// params, err := utils.GetParamsFromRequest(c, domain.OrderInputData{}, &h.i18n)
-	// if err != nil {
-	// 	appG.ResponseError(http.StatusBadRequest, err, nil)
-	// 	return
-	// }
-	var input *domain.OrderFilter
-	if er := c.BindJSON(&input); er != nil {
-		appG.ResponseError(http.StatusBadRequest, er, nil)
-		return
-	}
-
-	Orders, err := h.Services.Order.FindOrder(input)
+	params, err := utils.GetParamsFromRequest(c, domain.TaskMontajWorkerInputData{}, &h.i18n)
 	if err != nil {
 		appG.ResponseError(http.StatusBadRequest, err, nil)
 		return
 	}
 
-	c.JSON(http.StatusOK, Orders)
+	TaskMontajWorkers, err := h.Services.TaskMontajWorker.FindTaskMontajWorker(params)
+	if err != nil {
+		appG.ResponseError(http.StatusBadRequest, err, nil)
+		return
+	}
+
+	c.JSON(http.StatusOK, TaskMontajWorkers)
 }
 
-func (h *HandlerV1) GetOrderByID(c *gin.Context) {
+func (h *HandlerV1) FindTaskMontajWorkerPopulate(c *gin.Context) {
+	appG := app.Gin{C: c}
 
+	// params, err := utils.GetParamsFromRequest(c, domain.TaskMontajWorkerInputData{}, &h.i18n)
+	// if err != nil {
+	// 	appG.ResponseError(http.StatusBadRequest, err, nil)
+	// 	return
+	// }
+	var input *domain.TaskMontajWorkerFilter
+	if er := c.BindJSON(&input); er != nil {
+		appG.ResponseError(http.StatusBadRequest, er, nil)
+		return
+	}
+
+	TaskMontajWorkers, err := h.Services.TaskMontajWorker.FindTaskMontajWorkerPopulate(input)
+	if err != nil {
+		appG.ResponseError(http.StatusBadRequest, err, nil)
+		return
+	}
+
+	c.JSON(http.StatusOK, TaskMontajWorkers)
 }
 
-func (h *HandlerV1) UpdateOrder(c *gin.Context) {
+func (h *HandlerV1) UpdateTaskMontajWorker(c *gin.Context) {
 	appG := app.Gin{C: c}
 	userID, err := middleware.GetUID(c)
 	if err != nil {
@@ -181,13 +167,13 @@ func (h *HandlerV1) UpdateOrder(c *gin.Context) {
 		appG.ResponseError(http.StatusBadRequest, er, nil)
 		return
 	}
-	data, er := utils.BindJSON2[domain.OrderInput](a)
+	data, er := utils.BindJSON2[domain.TaskMontajWorkerInput](a)
 	if er != nil {
 		appG.ResponseError(http.StatusBadRequest, er, nil)
 		return
 	}
 
-	document, err := h.Services.Order.UpdateOrder(id, userID, &data)
+	document, err := h.Services.TaskMontajWorker.UpdateTaskMontajWorker(id, userID, &data)
 	if err != nil {
 		appG.ResponseError(http.StatusInternalServerError, err, nil)
 		return
@@ -196,11 +182,7 @@ func (h *HandlerV1) UpdateOrder(c *gin.Context) {
 	c.JSON(http.StatusOK, document)
 }
 
-func (h *HandlerV1) DeleteOrder(c *gin.Context) {
-
-}
-
-func (h *HandlerV1) CreateOrExistOrder(c *gin.Context, input *domain.Order) (*domain.Order, error) {
+func (h *HandlerV1) CreateOrExistTaskMontajWorker(c *gin.Context, input *domain.TaskMontajWorker) (*domain.TaskMontajWorker, error) {
 	appG := app.Gin{C: c}
 	userID, err := middleware.GetUID(c)
 	if err != nil {
@@ -208,7 +190,7 @@ func (h *HandlerV1) CreateOrExistOrder(c *gin.Context, input *domain.Order) (*do
 		appG.ResponseError(http.StatusUnauthorized, err, gin.H{"hello": "world"})
 		return nil, err
 	}
-	var result *domain.Order
+	var result *domain.TaskMontajWorker
 
 	// userIDPrimitive, err := primitive.ObjectIDFromHex(userID)
 	// if err != nil {
@@ -216,7 +198,7 @@ func (h *HandlerV1) CreateOrExistOrder(c *gin.Context, input *domain.Order) (*do
 	// 	return result, err
 	// }
 
-	// existOrders, err := h.services.Order.FindOrder(domain.RequestParams{
+	// existTaskMontajWorkers, err := h.services.TaskMontajWorker.FindTaskMontajWorker(domain.RequestParams{
 	// 	Options: domain.Options{Limit: 1},
 	// 	Filter:  bson.D{{"node_id", input.NodeID}, {"user_id", userIDPrimitive}},
 	// })
@@ -224,16 +206,36 @@ func (h *HandlerV1) CreateOrExistOrder(c *gin.Context, input *domain.Order) (*do
 	// 	appG.ResponseError(http.StatusBadRequest, err, nil)
 	// 	return result, err
 	// }
-	// if len(existOrders.Data) > 0 {
-	// 	fmt.Println("existOrders =")
+	// if len(existTaskMontajWorkers.Data) > 0 {
+	// 	fmt.Println("existTaskMontajWorkers =")
 	// 	// appG.ResponseError(http.StatusBadRequest, model.ErrNodedataVoteExistValue, nil)
-	// 	return &existOrders.Data[0], nil
+	// 	return &existTaskMontajWorkers.Data[0], nil
 	// }
 
-	result, err = h.Services.Order.CreateOrder(userID, input)
+	result, err = h.Services.TaskMontajWorker.CreateTaskMontajWorker(userID, input)
 	if err != nil {
 		appG.ResponseError(http.StatusBadRequest, err, nil)
 		return result, err
 	}
 	return result, nil
+}
+
+func (h *HandlerV1) DeleteTaskMontajWorker(c *gin.Context) {
+	appG := app.Gin{C: c}
+
+	id := c.Param("id")
+	if id == "" {
+		// c.AbortWithError(http.StatusBadRequest, errors.New("for remove need id"))
+		appG.ResponseError(http.StatusBadRequest, errors.New("for remove need id"), nil)
+		return
+	}
+
+	user, err := h.Services.TaskMontajWorker.DeleteTaskMontajWorker(id) // , input
+	if err != nil {
+		// c.AbortWithError(http.StatusBadRequest, err)
+		appG.ResponseError(http.StatusBadRequest, err, nil)
+		return
+	}
+
+	c.JSON(http.StatusOK, user)
 }

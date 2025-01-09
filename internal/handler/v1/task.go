@@ -17,6 +17,7 @@ func (h *HandlerV1) registerTask(router *gin.RouterGroup) {
 	route := router.Group("/task")
 	route.POST("", h.CreateTask)
 	route.GET("", h.FindTask)
+	route.POST("/populate", h.FindTaskPopulate)
 	route.PATCH("/:id", h.SetUserFromRequest, h.UpdateTask)
 	route.POST("/list", h.CreateTaskList)
 	route.POST("/sort", h.SortTaskList)
@@ -146,8 +147,22 @@ func (h *HandlerV1) FindTask(c *gin.Context) {
 	c.JSON(http.StatusOK, Tasks)
 }
 
-func (h *HandlerV1) GetTaskByID(c *gin.Context) {
+func (h *HandlerV1) FindTaskPopulate(c *gin.Context) {
+	appG := app.Gin{C: c}
 
+	var input *domain.TaskFilter
+	if er := c.BindJSON(&input); er != nil {
+		appG.ResponseError(http.StatusBadRequest, er, nil)
+		return
+	}
+
+	Orders, err := h.Services.Task.FindTaskPopulate(*input)
+	if err != nil {
+		appG.ResponseError(http.StatusBadRequest, err, nil)
+		return
+	}
+
+	c.JSON(http.StatusOK, Orders)
 }
 
 func (h *HandlerV1) UpdateTask(c *gin.Context) {

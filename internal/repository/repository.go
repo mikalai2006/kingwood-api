@@ -79,18 +79,41 @@ type Operation interface {
 
 type Task interface {
 	FindTask(params domain.RequestParams) (domain.Response[domain.Task], error)
-	FindTaskWithWorkers(params domain.RequestParams) (domain.Response[domain.Task], error)
+	FindTaskPopulate(input domain.TaskFilter) (domain.Response[domain.Task], error)
 	CreateTask(userID string, Order *domain.Task) (*domain.Task, error)
 	UpdateTask(id string, userID string, data *domain.TaskInput) (*domain.Task, error)
 	DeleteTask(id string) (*domain.Task, error)
 }
+type TaskMontajWorker interface {
+	FindTaskMontajWorkerPopulate(input *domain.TaskMontajWorkerFilter) (domain.Response[domain.TaskMontajWorker], error)
+	FindTaskMontajWorker(params domain.RequestParams) (domain.Response[domain.TaskMontajWorker], error)
+	CreateTaskMontajWorker(userID string, Order *domain.TaskMontajWorker) (*domain.TaskMontajWorker, error)
+	UpdateTaskMontajWorker(id string, userID string, data *domain.TaskMontajWorkerInput) (*domain.TaskMontajWorker, error)
+	DeleteTaskMontajWorker(id string) (*domain.TaskMontajWorker, error)
+}
 
 type TaskMontaj interface {
 	FindTaskMontaj(input domain.TaskMontajFilter) (domain.Response[domain.TaskMontaj], error)
-	FindTaskMontajWithWorkers(params domain.TaskMontajFilter) (domain.Response[domain.TaskMontaj], error)
+	FindTaskPopulate(params domain.TaskMontajFilter) (domain.Response[domain.TaskMontaj], error)
 	CreateTaskMontaj(userID string, Order *domain.TaskMontaj) (*domain.TaskMontaj, error)
 	UpdateTaskMontaj(id string, userID string, data *domain.TaskMontajInput) (*domain.TaskMontaj, error)
 	DeleteTaskMontaj(id string) (*domain.TaskMontaj, error)
+}
+
+type WorkTime interface {
+	FindWorkTime(input domain.WorkTimeFilter) (domain.Response[domain.WorkTime], error)
+	FindWorkTimePopulate(params domain.WorkTimeFilter) (domain.Response[domain.WorkTime], error)
+	CreateWorkTime(userID string, Order *domain.WorkTime) (*domain.WorkTime, error)
+	UpdateWorkTime(id string, userID string, data *domain.WorkTimeInput) (*domain.WorkTime, error)
+	DeleteWorkTime(id string) (*domain.WorkTime, error)
+}
+
+type TaskHistory interface {
+	FindTaskHistory(input domain.TaskHistoryFilter) (domain.Response[domain.TaskHistory], error)
+	FindTaskHistoryPopulate(params domain.TaskHistoryFilter) (domain.Response[domain.TaskHistory], error)
+	CreateTaskHistory(userID string, Order *domain.TaskHistory) (*domain.TaskHistory, error)
+	UpdateTaskHistory(id string, userID string, data *domain.TaskHistoryInput) (*domain.TaskHistory, error)
+	DeleteTaskHistory(id string) (*domain.TaskHistory, error)
 }
 
 type Object interface {
@@ -101,8 +124,8 @@ type Object interface {
 }
 
 type TaskWorker interface {
-	FindTaskWorkerPopulate(params domain.RequestParams) (domain.Response[domain.TaskWorker], error)
-	FindTaskWorker(params domain.RequestParams) (domain.Response[domain.TaskWorker], error)
+	FindTaskWorkerPopulate(input *domain.TaskWorkerFilter) (domain.Response[domain.TaskWorker], error)
+	// FindTaskWorker(params domain.RequestParams) (domain.Response[domain.TaskWorker], error)
 	CreateTaskWorker(userID string, Order *domain.TaskWorker) (*domain.TaskWorker, error)
 	UpdateTaskWorker(id string, userID string, data *domain.TaskWorkerInput) (*domain.TaskWorker, error)
 	DeleteTaskWorker(id string) (*domain.TaskWorker, error)
@@ -209,9 +232,12 @@ type Repositories struct {
 	TaskMontaj
 	TaskStatus
 	TaskWorker
+	TaskMontajWorker
 	Operation
 	Pay
 	Object
+	WorkTime
+	TaskHistory
 }
 
 func NewRepositories(mongodb *mongo.Database, i18n config.I18nConfig) *Repositories {
@@ -229,16 +255,19 @@ func NewRepositories(mongodb *mongo.Database, i18n config.I18nConfig) *Repositor
 		Message:       NewMessageMongo(mongodb, i18n),
 		MessageRoom:   NewMessageRoomMongo(mongodb, i18n),
 		// MessageImage:  NewMessageImageMongo(mongodb, i18n),
-		Offer:      NewOfferMongo(mongodb, i18n),
-		Question:   NewQuestionMongo(mongodb, i18n),
-		Ticket:     NewTicketMongo(mongodb, i18n),
-		Task:       NewTaskMongo(mongodb, i18n),
-		TaskWorker: NewTaskWorkerMongo(mongodb, i18n),
-		TaskStatus: NewTaskStatusMongo(mongodb, i18n),
-		TaskMontaj: NewTaskMontajMongo(mongodb, i18n),
-		Operation:  NewOperationMongo(mongodb, i18n),
-		Pay:        NewPayMongo(mongodb, i18n),
-		Object:     NewObjectMongo(mongodb, i18n),
+		Offer:            NewOfferMongo(mongodb, i18n),
+		Question:         NewQuestionMongo(mongodb, i18n),
+		Ticket:           NewTicketMongo(mongodb, i18n),
+		Task:             NewTaskMongo(mongodb, i18n),
+		TaskWorker:       NewTaskWorkerMongo(mongodb, i18n),
+		TaskStatus:       NewTaskStatusMongo(mongodb, i18n),
+		TaskMontaj:       NewTaskMontajMongo(mongodb, i18n),
+		TaskMontajWorker: NewTaskMontajWorkerMongo(mongodb, i18n),
+		Operation:        NewOperationMongo(mongodb, i18n),
+		Pay:              NewPayMongo(mongodb, i18n),
+		Object:           NewObjectMongo(mongodb, i18n),
+		WorkTime:         NewWorkTimeMongo(mongodb, i18n),
+		TaskHistory:      NewTaskHistoryMongo(mongodb, i18n),
 	}
 }
 

@@ -16,9 +16,9 @@ type User struct {
 	Name  string `json:"name" bson:"name" form:"name"`
 	Phone string `json:"phone" bson:"phone"`
 	// Avatar string `json:"avatar" bson:"avatar"`
-	Online   *bool     `json:"online" bson:"online" form:"online"`
-	Hidden   int       `json:"hidden" bson:"hidden" form:"hidden"`
-	Birthday time.Time `json:"birthday" bson:"birthday" form:"birthday"`
+	Online   *bool   `json:"online" bson:"online" form:"online"`
+	Hidden   int     `json:"hidden" bson:"hidden" form:"hidden"`
+	Birthday *string `json:"birthday" bson:"birthday" form:"birthday"`
 	// Post   []int  `json:"post" bson:"post"`
 	// Verify   bool   `json:"verify" bson:"verify"`
 	// Login    string `json:"login" bson:"login" form:"login"`
@@ -29,16 +29,17 @@ type User struct {
 	// Bal    int      `json:"bal" bson:"bal"`
 	// Role   Role     `json:"role" bson:"role"`
 
-	RoleId     primitive.ObjectID `json:"roleId" bson:"roleId" form:"roleId" primitive:"true"`
-	RoleObject Role               `json:"roleObject" bson:"roleObject"`
-	PostId     primitive.ObjectID `json:"postId" bson:"postId" form:"postId"`
-	PostObject Post               `json:"postObject" bson:"postObject"`
-	TypeWork   []string           `json:"typeWork" bson:"typeWork"`
-	TypePay    *int64             `json:"typePay" bson:"typePay"`
-	Oklad      *int64             `json:"oklad" bson:"oklad"`
+	RoleId   primitive.ObjectID `json:"roleId" bson:"roleId" form:"roleId" primitive:"true"`
+	PostId   primitive.ObjectID `json:"postId" bson:"postId" form:"postId"`
+	TypeWork []string           `json:"typeWork" bson:"typeWork"`
+	TypePay  *int64             `json:"typePay" bson:"typePay"`
+	Oklad    *int64             `json:"oklad" bson:"oklad"`
+	// Workes     *int64             `json:"workes" bson:"workes"`
 
-	Post   []string `json:"post" bson:"post"`
-	Images []Image  `json:"images,omitempty" bson:"images,omitempty"`
+	PostObject Post    `json:"postObject" bson:"postObject"`
+	RoleObject Role    `json:"roleObject" bson:"roleObject"`
+	Images     []Image `json:"images,omitempty" bson:"images,omitempty"`
+	// Post   []string `json:"post" bson:"post"`
 
 	LastTime  time.Time `json:"lastTime" bson:"lastTime"`
 	CreatedAt time.Time `json:"createdAt" bson:"createdAt"`
@@ -54,14 +55,15 @@ type UserInput struct {
 	// Avatar string `json:"avatar" bson:"avatar" form:"avatar"`
 	Hidden int `json:"hidden" bson:"hidden" form:"hidden"`
 	// Post   []int  `json:"post" bson:"post" form:"post"`
-	RoleId   string    `json:"roleId" bson:"roleId" form:"roleId"`
-	PostId   string    `json:"postId" bson:"postId" form:"postId"`
-	TypeWork []string  `json:"typeWork" bson:"typeWork" form:"typeWork"`
-	Birthday time.Time `json:"birthday" bson:"birthday" form:"birthday"`
-	Online   *bool     `json:"online" bson:"online" form:"online"`
+	RoleId   string   `json:"roleId" bson:"roleId" form:"roleId"`
+	PostId   string   `json:"postId" bson:"postId" form:"postId"`
+	TypeWork []string `json:"typeWork" bson:"typeWork" form:"typeWork"`
+	Birthday *string  `json:"birthday" bson:"birthday" form:"birthday"`
+	Online   *bool    `json:"online" bson:"online" form:"online"`
 
 	TypePay *int64 `json:"typePay" bson:"typePay" form:"typePay"`
 	Oklad   *int64 `json:"oklad" bson:"oklad" form:"oklad"`
+	// Workes  *int64 `json:"workes" bson:"workes" form:"workes"`
 
 	LastTime  time.Time `json:"lastTime" bson:"lastTime"`
 	CreatedAt time.Time `json:"createdAt" bson:"createdAt"`
@@ -80,10 +82,11 @@ type UserInputMongo struct {
 	RoleId   primitive.ObjectID `json:"roleId" bson:"roleId" form:"roleId"`
 	PostId   primitive.ObjectID `json:"postId" bson:"postId" form:"postId"`
 	TypeWork []string           `json:"typeWork" bson:"typeWork"`
-	Birthday time.Time          `json:"birthday" bson:"birthday" form:"birthday"`
+	Birthday *string            `json:"birthday" bson:"birthday" form:"birthday"`
 
 	TypePay *int64 `json:"typePay" bson:"typePay" form:"typePay"`
 	Oklad   *int64 `json:"oklad" bson:"oklad" form:"oklad"`
+	// Workes  *int64 `json:"workes" bson:"workes" form:"workes"`
 
 	LastTime  time.Time `json:"lastTime" bson:"lastTime"`
 	CreatedAt time.Time `json:"createdAt" bson:"createdAt"`

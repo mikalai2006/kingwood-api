@@ -149,7 +149,7 @@ func (r *TaskMontajMongo) FindTaskMontaj(input domain.TaskMontajFilter) (domain.
 	return response, nil
 }
 
-func (r *TaskMontajMongo) FindTaskMontajWithWorkers(input domain.TaskMontajFilter) (domain.Response[domain.TaskMontaj], error) {
+func (r *TaskMontajMongo) FindTaskPopulate(input domain.TaskMontajFilter) (domain.Response[domain.TaskMontaj], error) {
 	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
 	defer cancel()
 
@@ -303,23 +303,22 @@ func (r *TaskMontajMongo) CreateTaskMontaj(userID string, data *domain.TaskMonta
 
 	nextSortOrder := int64(0) //int64(len(allTaskByOrder))
 
+	from := *data.From
+	if !data.From.IsZero() {
+		from = time.Now()
+	}
+
 	newTask := domain.TaskMontajInput{
-		// OrderId: data.OrderId,
-		UserID: userIDPrimitive,
-		// OperationId: data.OperationId,
-		// OperationId: data.OperationId,
-		ObjectId: data.ObjectId,
-		Name:     data.Name,
-		// WorkerId: data.WorkerId,
-		SortOder: &nextSortOrder,
-		StatusId: data.StatusId,
-		Active:   data.Active,
-		// AutoCheck: data.AutoCheck,
-		Status: data.Status,
-		From:   data.From,
-		To:     data.To,
-		TypeGo: data.TypeGo,
-		// OperationId: data.OperationId,
+		UserID:      userIDPrimitive,
+		ObjectId:    data.ObjectId,
+		OperationId: data.OperationId,
+		Name:        data.Name,
+		SortOder:    &nextSortOrder,
+		StatusId:    data.StatusId,
+		Status:      data.Status,
+		From:        from,
+		To:          data.To,
+		TypeGo:      data.TypeGo,
 
 		CreatedAt: updatedAt,
 		UpdatedAt: updatedAt,
@@ -372,24 +371,15 @@ func (r *TaskMontajMongo) UpdateTaskMontaj(id string, userID string, data *domai
 	// if !data.WorkerId.IsZero() {
 	// 	newData["workerId"] = data.WorkerId
 	// }
-	// if !data.OperationId.IsZero() {
-	// 	newData["operationId"] = data.OperationId
-	// }
+	if !data.OperationId.IsZero() {
+		newData["operationId"] = data.OperationId
+	}
 	if data.Name != "" {
 		newData["name"] = data.Name
-	}
-	if !data.OrderId.IsZero() {
-		newData["orderId"] = data.OrderId
 	}
 	if !data.StatusId.IsZero() {
 		newData["statusId"] = data.StatusId
 	}
-	if data.Active != nil {
-		newData["active"] = data.Active
-	}
-	// if data.AutoCheck != nil {
-	// 	newData["autoCheck"] = data.AutoCheck
-	// }
 	newData["updatedAt"] = time.Now()
 	if data.SortOder != nil {
 		newData["sortOrder"] = data.SortOder
@@ -402,12 +392,6 @@ func (r *TaskMontajMongo) UpdateTaskMontaj(id string, userID string, data *domai
 	}
 	if !data.To.IsZero() {
 		newData["to"] = data.To
-	}
-	if !data.OperationId.IsZero() {
-		newData["operationId"] = data.OperationId
-	}
-	if !data.OrderId.IsZero() {
-		newData["orderId"] = data.OrderId
 	}
 	if data.TypeGo != "" {
 		newData["typeGo"] = data.TypeGo

@@ -21,8 +21,8 @@ func (s *TaskMontajService) FindTaskMontaj(input domain.TaskMontajFilter) (domai
 	return s.repo.FindTaskMontaj(input)
 }
 
-func (s *TaskMontajService) FindTaskWithWorkers(input domain.TaskMontajFilter) (domain.Response[domain.TaskMontaj], error) {
-	return s.repo.FindTaskMontajWithWorkers(input)
+func (s *TaskMontajService) FindTaskPopulate(input domain.TaskMontajFilter) (domain.Response[domain.TaskMontaj], error) {
+	return s.repo.FindTaskPopulate(input)
 }
 
 func (s *TaskMontajService) CreateTaskMontaj(userID string, data *domain.TaskMontaj) (*domain.TaskMontaj, error) {

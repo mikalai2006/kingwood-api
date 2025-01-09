@@ -16,7 +16,7 @@ import (
 func (h *HandlerV1) registerTaskMontaj(router *gin.RouterGroup) {
 	route := router.Group("/task_montaj")
 	route.POST("", h.CreateTaskMontaj)
-	route.GET("", h.FindTaskMontaj)
+	route.POST("/find", h.FindTaskMontaj)
 	route.PATCH("/:id", h.SetUserFromRequest, h.UpdateTaskMontaj)
 	route.POST("/list", h.CreateTaskMontajList)
 	route.POST("/sort", h.SortTaskMontajList)

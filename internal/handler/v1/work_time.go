@@ -13,15 +13,15 @@ import (
 	"github.com/mikalai2006/kingwood-api/pkg/app"
 )
 
-func (h *HandlerV1) registerOrder(router *gin.RouterGroup) {
-	route := router.Group("/order")
-	route.POST("/find", h.FindOrder)
-	route.POST("", h.CreateOrder)
-	route.PATCH("/:id", h.SetUserFromRequest, h.UpdateOrder)
-	route.POST("/list", h.CreateOrderList)
+func (h *HandlerV1) registerWorkTime(router *gin.RouterGroup) {
+	route := router.Group("/work_time")
+	route.POST("", h.CreateWorkTime)
+	route.POST("/find", h.FindWorkTime)
+	route.PATCH("/:id", h.SetUserFromRequest, h.UpdateWorkTime)
+	route.POST("/list", h.CreateWorkTimeList)
 }
 
-func (h *HandlerV1) CreateOrder(c *gin.Context) {
+func (h *HandlerV1) CreateWorkTime(c *gin.Context) {
 	appG := app.Gin{C: c}
 	// userID, err := middleware.GetUID(c)
 	// if err != nil {
@@ -30,22 +30,22 @@ func (h *HandlerV1) CreateOrder(c *gin.Context) {
 	// 	return
 	// }
 
-	var input *domain.Order
+	var input *domain.WorkTime
 	if er := c.BindJSON(&input); er != nil {
 		appG.ResponseError(http.StatusBadRequest, er, nil)
 		return
 	}
 
-	Order, err := h.CreateOrExistOrder(c, input) //h.services.Order.CreateOrder(userID, input)
+	Task, err := h.CreateOrExistWorkTime(c, input) //h.services.Task.CreateTask(userID, input)
 	if err != nil {
 		appG.ResponseError(http.StatusBadRequest, err, nil)
 		return
 	}
 
-	c.JSON(http.StatusOK, Order)
+	c.JSON(http.StatusOK, Task)
 }
 
-func (h *HandlerV1) CreateOrderList(c *gin.Context) {
+func (h *HandlerV1) CreateWorkTimeList(c *gin.Context) {
 	appG := app.Gin{C: c}
 	userID, err := middleware.GetUID(c)
 	if err != nil || userID == "" {
@@ -54,7 +54,7 @@ func (h *HandlerV1) CreateOrderList(c *gin.Context) {
 		return
 	}
 
-	var input []*domain.Order
+	var input []*domain.WorkTime
 	if er := c.BindJSON(&input); er != nil {
 		appG.ResponseError(http.StatusBadRequest, er, nil)
 		return
@@ -65,90 +65,56 @@ func (h *HandlerV1) CreateOrderList(c *gin.Context) {
 		return
 	}
 
-	var result []*domain.Order
+	var result []*domain.WorkTime
 	for i := range input {
-		Order, err := h.CreateOrExistOrder(c, input[i]) //h.services.Order.CreateOrder(userID, input)
+		Task, err := h.CreateOrExistWorkTime(c, input[i]) //h.services.Task.CreateTask(userID, input)
 		if err != nil {
 			appG.ResponseError(http.StatusBadRequest, err, nil)
 			return
 		}
-		result = append(result, Order)
+		result = append(result, Task)
 	}
 
 	c.JSON(http.StatusOK, result)
 }
 
-// @Summary Order Get all Orders
+// @Summary Find Tasks by params
 // @Security ApiKeyAuth
-// @Tags Order
-// @Description get all Orders
-// @ModuleID Order
+// @Tags Task
+// @Description Input params for search Tasks
+// @ModuleID Task
 // @Accept  json
 // @Produce  json
-// @Success 200 {object} []domain.Order
+// @Param input query TaskInput true "params for search Task"
+// @Success 200 {object} []domain.Task
 // @Failure 400,404 {object} domain.ErrorResponse
 // @Failure 500 {object} domain.ErrorResponse
 // @Failure default {object} domain.ErrorResponse
-// @Router /api/Order [get].
-// func (h *HandlerV1) GetAllOrder(c *gin.Context) {
-// 	appG := app.Gin{C: c}
-
-// 	params, err := utils.GetParamsFromRequest(c, domain.Order{}, &h.i18n)
-// 	if err != nil {
-// 		appG.ResponseError(http.StatusBadRequest, err, nil)
-// 		return
-// 	}
-
-// 	Orders, err := h.Services.Order.GetAllOrder(params)
-// 	if err != nil {
-// 		appG.ResponseError(http.StatusBadRequest, err, nil)
-// 		return
-// 	}
-
-// 	c.JSON(http.StatusOK, Orders)
-// }
-
-// @Summary Find Orders by params
-// @Security ApiKeyAuth
-// @Tags Order
-// @Description Input params for search Orders
-// @ModuleID Order
-// @Accept  json
-// @Produce  json
-// @Param input query OrderInput true "params for search Order"
-// @Success 200 {object} []domain.Order
-// @Failure 400,404 {object} domain.ErrorResponse
-// @Failure 500 {object} domain.ErrorResponse
-// @Failure default {object} domain.ErrorResponse
-// @Router /api/Order [get].
-func (h *HandlerV1) FindOrder(c *gin.Context) {
+// @Router /api/Task [get].
+func (h *HandlerV1) FindWorkTime(c *gin.Context) {
 	appG := app.Gin{C: c}
 
-	// params, err := utils.GetParamsFromRequest(c, domain.OrderInputData{}, &h.i18n)
+	// params, err := utils.GetParamsFromRequest(c, domain.WorkTimeInputData{}, &h.i18n)
 	// if err != nil {
 	// 	appG.ResponseError(http.StatusBadRequest, err, nil)
 	// 	return
 	// }
-	var input *domain.OrderFilter
+	var input *domain.WorkTimeFilter
 	if er := c.BindJSON(&input); er != nil {
 		appG.ResponseError(http.StatusBadRequest, er, nil)
 		return
 	}
 
-	Orders, err := h.Services.Order.FindOrder(input)
+	Tasks, err := h.Services.WorkTime.FindWorkTime(*input)
 	if err != nil {
 		appG.ResponseError(http.StatusBadRequest, err, nil)
 		return
 	}
 
-	c.JSON(http.StatusOK, Orders)
+	c.JSON(http.StatusOK, Tasks)
 }
 
-func (h *HandlerV1) GetOrderByID(c *gin.Context) {
-
-}
-
-func (h *HandlerV1) UpdateOrder(c *gin.Context) {
+func (h *HandlerV1) UpdateWorkTime(c *gin.Context) {
 	appG := app.Gin{C: c}
 	userID, err := middleware.GetUID(c)
 	if err != nil {
@@ -181,13 +147,13 @@ func (h *HandlerV1) UpdateOrder(c *gin.Context) {
 		appG.ResponseError(http.StatusBadRequest, er, nil)
 		return
 	}
-	data, er := utils.BindJSON2[domain.OrderInput](a)
+	data, er := utils.BindJSON2[domain.WorkTimeInput](a)
 	if er != nil {
 		appG.ResponseError(http.StatusBadRequest, er, nil)
 		return
 	}
 
-	document, err := h.Services.Order.UpdateOrder(id, userID, &data)
+	document, err := h.Services.WorkTime.UpdateWorkTime(id, userID, &data)
 	if err != nil {
 		appG.ResponseError(http.StatusInternalServerError, err, nil)
 		return
@@ -196,11 +162,11 @@ func (h *HandlerV1) UpdateOrder(c *gin.Context) {
 	c.JSON(http.StatusOK, document)
 }
 
-func (h *HandlerV1) DeleteOrder(c *gin.Context) {
+func (h *HandlerV1) DeleteWorkTime(c *gin.Context) {
 
 }
 
-func (h *HandlerV1) CreateOrExistOrder(c *gin.Context, input *domain.Order) (*domain.Order, error) {
+func (h *HandlerV1) CreateOrExistWorkTime(c *gin.Context, input *domain.WorkTime) (*domain.WorkTime, error) {
 	appG := app.Gin{C: c}
 	userID, err := middleware.GetUID(c)
 	if err != nil {
@@ -208,7 +174,7 @@ func (h *HandlerV1) CreateOrExistOrder(c *gin.Context, input *domain.Order) (*do
 		appG.ResponseError(http.StatusUnauthorized, err, gin.H{"hello": "world"})
 		return nil, err
 	}
-	var result *domain.Order
+	var result *domain.WorkTime
 
 	// userIDPrimitive, err := primitive.ObjectIDFromHex(userID)
 	// if err != nil {
@@ -216,7 +182,7 @@ func (h *HandlerV1) CreateOrExistOrder(c *gin.Context, input *domain.Order) (*do
 	// 	return result, err
 	// }
 
-	// existOrders, err := h.services.Order.FindOrder(domain.RequestParams{
+	// existTasks, err := h.services.Task.FindTask(domain.RequestParams{
 	// 	Options: domain.Options{Limit: 1},
 	// 	Filter:  bson.D{{"node_id", input.NodeID}, {"user_id", userIDPrimitive}},
 	// })
@@ -224,13 +190,13 @@ func (h *HandlerV1) CreateOrExistOrder(c *gin.Context, input *domain.Order) (*do
 	// 	appG.ResponseError(http.StatusBadRequest, err, nil)
 	// 	return result, err
 	// }
-	// if len(existOrders.Data) > 0 {
-	// 	fmt.Println("existOrders =")
+	// if len(existTasks.Data) > 0 {
+	// 	fmt.Println("existTasks =")
 	// 	// appG.ResponseError(http.StatusBadRequest, model.ErrNodedataVoteExistValue, nil)
-	// 	return &existOrders.Data[0], nil
+	// 	return &existTasks.Data[0], nil
 	// }
 
-	result, err = h.Services.Order.CreateOrder(userID, input)
+	result, err = h.Services.WorkTime.CreateWorkTime(userID, input)
 	if err != nil {
 		appG.ResponseError(http.StatusBadRequest, err, nil)
 		return result, err

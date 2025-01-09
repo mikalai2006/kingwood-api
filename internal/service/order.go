@@ -7,12 +7,14 @@ import (
 )
 
 type OrderService struct {
-	repo        repository.Order
-	userService *UserService
+	repo             repository.Order
+	userService      *UserService
+	Hub              *Hub
+	operationService *OperationService
 }
 
-func NewOrderService(repo repository.Order, userService *UserService) *OrderService {
-	return &OrderService{repo: repo, userService: userService}
+func NewOrderService(repo repository.Order, userService *UserService, hub *Hub, operationService *OperationService) *OrderService {
+	return &OrderService{repo: repo, userService: userService, Hub: hub, operationService: operationService}
 }
 
 func (s *OrderService) FindOrder(input *domain.OrderFilter) (domain.Response[domain.Order], error) {
@@ -66,7 +68,30 @@ func (s *OrderService) CreateOrder(userID string, data *domain.Order) (*domain.O
 }
 
 func (s *OrderService) UpdateOrder(id string, userID string, data *domain.OrderInput) (*domain.Order, error) {
-	return s.repo.UpdateOrder(id, userID, data)
+	result, err := s.repo.UpdateOrder(id, userID, data)
+
+	if data.StolyarComplete != nil || data.MalyarComplete != nil || data.MontajComplete != nil {
+		statusCompleted := int64(1)
+
+		dataUpdate := domain.OrderInput{}
+		// fmt.Println("dataUpdate: ", data.MalyarComplete, data.StolyarComplete, data.MontajComplete)
+		// fmt.Println("dataUpdate result: ", *result.MalyarComplete, *result.StolyarComplete, *result.MontajComplete)
+		if (result.MalyarComplete != nil && *result.MalyarComplete == statusCompleted) &&
+			(result.StolyarComplete != nil && *result.StolyarComplete == statusCompleted) &&
+			(result.MontajComplete != nil && *result.MontajComplete == statusCompleted) {
+			val := int64(100)
+			dataUpdate.Status = &val
+		} else {
+			val := int64(1)
+			dataUpdate.Status = &val
+		}
+
+		result, err = s.repo.UpdateOrder(id, userID, &dataUpdate)
+	}
+
+	s.Hub.HandleMessage(domain.Message{Type: "message", Method: "PATCH", Sender: userID, Recipient: "sobesednikID.Hex()", Content: result, ID: "room1", Service: "order"})
+
+	return result, err
 }
 
 func (s *OrderService) DeleteOrder(id string) (*domain.Order, error) {

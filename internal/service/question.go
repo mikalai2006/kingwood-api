@@ -38,7 +38,7 @@ func (s *QuestionService) UpdateQuestion(id string, userID string, data *model.Q
 func (s *QuestionService) DeleteQuestion(id string, userID string) (model.Question, error) {
 	result, err := s.repo.DeleteQuestion(id)
 
-	s.Hub.HandleMessage(domain.Message{Type: "message", Method: "REMOVE", Sender: userID, Recipient: "user2", Content: result, ID: "room1", Service: "question"})
+	s.Hub.HandleMessage(domain.Message{Type: "message", Method: "DELETE", Sender: userID, Recipient: "user2", Content: result, ID: "room1", Service: "question"})
 
 	return result, err
 }

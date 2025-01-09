@@ -95,14 +95,14 @@ func (h *HandlerV1) SetUserFromRequest(c *gin.Context) {
 		return
 	}
 
-	fmt.Println("header2: ", len(headerParts))
+	// fmt.Println("header2: ", len(headerParts))
 
 	c.Set(userCtx, claims.Subject)
 	c.Set(userRoles, claims.Roles)
 	c.Set(maxDistance, claims.Md)
 	c.Set(uid, claims.Uid)
 	c.Set(authCtx, authData)
-	fmt.Println("claims.Uid=", claims.Uid)
+	// fmt.Println("claims.Uid=", claims.Uid)
 	// session := sessions.Default(c)
 	// user := session.Get(userkey)
 	// if user == nil {

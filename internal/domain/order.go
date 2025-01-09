@@ -21,6 +21,7 @@ type Order struct {
 	StolyarComplete *int64             `json:"stolyarComplete" bson:"stolyarComplete" form:"stolyarComplete"`
 	MalyarComplete  *int64             `json:"malyarComplete" bson:"malyarComplete" form:"malyarComplete"`
 	GoComplete      *int64             `json:"goComplete" bson:"goComplete" form:"goComplete"`
+	DateOtgruzka    time.Time          `json:"dateOtgruzka" bson:"dateOtgruzka" form:"dateOtgruzka"`
 	MontajComplete  *int64             `json:"montajComplete" bson:"montajComplete" form:"montajComplete"`
 	// NeedMontaj    *int64             `json:"needMontaj" bson:"needMontaj" form:"needMontaj"`
 	Status *int64   `json:"status" bson:"status" form:"status"`
@@ -48,6 +49,7 @@ type OrderInput struct {
 	StolyarComplete *int64             `json:"stolyarComplete" bson:"stolyarComplete" form:"stolyarComplete"`
 	MalyarComplete  *int64             `json:"malyarComplete" bson:"malyarComplete" form:"malyarComplete"`
 	GoComplete      *int64             `json:"goComplete" bson:"goComplete" form:"goComplete"`
+	DateOtgruzka    time.Time          `json:"dateOtgruzka" bson:"dateOtgruzka" form:"dateOtgruzka"`
 	MontajComplete  *int64             `json:"montajComplete" bson:"montajComplete" form:"montajComplete"`
 	// NeedMontaj    *int64             `json:"needMontaj" bson:"needMontaj" form:"needMontaj"`
 	Status *int64   `json:"status" bson:"status" form:"status"`
@@ -72,7 +74,7 @@ type OrderFilter struct {
 	Name            *string   `json:"name,omitempty"`
 	Group           []*string `json:"group,omitempty"`
 	Status          *int64    `json:"status"`
-	ObjectIds       []string  `json:"objectIds" bson:"objectIds" form:"objectIds"`
+	ObjectId        []string  `json:"objectId" bson:"objectId" form:"objectId"`
 	StolyarComplete *int64    `json:"stolyarComplete"`
 	MalyarComplete  *int64    `json:"malyarComplete"`
 	GoComplete      *int64    `json:"goComplete"`
