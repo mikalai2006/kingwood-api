@@ -92,10 +92,10 @@ jobs:
           # key: ${{ secrets.SSH_SITE_TOKEN }}
           password: ${{ secrets.SSH_SITE_PASSWORD }}
           port: ${{ secrets.SSH_SITE_PORT }}
-          script: |
-            sudo docker-compose -f docker-compose.yml -p prod down
           # sudo docker rm mongodb-api
           # sudo docker rm kingwood-api-from-image
+          script: |
+            sudo docker-compose -f docker-compose.yml -p prod down
             sudo docker image rm ghcr.io/${{ github.repository_owner }}/${{ github.repository }}
             sudo docker-compose -f docker-compose.yml -p prod pull
             sudo docker-compose -f docker-compose.yml -p prod up -d
