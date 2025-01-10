@@ -24,10 +24,15 @@ type Auth struct {
 	// MaxDistance int    `json:"maxDistance" bson:"maxDistance"`
 	// Post []Post `json:"post" bson:"post,omitempty" gorm:"-"`
 
-	UserData  User      `json:"-" bson:"userData"`
+	Role      Role      `json:"-" bson:"role"`
+	User      User      `json:"-" bson:"user"`
 	CreatedAt time.Time `json:"createdAt" bson:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt" bson:"updatedAt"`
 }
+
+// type AuthResetPassword struct {
+// 	UserId   primitive.ObjectID `json:"userId" bson:"userId" form:"userId"`
+// }
 
 type AuthInput struct {
 	// UserId primitive.ObjectID `json:"userId" bson:"userId" form:"userId" gorm:"-"`
@@ -88,13 +93,17 @@ type AuthInputMongo struct {
 }
 
 type DataForClaims struct {
-	Roles  []string `json:"roles" bson:"roles"`
-	UserID string   `json:"user_id" bson:"user_id"`
-	Md     int      `json:"md" bson:"md"`
-	UID    string   `json:"uid" bson:"uid"`
+	// Roles  []string `json:"roles" bson:"roles"`
+	UserID string `json:"user_id" bson:"user_id"`
+	// Md     int      `json:"md" bson:"md"`
+	UID string `json:"uid" bson:"uid"`
 }
 
 type Verification struct {
 	Code     string `json:"code" bson:"code"`
 	Verified bool   `json:"verified" bson:"verified"`
+}
+
+type AuthPublicData struct {
+	Login string `json:"login" bson:"login"`
 }

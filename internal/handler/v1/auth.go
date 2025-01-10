@@ -3,6 +3,7 @@ package v1
 import (
 	"errors"
 	"net/http"
+	"slices"
 
 	"github.com/gin-gonic/gin"
 	"github.com/mikalai2006/kingwood-api/internal/domain"
@@ -15,6 +16,7 @@ import (
 func (h *HandlerV1) registerAuth(router *gin.RouterGroup) {
 	auth := router.Group("/auth")
 	auth.POST("/sign-up", h.SignUp)
+	auth.POST("/reset-password/:id", h.SetUserFromRequest, h.ResetPassword)
 	auth.POST("/sign-in", h.SignIn)
 	auth.POST("/logout", h.Logout)
 	auth.POST("/refresh", h.tokenRefresh)
@@ -23,29 +25,29 @@ func (h *HandlerV1) registerAuth(router *gin.RouterGroup) {
 	auth.GET("/iam", h.SetUserFromRequest, h.getIam)
 }
 
-func (h *HandlerV1) updateAuth(c *gin.Context) {
-	appG := app.Gin{C: c}
+// func (h *HandlerV1) updateAuth(c *gin.Context) {
+// 	appG := app.Gin{C: c}
 
-	userID, err := middleware.GetUID(c)
-	if err != nil {
-		appG.ResponseError(http.StatusUnauthorized, err, nil)
-		return
-	}
+// 	userID, err := middleware.GetUID(c)
+// 	if err != nil {
+// 		appG.ResponseError(http.StatusUnauthorized, err, nil)
+// 		return
+// 	}
 
-	var input domain.AuthInput
-	if er := c.Bind(&input); er != nil {
-		appG.ResponseError(http.StatusBadRequest, er, nil)
-		return
-	}
+// 	var input domain.AuthInput
+// 	if er := c.Bind(&input); er != nil {
+// 		appG.ResponseError(http.StatusBadRequest, er, nil)
+// 		return
+// 	}
 
-	auth, err := h.Services.Authorization.UpdateAuth(userID, &input)
-	if err != nil {
-		appG.ResponseError(http.StatusBadRequest, err, nil)
-		return
-	}
+// 	auth, err := h.Services.Authorization.UpdateAuth(userID, &input)
+// 	if err != nil {
+// 		appG.ResponseError(http.StatusBadRequest, err, nil)
+// 		return
+// 	}
 
-	c.JSON(http.StatusOK, auth)
-}
+// 	c.JSON(http.StatusOK, auth)
+// }
 
 func (h *HandlerV1) getIam(c *gin.Context) {
 	appG := app.Gin{C: c}
@@ -178,6 +180,47 @@ func (h *HandlerV1) SignUp(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, document)
+}
+
+func (h *HandlerV1) ResetPassword(c *gin.Context) {
+	appG := app.Gin{C: c}
+
+	lang := c.Query("lang")
+	if lang == "" {
+		lang = h.i18n.Default
+	}
+
+	// implementation roles for user.
+	roles, err := middleware.GetRoles(c)
+	if err != nil {
+		appG.ResponseError(http.StatusUnauthorized, err, nil)
+		return
+	}
+	if !slices.Contains(roles, "auth-resetpass") {
+		appG.ResponseError(http.StatusUnauthorized, domain.ErrNotRole, nil)
+		return
+	}
+
+	// userID, err := middleware.GetUID(c)
+	// if err != nil {
+	// 	// c.AbortWithError(http.StatusUnauthorized, err)
+	// 	appG.ResponseError(http.StatusUnauthorized, err, nil)
+	// 	return
+	// }
+	id := c.Param("id")
+	if id == "" {
+		// c.AbortWithError(http.StatusUnauthorized, err)
+		appG.ResponseError(http.StatusUnauthorized, err, nil)
+		return
+	}
+
+	newPassword, err := h.Services.Authorization.ResetPassword(id)
+	if err != nil {
+		appG.ResponseError(http.StatusBadRequest, err, nil)
+		return
+	}
+
+	c.JSON(http.StatusOK, newPassword)
 }
 
 // @Summary SignIn

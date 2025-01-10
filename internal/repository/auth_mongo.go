@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/mikalai2006/kingwood-api/internal/domain"
@@ -77,7 +78,7 @@ func chooseProvider(auth *domain.AuthInput) bson.D {
 
 		return bson.D{
 			{Key: "$or", Value: filter},
-			// {Key: "password", Value: auth.Password},
+			{Key: "password", Value: auth.Password},
 		}
 	}
 
@@ -167,28 +168,54 @@ func (r *AuthMongo) GetByCredentials(auth *domain.AuthInput) (domain.Auth, error
 	defer cancel()
 
 	filter := chooseProvider(auth)
-
+	fmt.Println("GetByCredentials filter: ", filter)
 	// pipe := mongo.Pipeline{}
 	// pipe = append(pipe, bson.D{{"$match", filter}})
 	// pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
-	// 	"from":         "users",
-	// 	"as":           "user_data",
-	// 	"localField":   "_id",
-	// 	"foreignField": "user_id",
-	// }}})
-	// pipe = append(pipe, bson.D{{Key: "$unwind", Value: "$user_data"}})
+	// 	"from": tblUsers,
+	// 	"as":   "usera",
+	// 	"let":  bson.D{{Key: "userId", Value: "$userId"}},
+	// 	"pipeline": mongo.Pipeline{
+	// 		bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$_id", "$$userId"}}}}},
+	// 		bson.D{{"$limit", 1}},
 
-	err := r.db.Collection(TblAuth).FindOne(ctx, filter).Decode(&user) // .Aggregate(ctx, pipe) //
+	// 		// // post.
+	// 		// bson.D{{
+	// 		// 	Key: "$lookup",
+	// 		// 	Value: bson.M{
+	// 		// 		"from": TblPost,
+	// 		// 		"as":   "posts",
+	// 		// 		// "localField":   "_id",
+	// 		// 		// "foreignField": "service_id",
+	// 		// 		"let": bson.D{{Key: "postId", Value: "$postId"}},
+	// 		// 		"pipeline": mongo.Pipeline{
+	// 		// 			bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$_id", "$$postId"}}}}},
+	// 		// 		},
+	// 		// 	},
+	// 		// }},
+	// 		// bson.D{{Key: "$set", Value: bson.M{"postObject": bson.M{"$first": "$posts"}}}},
+	// 		// role.
+	// 		bson.D{{Key: "$lookup", Value: bson.M{
+	// 			"from": TblRole,
+	// 			"as":   "rolea",
+	// 			// "localField":   "user_id",
+	// 			// "foreignField": "_id",
+	// 			"let": bson.D{{Key: "roleId", Value: "$roleId"}},
+	// 			"pipeline": mongo.Pipeline{
+	// 				bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$_id", "$$roleId"}}}}},
+	// 				bson.D{{"$limit", 1}},
+	// 			},
+	// 		}}},
+	// 		bson.D{{Key: "$set", Value: bson.M{"role": bson.M{"$first": "$rolea"}}}},
+	// 	},
+	// }}},
+	// 	bson.D{{Key: "$set", Value: bson.M{"worker": bson.M{"$first": "$usera"}}}},
+	// )
+
+	err := r.db.Collection(TblAuth).FindOne(ctx, filter).Decode(&user) //.Aggregate(ctx, pipe) //
 	if err != nil {
 		return user, err
 	}
-
-	if err := r.db.Collection(tblUsers).FindOneAndUpdate(ctx, bson.M{
-		"userId": user.ID,
-	}, bson.M{"$set": bson.M{"online": true}}).Decode(&user.UserData); err != nil {
-		return user, err
-	}
-
 	// defer cursor.Close(ctx)
 
 	// for cursor.Next(context.TODO()) {
@@ -200,6 +227,23 @@ func (r *AuthMongo) GetByCredentials(auth *domain.AuthInput) (domain.Auth, error
 	// if err := cursor.Err(); err != nil {
 	// 	return user, err
 	// }
+	if err := r.db.Collection(tblUsers).FindOne(ctx, bson.M{
+		"userId": user.ID,
+	}).Decode(&user.User); err != nil {
+		return user, err
+	}
+	if err := r.db.Collection(TblRole).FindOne(ctx, bson.M{
+		"_id": user.User.RoleId,
+	}).Decode(&user.Role); err != nil {
+		return user, err
+	}
+
+	if err := r.db.Collection(tblUsers).FindOneAndUpdate(ctx, bson.M{
+		"userId": user.ID,
+	}, bson.M{"$set": bson.M{"online": true}}).Decode(&user.User); err != nil {
+		return user, err
+	}
+
 	return user, err
 }
 
@@ -258,7 +302,7 @@ func (r *AuthMongo) RefreshToken(refreshToken string) (domain.Auth, error) {
 
 	if err := r.db.Collection(tblUsers).FindOne(ctx, bson.M{
 		"userId": result.ID,
-	}).Decode(&result.UserData); err != nil {
+	}).Decode(&result.User); err != nil {
 		return result, err
 	}
 
@@ -281,15 +325,39 @@ func (r *AuthMongo) RemoveRefreshToken(refreshToken string) (string, error) {
 
 	if err := r.db.Collection(tblUsers).FindOneAndUpdate(ctx, bson.M{
 		"userId": auth.ID,
-	}, bson.M{"$set": bson.M{"online": false}}).Decode(&auth.UserData); err != nil {
+	}, bson.M{"$set": bson.M{"online": false}}).Decode(&auth.User); err != nil {
 		return result, err
 	}
 
 	return result, nil
 }
 
-func (r *AuthMongo) UpdateAuth(id string, auth *domain.AuthInput) (domain.User, error) {
-	var result domain.User
+func (r *AuthMongo) UpdateAuth(id string, data *domain.AuthInput) (domain.Auth, error) {
+	var result domain.Auth
+
+	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
+	defer cancel()
+
+	collection := r.db.Collection(TblAuth)
+
+	idPrimitive, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return result, err
+	}
+
+	filter := bson.M{"_id": idPrimitive}
+
+	newData := bson.M{}
+	if data.Password != "" {
+		newData["password"] = data.Password
+		newData["session"] = data.Session
+	}
+	newData["updatedAt"] = time.Now()
+
+	err = collection.FindOneAndUpdate(ctx, filter, bson.M{"$set": newData}).Decode(&result)
+	if err != nil {
+		return result, err
+	}
 
 	return result, nil
 }

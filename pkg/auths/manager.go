@@ -14,6 +14,7 @@ type TokenManager interface {
 	NewJWT(claims domain.DataForClaims, ttl time.Duration) (string, error)
 	Parse(accessToken string) (*AuthClaims, error)
 	NewRefreshToken() (string, error)
+	GetRandomPassword() string
 }
 
 type Manager struct {
@@ -29,17 +30,24 @@ func NewManager(signingKey string) (*Manager, error) {
 }
 
 type AuthClaims struct {
-	Roles []string `json:"roles"`
-	Md    int      `json:"md"`
-	Uid   string   `json:"uid"`
+	// Roles []string `json:"roles"`
+	// Md    int      `json:"md"`
+	Uid string `json:"uid"`
 	jwt.StandardClaims
+}
+
+func (m *Manager) GetRandomPassword() string {
+	id := uuid.New()
+	uid := id.String()
+	short := uid[1:7]
+	return string(short)
 }
 
 func (m *Manager) NewJWT(claims domain.DataForClaims, ttl time.Duration) (string, error) {
 	claimsData := AuthClaims{
-		Roles: claims.Roles,
-		Uid:   claims.UID,
-		Md:    claims.Md,
+		// Roles: claims.Roles,
+		Uid: claims.UID,
+		// Md:    claims.Md,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(ttl).Unix(),
 			Subject:   claims.UserID,

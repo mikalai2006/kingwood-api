@@ -108,8 +108,8 @@ func (s *AuthService) SignIn(auth *domain.AuthInput) (domain.ResponseTokens, err
 	}
 	auth.Password = passwordHash
 
-	// fmt.Println("sign in ", auth)
 	user, err := s.repository.GetByCredentials(auth)
+	// fmt.Println("sign in ", user.Role)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			return result, err
@@ -120,6 +120,39 @@ func (s *AuthService) SignIn(auth *domain.AuthInput) (domain.ResponseTokens, err
 	return s.CreateSession(&user)
 }
 
+func (s *AuthService) ResetPassword(authID string) (string, error) {
+	result := ""
+
+	randomPassword := s.tokenManager.GetRandomPassword()
+
+	passwordHash, err := s.hasher.Hash(randomPassword)
+	if err != nil {
+		return result, err
+	}
+
+	verificationCode := s.otpGenerator.RandomSecret(s.verificationCodeLength)
+
+	authData := &domain.AuthInput{
+		Password:  passwordHash,
+		UpdatedAt: time.Now(),
+		Verification: domain.Verification{
+			Code: verificationCode,
+		},
+		// MaxDistance: auth.MaxDistance,
+		// RoleId: auth.RoleId,
+		// PostId: auth.PostId,
+	}
+
+	_, err = s.UpdateAuth(authID, authData)
+	if err != nil {
+		return result, err
+	}
+
+	result = randomPassword
+
+	return result, nil
+}
+
 func (s *AuthService) CreateSession(auth *domain.Auth) (domain.ResponseTokens, error) {
 	var (
 		res domain.ResponseTokens
@@ -127,10 +160,10 @@ func (s *AuthService) CreateSession(auth *domain.Auth) (domain.ResponseTokens, e
 	)
 
 	claims := domain.DataForClaims{
-		// Roles:  auth.Roles,
+		// Roles:  auth.Role.Value,
 		UserID: auth.ID.Hex(),
 		// Md:     auth.MaxDistance,
-		UID: auth.UserData.ID.Hex(),
+		UID: auth.User.ID.Hex(),
 	}
 
 	res.AccessToken, err = s.tokenManager.NewJWT(claims, s.accessTokenTTL)
@@ -196,8 +229,8 @@ func (s *AuthService) RemoveRefreshTokens(refreshToken string) (string, error) {
 	return result, err
 }
 
-func (s *AuthService) UpdateAuth(id string, auth *domain.AuthInput) (domain.User, error) {
-	result, err := s.repository.UpdateAuth(id, auth)
+func (s *AuthService) UpdateAuth(id string, data *domain.AuthInput) (domain.Auth, error) {
+	result, err := s.repository.UpdateAuth(id, data)
 	// s.Hub.HandleMessage(domain.Message{Type: "message", Method: "PATCH", Sender: id, Recipient: "user2", Content: result, ID: "room1", Service: "user"})
 
 	return result, err

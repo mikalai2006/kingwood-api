@@ -29,7 +29,7 @@ type Authorization interface {
 	VerificationCode(userID string, code string) error
 	RefreshToken(refreshToken string) (domain.Auth, error)
 	RemoveRefreshToken(refreshToken string) (string, error)
-	UpdateAuth(id string, auth *domain.AuthInput) (domain.User, error)
+	UpdateAuth(id string, auth *domain.AuthInput) (domain.Auth, error)
 }
 
 type Product interface {

@@ -89,19 +89,24 @@ func (h *HandlerV1) SetUserFromRequest(c *gin.Context) {
 		return
 	}
 
-	authData, err := h.Services.Authorization.GetAuth(claims.Subject)
+	// authData, err := h.Services.Authorization.GetAuth(claims.Subject)
+	// if err != nil {
+	// 	appG.ResponseError(http.StatusUnauthorized, err, nil)
+	// 	return
+	// }
+
+	// fmt.Println("header2: ", len(headerParts))
+	user, err := h.Services.User.GetUser(claims.Uid)
 	if err != nil {
 		appG.ResponseError(http.StatusUnauthorized, err, nil)
 		return
 	}
 
-	// fmt.Println("header2: ", len(headerParts))
-
 	c.Set(userCtx, claims.Subject)
-	c.Set(userRoles, claims.Roles)
-	c.Set(maxDistance, claims.Md)
+	c.Set(userRoles, user.RoleObject.Value)
+	// c.Set(maxDistance, claims.Md)
 	c.Set(uid, claims.Uid)
-	c.Set(authCtx, authData)
+	// c.Set(authCtx, authData)
 	// fmt.Println("claims.Uid=", claims.Uid)
 	// session := sessions.Default(c)
 	// user := session.Get(userkey)

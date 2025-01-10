@@ -40,6 +40,7 @@ type User struct {
 	RoleObject Role    `json:"roleObject" bson:"roleObject"`
 	Images     []Image `json:"images,omitempty" bson:"images,omitempty"`
 	// Post   []string `json:"post" bson:"post"`
+	Auth AuthPublicData `json:"auth,omitempty" bson:"auth,omitempty"`
 
 	LastTime  time.Time `json:"lastTime" bson:"lastTime"`
 	CreatedAt time.Time `json:"createdAt" bson:"createdAt"`

@@ -31,16 +31,17 @@ func (h *HandlerV1) createRole(c *gin.Context) {
 		return
 	}
 
-	auth, err := middleware.GetAuthFromCtx(c)
+	// TODO
+	roles, err := middleware.GetRoles(c)
 	if err != nil {
 		appG.ResponseError(http.StatusUnauthorized, err, nil)
 		return
 	}
-	if slices.Contains(auth.UserData.RoleObject.Value, "user_create") {
+	if slices.Contains(roles, "user_create") {
 		fmt.Println("user_create: ")
 
 	}
-	fmt.Println("auth: ", auth.UserData.RoleObject)
+	fmt.Println("auth: ", roles)
 	var input *domain.RoleInput
 	if er := c.BindJSON(&input); er != nil {
 		appG.ResponseError(http.StatusBadRequest, er, nil)

@@ -144,69 +144,113 @@ func (r *UserMongo) GetUser(id string) (domain.User, error) {
 	}
 
 	// add populate.
+	// post.
 	pipe = append(pipe, bson.D{{
 		Key: "$lookup",
 		Value: bson.M{
-			"from": tblImage,
-			"as":   "images",
+			"from": TblPost,
+			"as":   "posts",
 			// "localField":   "_id",
 			// "foreignField": "service_id",
-			"let": bson.D{{Key: "serviceId", Value: bson.D{{"$toString", "$_id"}}}},
+			"let": bson.D{{Key: "postId", Value: "$postId"}},
 			"pipeline": mongo.Pipeline{
-				bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$service_id", "$$serviceId"}}}}},
+				bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$_id", "$$postId"}}}}},
 			},
 		},
 	}})
+	pipe = append(pipe, bson.D{{Key: "$set", Value: bson.M{"postObject": bson.M{"$first": "$posts"}}}})
+	// role.
+	pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
+		"from": TblRole,
+		"as":   "rolea",
+		// "localField":   "user_id",
+		// "foreignField": "_id",
+		"let": bson.D{{Key: "roleId", Value: "$roleId"}},
+		"pipeline": mongo.Pipeline{
+			bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$_id", "$$roleId"}}}}},
+			bson.D{{"$limit", 1}},
+		},
+	}}})
+	pipe = append(pipe, bson.D{{Key: "$set", Value: bson.M{"roleObject": bson.M{"$first": "$rolea"}}}})
 
-	// add populate.
+	// add populate auth.
 	pipe = append(pipe, bson.D{{
 		Key: "$lookup",
 		Value: bson.M{
-			"from": tblImage,
-			"as":   "roles",
-			// "localField":   "_id",
-			// "foreignField": "service_id",
-			"let": bson.D{{Key: "userId", Value: bson.D{{"$toString", "$_id"}}}},
-			"pipeline": mongo.Pipeline{
-				bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$userId", "$$userId"}}}}},
-			},
+			"from":         TblAuth,
+			"as":           "auths",
+			"localField":   "userId",
+			"foreignField": "_id",
+			// "let": bson.D{{Key: "roleId", Value: bson.D{{"$toString", "$roleId"}}}},
+			// "pipeline": mongo.Pipeline{
+			// 	bson.D{{Key: "$match", Value: bson.M{"$_id": bson.M{"$eq": [2]string{"$roleId", "$$_id"}}}}},
+			// },
 		},
 	}})
+	pipe = append(pipe, bson.D{{Key: "$set", Value: bson.M{"auth": bson.M{"$first": "$auths"}}}})
+	// pipe = append(pipe, bson.D{{
+	// 	Key: "$lookup",
+	// 	Value: bson.M{
+	// 		"from": tblImage,
+	// 		"as":   "images",
+	// 		// "localField":   "_id",
+	// 		// "foreignField": "service_id",
+	// 		"let": bson.D{{Key: "serviceId", Value: bson.D{{"$toString", "$_id"}}}},
+	// 		"pipeline": mongo.Pipeline{
+	// 			bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$service_id", "$$serviceId"}}}}},
+	// 		},
+	// 	},
+	// }})
 
-	// add populate.
-	pipe = append(pipe, bson.D{{
-		Key: "$lookup",
-		Value: bson.M{
-			"from": tblImage,
-			"as":   "post",
-			// "localField":   "_id",
-			// "foreignField": "service_id",
-			"let": bson.D{{Key: "userId", Value: bson.D{{"$toString", "$_id"}}}},
-			"pipeline": mongo.Pipeline{
-				bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$userId", "$$userId"}}}}},
-			},
-		},
-	}})
+	// // add populate.
+	// pipe = append(pipe, bson.D{{
+	// 	Key: "$lookup",
+	// 	Value: bson.M{
+	// 		"from": tblImage,
+	// 		"as":   "roles",
+	// 		// "localField":   "_id",
+	// 		// "foreignField": "service_id",
+	// 		"let": bson.D{{Key: "userId", Value: bson.D{{"$toString", "$_id"}}}},
+	// 		"pipeline": mongo.Pipeline{
+	// 			bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$userId", "$$userId"}}}}},
+	// 		},
+	// 	},
+	// }})
 
-	// add populate.
-	pipe = append(pipe, bson.D{{
-		Key: "$lookup",
-		Value: bson.M{
-			"from": TblAuth,
-			"as":   "authsx",
-			// "localField":   "_id",
-			// "foreignField": "service_id",
-			"let": bson.D{{Key: "userId", Value: "$user_id"}},
-			"pipeline": mongo.Pipeline{
-				bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$_id", "$$userId"}}}}},
-				bson.D{{"$limit", 1}},
-			},
-		},
-	}})
+	// // add populate.
+	// pipe = append(pipe, bson.D{{
+	// 	Key: "$lookup",
+	// 	Value: bson.M{
+	// 		"from": tblImage,
+	// 		"as":   "post",
+	// 		// "localField":   "_id",
+	// 		// "foreignField": "service_id",
+	// 		"let": bson.D{{Key: "userId", Value: bson.D{{"$toString", "$_id"}}}},
+	// 		"pipeline": mongo.Pipeline{
+	// 			bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$userId", "$$userId"}}}}},
+	// 		},
+	// 	},
+	// }})
 
-	pipe = append(pipe, bson.D{{Key: "$set", Value: bson.M{"md": "$test.max_distance"}}})
-	// pipe = append(pipe, bson.D{{Key: "$set", Value: bson.M{"test": bson.M{"$first": "$authsx"}}}})
-	// pipe = append(pipe, bson.D{{Key: "$set", Value: bson.M{"roles": "$test.roles"}}})
+	// // add populate.
+	// pipe = append(pipe, bson.D{{
+	// 	Key: "$lookup",
+	// 	Value: bson.M{
+	// 		"from": TblAuth,
+	// 		"as":   "authsx",
+	// 		// "localField":   "_id",
+	// 		// "foreignField": "service_id",
+	// 		"let": bson.D{{Key: "userId", Value: "$user_id"}},
+	// 		"pipeline": mongo.Pipeline{
+	// 			bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$_id", "$$userId"}}}}},
+	// 			bson.D{{"$limit", 1}},
+	// 		},
+	// 	},
+	// }})
+
+	// pipe = append(pipe, bson.D{{Key: "$set", Value: bson.M{"md": "$test.max_distance"}}})
+	// // pipe = append(pipe, bson.D{{Key: "$set", Value: bson.M{"test": bson.M{"$first": "$authsx"}}}})
+	// // pipe = append(pipe, bson.D{{Key: "$set", Value: bson.M{"roles": "$test.roles"}}})
 
 	// // add stat user tag vote.
 	// pipe = append(pipe, bson.D{{
@@ -379,6 +423,22 @@ func (r *UserMongo) FindUser(params domain.RequestParams) (domain.Response[domai
 		},
 	}})
 	pipe = append(pipe, bson.D{{Key: "$set", Value: bson.M{"postObject": bson.M{"$first": "$posts"}}}})
+
+	// add populate auth.
+	pipe = append(pipe, bson.D{{
+		Key: "$lookup",
+		Value: bson.M{
+			"from":         TblAuth,
+			"as":           "auths",
+			"localField":   "userId",
+			"foreignField": "_id",
+			// "let": bson.D{{Key: "roleId", Value: bson.D{{"$toString", "$roleId"}}}},
+			// "pipeline": mongo.Pipeline{
+			// 	bson.D{{Key: "$match", Value: bson.M{"$_id": bson.M{"$eq": [2]string{"$roleId", "$$_id"}}}}},
+			// },
+		},
+	}})
+	pipe = append(pipe, bson.D{{Key: "$set", Value: bson.M{"auth": bson.M{"$first": "$auths"}}}})
 
 	cursor, err := r.db.Collection(tblUsers).Aggregate(ctx, pipe) // Find(ctx, params.Filter, opts)
 	if err != nil {
