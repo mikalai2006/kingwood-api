@@ -16,6 +16,7 @@ type Order struct {
 	ConstructorId   primitive.ObjectID `json:"constructorId" bson:"constructorId" primitive:"true"`
 	ObjectId        primitive.ObjectID `json:"objectId" bson:"objectId" form:"objectId"`
 	Term            time.Time          `json:"term" bson:"term" form:"term"`
+	DateStart       time.Time          `json:"dateStart" bson:"dateStart" form:"dateStart"`
 	TermMontaj      time.Time          `json:"termMontaj" bson:"termMontaj" form:"termMontaj"`
 	Priority        *int64             `json:"priority" bson:"priority" form:"priority"`
 	StolyarComplete *int64             `json:"stolyarComplete" bson:"stolyarComplete" form:"stolyarComplete"`
@@ -30,6 +31,7 @@ type Order struct {
 	// User User `json:"user" bson:"user"`
 	Object Object `json:"object" bson:"object"`
 
+	Year      int       `json:"year" bson:"year"`
 	CreatedAt time.Time `json:"createdAt" bson:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt" bson:"updatedAt"`
 }
@@ -44,6 +46,7 @@ type OrderInput struct {
 	ObjectId        primitive.ObjectID `json:"objectId" bson:"objectId" form:"objectId"`
 	ConstructorId   primitive.ObjectID `json:"constructorId" bson:"constructorId" primitive:"true"`
 	Term            time.Time          `json:"term" bson:"term" form:"term"`
+	DateStart       time.Time          `json:"dateStart" bson:"dateStart" form:"dateStart"`
 	TermMontaj      time.Time          `json:"termMontaj" bson:"termMontaj" form:"termMontaj"`
 	Priority        *int64             `json:"priority" bson:"priority" form:"priority"`
 	StolyarComplete *int64             `json:"stolyarComplete" bson:"stolyarComplete" form:"stolyarComplete"`
@@ -55,6 +58,7 @@ type OrderInput struct {
 	Status *int64   `json:"status" bson:"status" form:"status"`
 	Group  []string `json:"group" bson:"group" form:"group"`
 
+	Year      int       `json:"year" bson:"year"`
 	CreatedAt time.Time `json:"createdAt" bson:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt" bson:"updatedAt"`
 }
@@ -79,8 +83,9 @@ type OrderFilter struct {
 	MalyarComplete  *int64    `json:"malyarComplete"`
 	GoComplete      *int64    `json:"goComplete"`
 	MontajComplete  *int64    `json:"montajComplete"`
+	Year            *int      `json:"year"`
 	// NeedMontaj *int64              `json:"needMontaj" bson:"needMontaj" form:"needMontaj"`
-	Sort  []*FilterSortParams `json:"sort,omitempty"`
+	Sort  []*FilterSortParams `json:"$sort,omitempty"`
 	Limit *int                `json:"$limit,omitempty"`
 	Skip  *int                `json:"$skip,omitempty"`
 }

@@ -21,9 +21,9 @@ func (s *OrderService) FindOrder(input *domain.OrderFilter) (domain.Response[dom
 	return s.repo.FindOrder(input)
 }
 
-func (s *OrderService) GetAllOrder(params domain.RequestParams) (domain.Response[domain.Order], error) {
-	return s.repo.GetAllOrder(params)
-}
+// func (s *OrderService) GetAllOrder(params domain.RequestParams) (domain.Response[domain.Order], error) {
+// 	return s.repo.GetAllOrder(params)
+// }
 
 func (s *OrderService) CreateOrder(userID string, data *domain.Order) (*domain.Order, error) {
 	var result *domain.Order

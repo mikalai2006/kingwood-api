@@ -68,8 +68,6 @@ type Order interface {
 	FindOrder(input *domain.OrderFilter) (domain.Response[domain.Order], error)
 	UpdateOrder(id string, userID string, data *domain.OrderInput) (*domain.Order, error)
 	DeleteOrder(id string) (*domain.Order, error)
-
-	GetAllOrder(params domain.RequestParams) (domain.Response[domain.Order], error)
 }
 
 type Operation interface {

@@ -21,11 +21,20 @@ func NewOrderMongo(db *mongo.Database, i18n config.I18nConfig) *OrderMongo {
 	return &OrderMongo{db: db, i18n: i18n}
 }
 
+type ResultMetadata struct {
+	ID    interface{} `json:"_id" bson:"_id"`
+	Total int         `json:"total" bson:"total"`
+}
+type ResultFacet struct {
+	Metadata []ResultMetadata `json:"metadata" bson:"metadata"`
+	Data     []domain.Order   `json:"data" bson:"data"`
+}
+
 func (r *OrderMongo) FindOrder(input *domain.OrderFilter) (domain.Response[domain.Order], error) {
 	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
 	defer cancel()
 
-	var results []domain.Order
+	// var results []domain.Order
 	var response domain.Response[domain.Order]
 	// var response domain.Response[domain.Order]
 	// filter, opts, err := CreateFilterAndOptions(params)
@@ -146,14 +155,53 @@ func (r *OrderMongo) FindOrder(input *domain.OrderFilter) (domain.Response[domai
 
 	skip := 0
 	limit := 10
+	dataOptions := bson.A{}
 	if input.Skip != nil {
-		pipe = append(pipe, bson.D{{"$skip", input.Skip}})
 		skip = *input.Skip
+		dataOptions = append(dataOptions, bson.D{{"$skip", skip}})
 	}
 	if input.Limit != nil {
-		pipe = append(pipe, bson.D{{"$limit", input.Limit}})
 		limit = *input.Limit
+		dataOptions = append(dataOptions, bson.D{{"$limit", limit}})
 	}
+	if input.Sort != nil {
+		sortParam := bson.D{}
+		for i := range input.Sort {
+			sortParam = append(sortParam, bson.E{*input.Sort[i].Key, *input.Sort[i].Value})
+		}
+		dataOptions = append(dataOptions, bson.D{{"$sort", sortParam}})
+	}
+
+	pipe = append(pipe, bson.D{{Key: "$facet", Value: bson.D{
+		{"data", dataOptions},
+		{Key: "metadata", Value: mongo.Pipeline{
+			bson.D{{"$group", bson.D{
+				{"_id", nil},
+				{"total", bson.D{{"$sum", 1}}}}}},
+		}},
+	},
+	}})
+
+	// $facet: {
+	// 	results: [
+	// 	  {
+	// 		$skip: 1
+	// 	  },
+	// 	  {
+	// 		$limit: 1
+	// 	  }
+	// 	],
+	// 	count: [
+	// 	  {
+	// 		$group: {
+	// 		  _id: null,
+	// 		  count: {
+	// 			$sum: 1
+	// 		  }
+	// 		}
+	// 	  }
+	// 	]
+	//   }
 
 	cursor, err := r.db.Collection(TblOrder).Aggregate(ctx, pipe) // Find(ctx, params.Filter, opts)
 	// cursor, err := r.db.Collection(TblNode).Find(ctx, filter, opts)
@@ -162,9 +210,18 @@ func (r *OrderMongo) FindOrder(input *domain.OrderFilter) (domain.Response[domai
 	}
 	defer cursor.Close(ctx)
 
-	if er := cursor.All(ctx, &results); er != nil {
+	resultMap := []bson.M{}
+	if er := cursor.All(ctx, &resultMap); er != nil {
 		return response, er
 	}
+	resultFacetOne := ResultFacet{}
+	bsonBytes, errs := bson.Marshal(resultMap[0])
+	if errs != nil {
+		fmt.Println("rrrrr: errs ", errs)
+	}
+
+	bson.Unmarshal(bsonBytes, &resultFacetOne)
+	// fmt.Println("rrrrr: ", resultMap[0])
 
 	// count, err := r.db.Collection(TblOrder).CountDocuments(ctx, params.Filter)
 	// if err != nil {
@@ -172,116 +229,13 @@ func (r *OrderMongo) FindOrder(input *domain.OrderFilter) (domain.Response[domai
 	// }
 
 	response = domain.Response[domain.Order]{
-		Total: 0,
+		Total: resultFacetOne.Metadata[0].Total,
 		Skip:  skip,
 		Limit: limit,
-		Data:  results,
+		Data:  resultFacetOne.Data, //results,
 	}
 	return response, nil
 }
-
-func (r *OrderMongo) GetAllOrder(params domain.RequestParams) (domain.Response[domain.Order], error) {
-	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
-	defer cancel()
-
-	var results []domain.Order
-	var response domain.Response[domain.Order]
-	pipe, err := CreatePipeline(params, &r.i18n)
-	if err != nil {
-		return domain.Response[domain.Order]{}, err
-	}
-
-	cursor, err := r.db.Collection(TblOrder).Aggregate(ctx, pipe) // Find(ctx, params.Filter, opts)
-	if err != nil {
-		return response, err
-	}
-	defer cursor.Close(ctx)
-
-	if er := cursor.All(ctx, &results); er != nil {
-		return response, er
-	}
-
-	resultSlice := make([]domain.Order, len(results))
-	// for i, d := range results {
-	// 	resultSlice[i] = d
-	// }
-	copy(resultSlice, results)
-
-	count, err := r.db.Collection(TblOrder).CountDocuments(ctx, bson.M{})
-	if err != nil {
-		return response, err
-	}
-
-	response = domain.Response[domain.Order]{
-		Total: int(count),
-		Skip:  int(params.Options.Skip),
-		Limit: int(params.Options.Limit),
-		Data:  resultSlice,
-	}
-	return response, nil
-}
-
-// func (r *OrderMongo) GqlGetOrders(params domain.RequestParams) ([]*domain.Order, error) {
-// 	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
-// 	defer cancel()
-
-// 	var results []*domain.Order
-// 	pipe, err := CreatePipeline(params, &r.i18n)
-// 	if err != nil {
-// 		return results, err
-// 	}
-
-// 	pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
-// 		"from": "users",
-// 		"as":   "usera",
-// 		"let":  bson.D{{Key: "userId", Value: "$user_id"}},
-// 		"pipeline": mongo.Pipeline{
-// 			bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$_id", "$$userId"}}}}},
-// 			bson.D{{"$limit", 1}},
-// 			bson.D{{
-// 				Key: "$lookup",
-// 				Value: bson.M{
-// 					"from": tblImage,
-// 					"as":   "images",
-// 					"let":  bson.D{{Key: "serviceId", Value: bson.D{{"$toString", "$_id"}}}},
-// 					"pipeline": mongo.Pipeline{
-// 						bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$service_id", "$$serviceId"}}}}},
-// 					},
-// 				},
-// 			}},
-// 		},
-// 	}}})
-// 	pipe = append(pipe, bson.D{{Key: "$set", Value: bson.M{"user": bson.M{"$first": "$usera"}}}})
-
-// 	cursor, err := r.db.Collection(TblOrder).Aggregate(ctx, pipe) // Find(ctx, params.Filter, opts)
-// 	if err != nil {
-// 		return results, err
-// 	}
-// 	defer cursor.Close(ctx)
-
-// 	if er := cursor.All(ctx, &results); er != nil {
-// 		return results, er
-// 	}
-
-// 	resultSlice := make([]*domain.Order, len(results))
-// 	// for i, d := range results {
-// 	// 	resultSlice[i] = d
-// 	// }
-// 	copy(resultSlice, results)
-
-// 	// count, err := r.db.Collection(TblOrder).CountDocuments(ctx, bson.M{})
-// 	// if err != nil {
-// 	// 	return results, err
-// 	// }
-
-// 	// results = []*domain.Order{
-// 	// 	Total: int(count),
-// 	// 	Skip:  int(params.Options.Skip),
-// 	// 	Limit: int(params.Options.Limit),
-// 	// 	Data:  resultSlice,
-// 	// }
-// 	return results, nil
-// }
 
 func (r *OrderMongo) CreateOrder(userID string, data *domain.Order) (*domain.Order, error) {
 	var result *domain.Order
@@ -305,7 +259,7 @@ func (r *OrderMongo) CreateOrder(userID string, data *domain.Order) (*domain.Ord
 		updatedAt = time.Now()
 	}
 
-	itemCount, err := collection.CountDocuments(ctx, bson.M{})
+	itemCount, err := collection.CountDocuments(ctx, bson.M{"year": time.Now().Year()})
 	if err != nil {
 		return nil, err
 	}
@@ -321,12 +275,13 @@ func (r *OrderMongo) CreateOrder(userID string, data *domain.Order) (*domain.Ord
 		Priority:        data.Priority,
 		Term:            data.Term,
 		TermMontaj:      data.TermMontaj,
-		Status:          data.Status,
+		Status:          &defaultStatus,
 		Group:           data.Group,
 		StolyarComplete: &defaultStatus,
 		MalyarComplete:  &defaultStatus,
 		GoComplete:      &defaultStatus,
 		MontajComplete:  &defaultStatus,
+		Year:            time.Now().Year(),
 
 		CreatedAt: updatedAt,
 		UpdatedAt: updatedAt,
@@ -390,6 +345,9 @@ func (r *OrderMongo) UpdateOrder(id string, userID string, data *domain.OrderInp
 	}
 	if !data.Term.IsZero() {
 		newData["term"] = data.Term
+	}
+	if !data.DateStart.IsZero() {
+		newData["dateStart"] = data.DateStart
 	}
 	if !data.TermMontaj.IsZero() {
 		newData["termMontaj"] = data.TermMontaj

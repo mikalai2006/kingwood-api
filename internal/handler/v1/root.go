@@ -47,7 +47,6 @@ func (h *HandlerV1) Init(api *gin.RouterGroup) {
 		h.registerWs(v1)
 		h.registerOperation(v1)
 		h.registerTaskStatus(v1)
-		h.registerObject(v1)
 
 		authenticated := v1.Group("", h.SetUserFromRequest)
 		{
@@ -57,6 +56,7 @@ func (h *HandlerV1) Init(api *gin.RouterGroup) {
 			// h.registerMessage(authenticated)
 			// h.registerMessageRoom(authenticated)
 			h.registerOrder(authenticated)
+			h.registerObject(authenticated)
 			// h.registerOffer(authenticated)
 			// h.registerOperation(authenticated)
 			h.registerTask(authenticated)
