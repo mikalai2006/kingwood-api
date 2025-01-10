@@ -310,19 +310,23 @@ func (r *OrderMongo) CreateOrder(userID string, data *domain.Order) (*domain.Ord
 		return nil, err
 	}
 
+	defaultStatus := int64(0)
 	newOrder := domain.OrderInput{
-		UserID:        userIDPrimitive,
-		Name:          data.Name,
-		Description:   data.Description,
-		ObjectId:      data.ObjectId,
-		Number:        itemCount + 1,
-		ConstructorId: data.ConstructorId,
-		Priority:      data.Priority,
-		Term:          data.Term,
-		TermMontaj:    data.TermMontaj,
-		Status:        data.Status,
-		Group:         data.Group,
-		// NeedMontaj:    data.NeedMontaj,
+		UserID:          userIDPrimitive,
+		Name:            data.Name,
+		Description:     data.Description,
+		ObjectId:        data.ObjectId,
+		Number:          itemCount + 1,
+		ConstructorId:   data.ConstructorId,
+		Priority:        data.Priority,
+		Term:            data.Term,
+		TermMontaj:      data.TermMontaj,
+		Status:          data.Status,
+		Group:           data.Group,
+		StolyarComplete: &defaultStatus,
+		MalyarComplete:  &defaultStatus,
+		GoComplete:      &defaultStatus,
+		MontajComplete:  &defaultStatus,
 
 		CreatedAt: updatedAt,
 		UpdatedAt: updatedAt,
