@@ -14,7 +14,7 @@ import (
 )
 
 func (h *HandlerV1) registerAppError(router *gin.RouterGroup) {
-	route := router.Group("/error_app")
+	route := router.Group("/app_error")
 	route.POST("", h.CreateAppError)
 	route.POST("/populate", h.FindAppError)
 	route.PATCH("/:id", h.SetUserFromRequest, h.UpdateAppError)

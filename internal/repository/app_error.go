@@ -29,11 +29,23 @@ func (r *AppErrorMongo) FindAppError(input *domain.AppErrorFilter) (domain.Respo
 
 	// Filters
 	q := bson.D{}
+	if input.Code != "" {
+		q = append(q, bson.E{"code", input.Code})
+	}
+	if input.From != nil && !input.From.IsZero() {
+		q = append(q, bson.E{"createdAt", bson.D{{"$gte", primitive.NewDateTimeFromTime(*input.From)}}})
+	}
+	if input.To != nil && !input.To.IsZero() {
+		q = append(q, bson.E{"createdAt", bson.D{{"$lte", primitive.NewDateTimeFromTime(*input.To)}}})
+	}
 	if input.Error != "" {
-		q = append(q, bson.E{"error", input.Error})
+		q = append(q, bson.E{"error", bson.E{"$regex", input.Error}})
+	}
+	if input.Stack != "" {
+		q = append(q, bson.E{"stack", bson.E{"$regex", input.Stack}})
 	}
 	if input.Status != nil {
-		q = append(q, bson.E{"status", &input.Status})
+		q = append(q, bson.E{"status", *input.Status})
 	}
 	if input.ID != nil && len(input.ID) > 0 {
 		ids := []primitive.ObjectID{}
@@ -199,7 +211,9 @@ func (r *AppErrorMongo) CreateAppError(userID string, data *domain.AppError) (*d
 	newAppError := domain.AppErrorInput{
 		UserID: userIDPrimitive,
 		Error:  data.Error,
-		Status: data.Status,
+		Status: &data.Status,
+		Code:   data.Code,
+		Stack:  data.Stack,
 
 		CreatedAt: updatedAt,
 		UpdatedAt: updatedAt,

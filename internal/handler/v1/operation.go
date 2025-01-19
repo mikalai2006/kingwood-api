@@ -15,10 +15,10 @@ import (
 
 func (h *HandlerV1) registerOperation(router *gin.RouterGroup) {
 	Operation := router.Group("/operation")
-	Operation.POST("", h.CreateOperation)
+	Operation.POST("", h.SetUserFromRequest, h.CreateOperation)
 	Operation.GET("", h.FindOperation)
 	Operation.PATCH("/:id", h.SetUserFromRequest, h.UpdateOperation)
-	Operation.POST("/list", h.CreateOperationList)
+	Operation.POST("/list", h.SetUserFromRequest, h.CreateOperationList)
 }
 
 func (h *HandlerV1) CreateOperation(c *gin.Context) {
