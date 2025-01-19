@@ -16,9 +16,10 @@ import (
 func (h *HandlerV1) registerPay(router *gin.RouterGroup) {
 	route := router.Group("/pay")
 	route.POST("", h.CreatePay)
-	route.GET("", h.FindPay)
+	route.POST("/populate", h.FindPay)
 	route.PATCH("/:id", h.SetUserFromRequest, h.UpdatePay)
-	route.POST("/list", h.CreatePayList)
+	// route.POST("/list", h.CreatePayList)
+	route.DELETE("/:id", h.DeletePay)
 }
 
 func (h *HandlerV1) CreatePay(c *gin.Context) {
@@ -94,13 +95,18 @@ func (h *HandlerV1) CreatePayList(c *gin.Context) {
 func (h *HandlerV1) FindPay(c *gin.Context) {
 	appG := app.Gin{C: c}
 
-	params, err := utils.GetParamsFromRequest(c, domain.PayInputData{}, &h.i18n)
-	if err != nil {
-		appG.ResponseError(http.StatusBadRequest, err, nil)
+	// params, err := utils.GetParamsFromRequest(c, domain.PayInputData{}, &h.i18n)
+	// if err != nil {
+	// 	appG.ResponseError(http.StatusBadRequest, err, nil)
+	// 	return
+	// }
+	var input *domain.PayFilter
+	if er := c.BindJSON(&input); er != nil {
+		appG.ResponseError(http.StatusBadRequest, er, nil)
 		return
 	}
 
-	Pays, err := h.Services.Pay.FindPay(params)
+	Pays, err := h.Services.Pay.FindPay(input)
 	if err != nil {
 		appG.ResponseError(http.StatusBadRequest, err, nil)
 		return
@@ -162,7 +168,30 @@ func (h *HandlerV1) UpdatePay(c *gin.Context) {
 }
 
 func (h *HandlerV1) DeletePay(c *gin.Context) {
+	appG := app.Gin{C: c}
 
+	id := c.Param("id")
+	if id == "" {
+		// c.AbortWithError(http.StatusBadRequest, errors.New("for remove need id"))
+		appG.ResponseError(http.StatusBadRequest, errors.New("for remove need id"), nil)
+		return
+	}
+
+	userID, err := middleware.GetUID(c)
+	if err != nil {
+		// c.AbortWithError(http.StatusUnauthorized, err)
+		appG.ResponseError(http.StatusUnauthorized, err, gin.H{"hello": "world"})
+		return
+	}
+
+	user, err := h.Services.Pay.DeletePay(id, userID)
+	if err != nil {
+		// c.AbortWithError(http.StatusBadRequest, err)
+		appG.ResponseError(http.StatusBadRequest, err, nil)
+		return
+	}
+
+	c.JSON(http.StatusOK, user)
 }
 
 func (h *HandlerV1) CreateOrExistPay(c *gin.Context, input *domain.Pay) (*domain.Pay, error) {

@@ -13,17 +13,15 @@ import (
 	"github.com/mikalai2006/kingwood-api/pkg/app"
 )
 
-func (h *HandlerV1) registerTaskMontajWorker(router *gin.RouterGroup) {
-	route := router.Group("/task_montaj_worker")
-	route.POST("", h.CreateTaskMontajWorker)
-	route.GET("", h.FindTaskMontajWorker)
-	route.POST("/populate", h.FindTaskMontajWorkerPopulate)
-	route.PATCH("/:id", h.SetUserFromRequest, h.UpdateTaskMontajWorker)
-	route.POST("/list", h.CreateTaskMontajWorkerList)
-	route.DELETE("/:id", h.DeleteTaskMontajWorker)
+func (h *HandlerV1) registerWorkHistory(router *gin.RouterGroup) {
+	route := router.Group("/work_history")
+	route.POST("", h.CreateWorkHistory)
+	route.POST("/find", h.FindWorkHistory)
+	route.PATCH("/:id", h.SetUserFromRequest, h.UpdateWorkHistory)
+	route.POST("/list", h.CreateWorkHistoryList)
 }
 
-func (h *HandlerV1) CreateTaskMontajWorker(c *gin.Context) {
+func (h *HandlerV1) CreateWorkHistory(c *gin.Context) {
 	appG := app.Gin{C: c}
 	// userID, err := middleware.GetUID(c)
 	// if err != nil {
@@ -32,22 +30,22 @@ func (h *HandlerV1) CreateTaskMontajWorker(c *gin.Context) {
 	// 	return
 	// }
 
-	var input *domain.TaskMontajWorker
+	var input *domain.WorkHistory
 	if er := c.BindJSON(&input); er != nil {
 		appG.ResponseError(http.StatusBadRequest, er, nil)
 		return
 	}
 
-	TaskMontajWorker, err := h.CreateOrExistTaskMontajWorker(c, input) //h.services.TaskMontajWorker.CreateTaskMontajWorker(userID, input)
+	Work, err := h.CreateOrExistWorkHistory(c, input) //h.services.Work.CreateWork(userID, input)
 	if err != nil {
 		appG.ResponseError(http.StatusBadRequest, err, nil)
 		return
 	}
 
-	c.JSON(http.StatusOK, TaskMontajWorker)
+	c.JSON(http.StatusOK, Work)
 }
 
-func (h *HandlerV1) CreateTaskMontajWorkerList(c *gin.Context) {
+func (h *HandlerV1) CreateWorkHistoryList(c *gin.Context) {
 	appG := app.Gin{C: c}
 	userID, err := middleware.GetUID(c)
 	if err != nil || userID == "" {
@@ -56,7 +54,7 @@ func (h *HandlerV1) CreateTaskMontajWorkerList(c *gin.Context) {
 		return
 	}
 
-	var input []*domain.TaskMontajWorker
+	var input []*domain.WorkHistory
 	if er := c.BindJSON(&input); er != nil {
 		appG.ResponseError(http.StatusBadRequest, er, nil)
 		return
@@ -67,74 +65,56 @@ func (h *HandlerV1) CreateTaskMontajWorkerList(c *gin.Context) {
 		return
 	}
 
-	var result []*domain.TaskMontajWorker
+	var result []*domain.WorkHistory
 	for i := range input {
-		TaskMontajWorker, err := h.CreateOrExistTaskMontajWorker(c, input[i]) //h.services.TaskMontajWorker.CreateTaskMontajWorker(userID, input)
+		Work, err := h.CreateOrExistWorkHistory(c, input[i]) //h.services.Work.CreateWork(userID, input)
 		if err != nil {
 			appG.ResponseError(http.StatusBadRequest, err, nil)
 			return
 		}
-		result = append(result, TaskMontajWorker)
+		result = append(result, Work)
 	}
 
 	c.JSON(http.StatusOK, result)
 }
 
-// @Summary Find TaskMontajWorkers by params
+// @Summary Find Works by params
 // @Security ApiKeyAuth
-// @Tags TaskMontajWorker
-// @Description Input params for search TaskMontajWorkers
-// @ModuleID TaskMontajWorker
+// @Tags Work
+// @Description Input params for search Works
+// @ModuleID Work
 // @Accept  json
 // @Produce  json
-// @Param input query TaskMontajWorkerInput true "params for search TaskMontajWorker"
-// @Success 200 {object} []domain.TaskMontajWorker
+// @Param input query WorkInput true "params for search Work"
+// @Success 200 {object} []domain.Work
 // @Failure 400,404 {object} domain.ErrorResponse
 // @Failure 500 {object} domain.ErrorResponse
 // @Failure default {object} domain.ErrorResponse
-// @Router /api/TaskMontajWorker [get].
-func (h *HandlerV1) FindTaskMontajWorker(c *gin.Context) {
+// @Router /api/Work [get].
+func (h *HandlerV1) FindWorkHistory(c *gin.Context) {
 	appG := app.Gin{C: c}
 
-	params, err := utils.GetParamsFromRequest(c, domain.TaskMontajWorkerInputData{}, &h.i18n)
-	if err != nil {
-		appG.ResponseError(http.StatusBadRequest, err, nil)
-		return
-	}
-
-	TaskMontajWorkers, err := h.Services.TaskMontajWorker.FindTaskMontajWorker(params)
-	if err != nil {
-		appG.ResponseError(http.StatusBadRequest, err, nil)
-		return
-	}
-
-	c.JSON(http.StatusOK, TaskMontajWorkers)
-}
-
-func (h *HandlerV1) FindTaskMontajWorkerPopulate(c *gin.Context) {
-	appG := app.Gin{C: c}
-
-	// params, err := utils.GetParamsFromRequest(c, domain.TaskMontajWorkerInputData{}, &h.i18n)
+	// params, err := utils.GetParamsFromRequest(c, domain.WorkHistoryInputData{}, &h.i18n)
 	// if err != nil {
 	// 	appG.ResponseError(http.StatusBadRequest, err, nil)
 	// 	return
 	// }
-	var input *domain.TaskMontajWorkerFilter
+	var input *domain.WorkHistoryFilter
 	if er := c.BindJSON(&input); er != nil {
 		appG.ResponseError(http.StatusBadRequest, er, nil)
 		return
 	}
 
-	TaskMontajWorkers, err := h.Services.TaskMontajWorker.FindTaskMontajWorkerPopulate(input)
+	Works, err := h.Services.WorkHistory.FindWorkHistory(*input)
 	if err != nil {
 		appG.ResponseError(http.StatusBadRequest, err, nil)
 		return
 	}
 
-	c.JSON(http.StatusOK, TaskMontajWorkers)
+	c.JSON(http.StatusOK, Works)
 }
 
-func (h *HandlerV1) UpdateTaskMontajWorker(c *gin.Context) {
+func (h *HandlerV1) UpdateWorkHistory(c *gin.Context) {
 	appG := app.Gin{C: c}
 	userID, err := middleware.GetUID(c)
 	if err != nil {
@@ -167,13 +147,13 @@ func (h *HandlerV1) UpdateTaskMontajWorker(c *gin.Context) {
 		appG.ResponseError(http.StatusBadRequest, er, nil)
 		return
 	}
-	data, er := utils.BindJSON2[domain.TaskMontajWorkerInput](a)
+	data, er := utils.BindJSON2[domain.WorkHistoryInput](a)
 	if er != nil {
 		appG.ResponseError(http.StatusBadRequest, er, nil)
 		return
 	}
 
-	document, err := h.Services.TaskMontajWorker.UpdateTaskMontajWorker(id, userID, &data)
+	document, err := h.Services.WorkHistory.UpdateWorkHistory(id, userID, &data)
 	if err != nil {
 		appG.ResponseError(http.StatusInternalServerError, err, nil)
 		return
@@ -182,7 +162,11 @@ func (h *HandlerV1) UpdateTaskMontajWorker(c *gin.Context) {
 	c.JSON(http.StatusOK, document)
 }
 
-func (h *HandlerV1) CreateOrExistTaskMontajWorker(c *gin.Context, input *domain.TaskMontajWorker) (*domain.TaskMontajWorker, error) {
+func (h *HandlerV1) DeleteWorkHistory(c *gin.Context) {
+
+}
+
+func (h *HandlerV1) CreateOrExistWorkHistory(c *gin.Context, input *domain.WorkHistory) (*domain.WorkHistory, error) {
 	appG := app.Gin{C: c}
 	userID, err := middleware.GetUID(c)
 	if err != nil {
@@ -190,7 +174,7 @@ func (h *HandlerV1) CreateOrExistTaskMontajWorker(c *gin.Context, input *domain.
 		appG.ResponseError(http.StatusUnauthorized, err, gin.H{"hello": "world"})
 		return nil, err
 	}
-	var result *domain.TaskMontajWorker
+	var result *domain.WorkHistory
 
 	// userIDPrimitive, err := primitive.ObjectIDFromHex(userID)
 	// if err != nil {
@@ -198,7 +182,7 @@ func (h *HandlerV1) CreateOrExistTaskMontajWorker(c *gin.Context, input *domain.
 	// 	return result, err
 	// }
 
-	// existTaskMontajWorkers, err := h.services.TaskMontajWorker.FindTaskMontajWorker(domain.RequestParams{
+	// existWorks, err := h.services.Work.FindWork(domain.RequestParams{
 	// 	Options: domain.Options{Limit: 1},
 	// 	Filter:  bson.D{{"node_id", input.NodeID}, {"user_id", userIDPrimitive}},
 	// })
@@ -206,36 +190,16 @@ func (h *HandlerV1) CreateOrExistTaskMontajWorker(c *gin.Context, input *domain.
 	// 	appG.ResponseError(http.StatusBadRequest, err, nil)
 	// 	return result, err
 	// }
-	// if len(existTaskMontajWorkers.Data) > 0 {
-	// 	fmt.Println("existTaskMontajWorkers =")
+	// if len(existWorks.Data) > 0 {
+	// 	fmt.Println("existWorks =")
 	// 	// appG.ResponseError(http.StatusBadRequest, model.ErrNodedataVoteExistValue, nil)
-	// 	return &existTaskMontajWorkers.Data[0], nil
+	// 	return &existWorks.Data[0], nil
 	// }
 
-	result, err = h.Services.TaskMontajWorker.CreateTaskMontajWorker(userID, input)
+	result, err = h.Services.WorkHistory.CreateWorkHistory(userID, input)
 	if err != nil {
 		appG.ResponseError(http.StatusBadRequest, err, nil)
 		return result, err
 	}
 	return result, nil
-}
-
-func (h *HandlerV1) DeleteTaskMontajWorker(c *gin.Context) {
-	appG := app.Gin{C: c}
-
-	id := c.Param("id")
-	if id == "" {
-		// c.AbortWithError(http.StatusBadRequest, errors.New("for remove need id"))
-		appG.ResponseError(http.StatusBadRequest, errors.New("for remove need id"), nil)
-		return
-	}
-
-	user, err := h.Services.TaskMontajWorker.DeleteTaskMontajWorker(id) // , input
-	if err != nil {
-		// c.AbortWithError(http.StatusBadRequest, err)
-		appG.ResponseError(http.StatusBadRequest, err, nil)
-		return
-	}
-
-	c.JSON(http.StatusOK, user)
 }

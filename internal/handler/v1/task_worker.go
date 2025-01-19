@@ -228,7 +228,14 @@ func (h *HandlerV1) DeleteTaskWorker(c *gin.Context) {
 		return
 	}
 
-	user, err := h.Services.TaskWorker.DeleteTaskWorker(id) // , input
+	userID, err := middleware.GetUID(c)
+	if err != nil {
+		// c.AbortWithError(http.StatusUnauthorized, err)
+		appG.ResponseError(http.StatusUnauthorized, err, gin.H{"hello": "world"})
+		return
+	}
+
+	user, err := h.Services.TaskWorker.DeleteTaskWorker(id, userID) // , input
 	if err != nil {
 		// c.AbortWithError(http.StatusBadRequest, err)
 		appG.ResponseError(http.StatusBadRequest, err, nil)

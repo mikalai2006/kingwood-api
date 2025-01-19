@@ -74,16 +74,19 @@ type OrderInput struct {
 // }
 
 type OrderFilter struct {
-	ID              []*string `json:"id,omitempty"`
-	Name            *string   `json:"name,omitempty"`
-	Group           []*string `json:"group,omitempty"`
-	Status          *int64    `json:"status"`
-	ObjectId        []string  `json:"objectId" bson:"objectId" form:"objectId"`
-	StolyarComplete *int64    `json:"stolyarComplete"`
-	MalyarComplete  *int64    `json:"malyarComplete"`
-	GoComplete      *int64    `json:"goComplete"`
-	MontajComplete  *int64    `json:"montajComplete"`
-	Year            *int      `json:"year"`
+	ID              []*string  `json:"id,omitempty"`
+	Name            *string    `json:"name,omitempty"`
+	Group           []*string  `json:"group,omitempty"`
+	Status          *int64     `json:"status"`
+	ObjectId        []string   `json:"objectId" bson:"objectId" form:"objectId"`
+	StolyarComplete *int64     `json:"stolyarComplete"`
+	MalyarComplete  *int64     `json:"malyarComplete"`
+	GoComplete      *int64     `json:"goComplete"`
+	MontajComplete  *int64     `json:"montajComplete"`
+	Year            *int       `json:"year"`
+	From            *time.Time `json:"from,omitempty"`
+	To              *time.Time `json:"to,omitempty"`
+	Date            *time.Time `json:"date,omitempty"`
 	// NeedMontaj *int64              `json:"needMontaj" bson:"needMontaj" form:"needMontaj"`
 	Sort  []*FilterSortParams `json:"$sort,omitempty"`
 	Limit *int                `json:"$limit,omitempty"`

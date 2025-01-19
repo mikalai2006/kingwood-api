@@ -8,13 +8,12 @@ import (
 	"github.com/mikalai2006/kingwood-api/internal/middleware"
 	"github.com/mikalai2006/kingwood-api/internal/utils"
 	"github.com/mikalai2006/kingwood-api/pkg/app"
-	"go.mongodb.org/mongo-driver/bson"
 )
 
 func (h *HandlerV1) RegisterUser(router *gin.RouterGroup) {
 	user := router.Group("/user")
 	user.POST("", h.CreateUser)
-	user.GET("", h.FindUser)
+	user.POST("/populate", h.FindUser)
 	user.GET("/:id", h.GetUser)
 	user.DELETE("/:id", h.DeleteUser)
 	user.PATCH("/:id", h.UpdateUser)
@@ -78,13 +77,18 @@ func (h *HandlerV1) GetUser(c *gin.Context) {
 func (h *HandlerV1) FindUser(c *gin.Context) {
 	appG := app.Gin{C: c}
 
-	params, err := utils.GetParamsFromRequest(c, domain.UserInput{}, &h.i18n)
-	if err != nil {
-		appG.ResponseError(http.StatusBadRequest, err, nil)
+	// params, err := utils.GetParamsFromRequest(c, domain.UserInput{}, &h.i18n)
+	// if err != nil {
+	// 	appG.ResponseError(http.StatusBadRequest, err, nil)
+	// 	return
+	// }
+	var input *domain.UserFilter
+	if er := c.BindJSON(&input); er != nil {
+		appG.ResponseError(http.StatusBadRequest, er, nil)
 		return
 	}
 
-	users, err := h.Services.User.FindUser(params)
+	users, err := h.Services.User.FindUser(input)
 	if err != nil {
 		appG.ResponseError(http.StatusBadRequest, err, nil)
 		return
@@ -182,7 +186,7 @@ func (h *HandlerV1) UpdateUser(c *gin.Context) {
 		return
 	}
 
-	user, err := h.Services.User.UpdateUser(id, &input)
+	user, err := h.Services.User.GetUser(id)
 	if err != nil {
 		appG.ResponseError(http.StatusBadRequest, err, nil)
 		return
@@ -212,11 +216,19 @@ func (h *HandlerV1) UpdateUser(c *gin.Context) {
 		images = append(images, image)
 	}
 
-	result, err := h.Services.User.FindUser(domain.RequestParams{Filter: bson.D{{"_id", user.ID}}})
+	result, err := h.Services.User.UpdateUser(id, &input)
 	if err != nil {
 		appG.ResponseError(http.StatusBadRequest, err, nil)
 		return
 	}
 
-	c.JSON(http.StatusOK, result.Data[0])
+	// limit := 1
+	// result, err := h.Services.User.FindUser(&domain.UserFilter{ID: []string{user.ID.Hex()}, Limit: &limit})
+	// // domain.RequestParams{Filter: bson.D{{"_id", user.ID}}})
+	// if err != nil {
+	// 	appG.ResponseError(http.StatusBadRequest, err, nil)
+	// 	return
+	// }
+
+	c.JSON(http.StatusOK, result)
 }

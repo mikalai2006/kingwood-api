@@ -238,6 +238,22 @@ func (r *TaskWorkerMongo) FindTaskWorkerPopulate(input *domain.TaskWorkerFilter)
 					},
 				},
 			}},
+			// add populate auth.
+			bson.D{{
+				Key: "$lookup",
+				Value: bson.M{
+					"from":         TblAuth,
+					"as":           "auths",
+					"localField":   "userId",
+					"foreignField": "_id",
+					// "let": bson.D{{Key: "roleId", Value: bson.D{{"$toString", "$roleId"}}}},
+					// "pipeline": mongo.Pipeline{
+					// 	bson.D{{Key: "$match", Value: bson.M{"$_id": bson.M{"$eq": [2]string{"$roleId", "$$_id"}}}}},
+					// },
+				},
+			}},
+			bson.D{{Key: "$set", Value: bson.M{"auth": bson.M{"$first": "$auths"}}}},
+			bson.D{{Key: "$set", Value: bson.M{"authPrivate": bson.M{"$first": "$auths"}}}},
 
 			// post.
 			bson.D{{
@@ -580,9 +596,13 @@ func (r *TaskWorkerMongo) DeleteTaskWorker(id string) (*domain.TaskWorker, error
 
 	filter := bson.M{"_id": idPrimitive}
 
-	err = collection.FindOne(ctx, filter).Decode(&result)
+	// err = collection.FindOne(ctx, filter).Decode(&result)
+	taskWorkers, err := r.FindTaskWorkerPopulate(&domain.TaskWorkerFilter{ID: []*string{&id}})
 	if err != nil {
 		return result, err
+	}
+	if len(taskWorkers.Data) > 0 {
+		result = &taskWorkers.Data[0]
 	}
 
 	_, err = collection.DeleteOne(ctx, filter)

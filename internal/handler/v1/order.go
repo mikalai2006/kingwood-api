@@ -19,6 +19,7 @@ func (h *HandlerV1) registerOrder(router *gin.RouterGroup) {
 	route.POST("", h.CreateOrder)
 	route.PATCH("/:id", h.SetUserFromRequest, h.UpdateOrder)
 	route.POST("/list", h.CreateOrderList)
+	route.DELETE("/:id", h.DeleteOrder)
 }
 
 func (h *HandlerV1) CreateOrder(c *gin.Context) {
@@ -197,7 +198,23 @@ func (h *HandlerV1) UpdateOrder(c *gin.Context) {
 }
 
 func (h *HandlerV1) DeleteOrder(c *gin.Context) {
+	appG := app.Gin{C: c}
 
+	id := c.Param("id")
+	if id == "" {
+		// c.AbortWithError(http.StatusBadRequest, errors.New("for remove need id"))
+		appG.ResponseError(http.StatusBadRequest, errors.New("for remove need id"), nil)
+		return
+	}
+
+	user, err := h.Services.Order.DeleteOrder(id) // , input
+	if err != nil {
+		// c.AbortWithError(http.StatusBadRequest, err)
+		appG.ResponseError(http.StatusBadRequest, err, nil)
+		return
+	}
+
+	c.JSON(http.StatusOK, user)
 }
 
 func (h *HandlerV1) CreateOrExistOrder(c *gin.Context, input *domain.Order) (*domain.Order, error) {

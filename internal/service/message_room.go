@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/mikalai2006/kingwood-api/graph/model"
 	"github.com/mikalai2006/kingwood-api/internal/domain"
 	"github.com/mikalai2006/kingwood-api/internal/repository"
 )
@@ -18,30 +17,30 @@ func NewMessageRoomService(repo repository.MessageRoom, Hub *Hub) *MessageRoomSe
 	return &MessageRoomService{repo: repo, Hub: Hub}
 }
 
-func (s *MessageRoomService) FindMessageRoom(params *model.MessageRoomFilter) (domain.Response[model.MessageRoom], error) {
+func (s *MessageRoomService) FindMessageRoom(params *domain.MessageRoomFilter) (domain.Response[domain.MessageRoom], error) {
 	return s.repo.FindMessageRoom(params)
 }
 
-func (s *MessageRoomService) CreateMessageRoom(userID string, data *model.MessageRoom) (*model.MessageRoom, error) {
+func (s *MessageRoomService) CreateMessageRoom(userID string, data *domain.MessageRoom) (*domain.MessageRoom, error) {
 	result, err := s.repo.CreateMessageRoom(userID, data)
 
-	s.Hub.HandleMessage(domain.Message{Type: "message", Method: "ADD", Sender: userID, Recipient: result.TakeUserID.Hex(), Content: result, ID: "room1", Service: "messageRoom"})
+	// s.Hub.HandleMessage(domain.MessageSocket{Type: "message", Method: "ADD", Sender: userID, Recipient: result.TakeUserID.Hex(), Content: result, ID: "room1", Service: "messageRoom"})
 
 	return result, err
 }
 
-func (s *MessageRoomService) UpdateMessageRoom(id string, userID string, data *model.MessageRoom) (*model.MessageRoom, error) {
+func (s *MessageRoomService) UpdateMessageRoom(id string, userID string, data *domain.MessageRoom) (*domain.MessageRoom, error) {
 	// return s.repo.UpdateMessageRoom(id, userID, data)
 	result, err := s.repo.UpdateMessageRoom(id, userID, data)
 
-	if result != nil && err == nil {
-		s.Hub.HandleMessage(domain.Message{Type: "message", Method: "patch", Sender: userID, Recipient: result.TakeUserID.Hex(), Content: result, ID: "room1", Service: "messageRoom"})
-	}
+	// if result != nil && err == nil {
+	// 	s.Hub.HandleMessage(domain.MessageSocket{Type: "message", Method: "patch", Sender: userID, Recipient: result.TakeUserID.Hex(), Content: result, ID: "room1", Service: "messageRoom"})
+	// }
 
 	return result, err
 }
 
-func (s *MessageRoomService) DeleteMessageRoom(id string) (model.MessageRoom, error) {
+func (s *MessageRoomService) DeleteMessageRoom(id string) (domain.MessageRoom, error) {
 	result, err := s.repo.DeleteMessageRoom(id)
 
 	// Delete dir with images for room.
@@ -62,6 +61,6 @@ func (s *MessageRoomService) DeleteMessageRoom(id string) (model.MessageRoom, er
 	return result, err
 }
 
-// func (s *MessageRoomService) GetGroupForUser(userID string) ([]model.MessageGroupForUser, error) {
-// 	return s.repo.GetGroupForUser(userID)
-// }
+func (s *MessageRoomService) GetGroupForUser(userID string) ([]domain.MessageGroupForUser, error) {
+	return s.repo.GetGroupForUser(userID)
+}

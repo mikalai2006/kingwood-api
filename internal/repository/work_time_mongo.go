@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/mikalai2006/kingwood-api/internal/config"
@@ -30,10 +31,28 @@ func (r *WorkTimeMongo) FindWorkTime(input domain.WorkTimeFilter) (domain.Respon
 	q := bson.D{}
 
 	// Filters
+	if !input.From.IsZero() {
+		q = append(q, bson.E{"from", bson.D{{"$gte", primitive.NewDateTimeFromTime(input.From)}}})
+	}
+	if !input.To.IsZero() {
+		q = append(q, bson.E{"to", bson.D{{"$lte", primitive.NewDateTimeFromTime(input.To)}}})
+	}
+	if input.Status != nil {
+		q = append(q, bson.E{"status", input.Status})
+	}
+	if !input.Date.IsZero() {
+		t := time.Time(input.Date)
+		year, month, day := t.Date()
+		from := time.Date(year, month, day, 0, 0, 0, 0, t.Location())
+		to := time.Date(year, month, day, 23, 59, 59, 0, t.Location())
+
+		q = append(q, bson.E{"date", bson.D{{"$gte", primitive.NewDateTimeFromTime(from)}}})
+		q = append(q, bson.E{"date", bson.D{{"$lte", primitive.NewDateTimeFromTime(to)}}})
+	}
 	if input.WorkerId != nil && len(input.WorkerId) > 0 {
 		workerIds := []primitive.ObjectID{}
 		for i, _ := range input.WorkerId {
-			workerIDPrimitive, err := primitive.ObjectIDFromHex(*input.WorkerId[i])
+			workerIDPrimitive, err := primitive.ObjectIDFromHex(input.WorkerId[i])
 			if err != nil {
 				return response, err
 			}
@@ -120,10 +139,39 @@ func (r *WorkTimeMongo) FindWorkTimePopulate(input domain.WorkTimeFilter) (domai
 	q := bson.D{}
 
 	// Filters
+	if !input.From.IsZero() {
+		q = append(q, bson.E{"from", bson.D{{"$gte", primitive.NewDateTimeFromTime(input.From)}}})
+	}
+	if !input.To.IsZero() {
+		q = append(q, bson.E{"to", bson.D{{"$lte", primitive.NewDateTimeFromTime(input.To)}}})
+	}
+	if input.Status != nil {
+		q = append(q, bson.E{"status", input.Status})
+	}
+	if !input.Date.IsZero() {
+		t := time.Time(input.Date)
+		// year, month, day := t.Date()
+		// from := time.Date(year, month, day, 0, 0, 0, 0, t.Location())
+		// to := time.Date(year, month, day, 23, 59, 59, 0, t.Location())
+
+		// eastOfUTC := time.FixedZone("UTC-3", -3*60*60)
+		eastOfUTCP := time.FixedZone("UTC+3", 3*60*60)
+		from1 := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, eastOfUTCP)
+		to1 := time.Date(t.Year(), t.Month(), t.Day(), 23, 59, 59, 0, eastOfUTCP)
+
+		fmt.Println("======================FIND TIME WORK====================")
+		fmt.Println("date: ", t, "====>", t.UTC())
+		fmt.Println("from: ", from1, "====>", from1.UTC())
+		fmt.Println("to: ", to1, "====>", to1.UTC())
+		fmt.Println("========================================================")
+
+		q = append(q, bson.E{"date", bson.D{{"$gte", primitive.NewDateTimeFromTime(from1.UTC())}}})
+		q = append(q, bson.E{"date", bson.D{{"$lte", primitive.NewDateTimeFromTime(to1.UTC())}}})
+	}
 	if input.WorkerId != nil && len(input.WorkerId) > 0 {
 		workerIds := []primitive.ObjectID{}
 		for i, _ := range input.WorkerId {
-			workerIDPrimitive, err := primitive.ObjectIDFromHex(*input.WorkerId[i])
+			workerIDPrimitive, err := primitive.ObjectIDFromHex(input.WorkerId[i])
 			if err != nil {
 				return response, err
 			}
@@ -136,18 +184,44 @@ func (r *WorkTimeMongo) FindWorkTimePopulate(input domain.WorkTimeFilter) (domai
 
 	pipe := mongo.Pipeline{}
 	pipe = append(pipe, bson.D{{"$match", q}})
-	// pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
-	// 	"from": tblObject,
-	// 	"as":   "objecta",
-	// 	// "localField":   "user_id",
-	// 	// "foreignField": "_id",
-	// 	"let": bson.D{{Key: "objectId", Value: "$objectId"}},
-	// 	"pipeline": mongo.Pipeline{
-	// 		bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$_id", "$$objectId"}}}}},
-	// 		bson.D{{"$limit", 1}},
-	// 	},
-	// }}})
-	// pipe = append(pipe, bson.D{{Key: "$set", Value: bson.M{"object": bson.M{"$first": "$objecta"}}}})
+
+	// populate workHistory.
+	pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
+		"from": tblWorkHistory,
+		"as":   "workHistory",
+		// "localField":   "user_id",
+		// "foreignField": "_id",
+		"let": bson.D{
+			{Key: "workerId", Value: "$workerId"},
+			{Key: "from", Value: "$from"},
+			{Key: "to", Value: "$to"},
+		},
+		"pipeline": mongo.Pipeline{
+			bson.D{
+				{"$match", bson.D{
+					{"$expr", bson.D{
+						{"$and", bson.A{
+							bson.D{{"$eq", bson.A{"$workerId", "$$workerId"}}},
+							bson.D{{"$lte", bson.A{"$to", "$$to"}}},
+							bson.D{{"$gte", bson.A{"$from", "$$from"}}},
+						}},
+					}},
+				}},
+			},
+			// bson.D{{Key: "$match", Value: bson.M{
+			// 	"$expr": bson.A{
+			// 		bson.M{"$eq": [2]string{"$workerId", "$$workerId"}},
+			// 		bson.M{"$lte": bson.A{
+			// 			"$to",
+			// 			"$$to",
+			// 			// "$to", bson.E{"$toDate", "$$to",
+			// 		}}},
+			// 	// bson.M{"$gte": [2]string{"$from", "$$from"}},
+			// 	// "to":    bson.D{{"$lte", mongo.ISODate("$$to")}},
+			// 	// "from":  bson.D{{"$gte", "$$from"}},
+			// }}},
+		},
+	}}})
 
 	if input.Sort != nil && len(input.Sort) > 0 {
 		sortParam := bson.D{}
@@ -227,16 +301,28 @@ func (r *WorkTimeMongo) CreateWorkTime(userID string, data *domain.WorkTime) (*d
 	// if er := cursor.All(ctx, &allTaskByOrder); er != nil {
 	// 	return result, er
 	// }
-
+	// time.Local = time.UTC
+	date := time.Now()
+	// fmt.Println(time.Now())
+	// fmt.Println(date)
+	if !data.Date.IsZero() {
+		date = data.Date
+	}
+	defaultTotal := int64(0)
+	if data.Total != nil {
+		defaultTotal = *data.Total
+	}
 	newTask := domain.WorkTimeInput{
 		// OrderId:  data.OrderId,
 		// TaskId:   data.TaskId,
 		WorkerId: data.WorkerId,
 		UserID:   userIDPrimitive,
-		Status:   data.Status,
+		Status:   &data.Status,
 		From:     data.From,
 		To:       data.To,
-		Date:     time.Now(),
+		Date:     date,
+		Oklad:    data.Oklad,
+		Total:    &defaultTotal,
 
 		CreatedAt: updatedAt,
 		UpdatedAt: updatedAt,
@@ -279,11 +365,14 @@ func (r *WorkTimeMongo) UpdateWorkTime(id string, userID string, data *domain.Wo
 	if !data.WorkerId.IsZero() {
 		newData["workerId"] = data.WorkerId
 	}
-	if data.Status != "" {
-		newData["status"] = data.Status
+	if data.Status != nil {
+		newData["status"] = &data.Status
 	}
 	if !data.From.IsZero() {
 		newData["from"] = data.From
+	}
+	if data.Total != nil {
+		newData["total"] = data.Total
 	}
 	if !data.To.IsZero() {
 		newData["to"] = data.To

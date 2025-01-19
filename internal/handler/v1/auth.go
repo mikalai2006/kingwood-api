@@ -1,13 +1,17 @@
 package v1
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"slices"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 	"github.com/mikalai2006/kingwood-api/internal/domain"
 	"github.com/mikalai2006/kingwood-api/internal/middleware"
+	"github.com/mikalai2006/kingwood-api/internal/utils"
 	"github.com/mikalai2006/kingwood-api/pkg/app"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -21,6 +25,7 @@ func (h *HandlerV1) registerAuth(router *gin.RouterGroup) {
 	auth.POST("/logout", h.Logout)
 	auth.POST("/refresh", h.tokenRefresh)
 	auth.GET("/refresh", h.tokenRefresh)
+	auth.PATCH("/:id", h.SetUserFromRequest, h.UpdateAuth)
 	auth.GET("/verification/:code", h.SetUserFromRequest, h.VerificationAuth)
 	auth.GET("/iam", h.SetUserFromRequest, h.getIam)
 }
@@ -190,23 +195,18 @@ func (h *HandlerV1) ResetPassword(c *gin.Context) {
 		lang = h.i18n.Default
 	}
 
-	// implementation roles for user.
-	roles, err := middleware.GetRoles(c)
-	if err != nil {
-		appG.ResponseError(http.StatusUnauthorized, err, nil)
-		return
-	}
-	if !slices.Contains(roles, "auth-resetpass") {
-		appG.ResponseError(http.StatusUnauthorized, domain.ErrNotRole, nil)
+	userID, err := middleware.GetUID(c)
+	if err != nil || userID == "" {
+		// c.AbortWithError(http.StatusUnauthorized, err)
+		appG.ResponseError(http.StatusUnauthorized, err, gin.H{"hello": "world"})
 		return
 	}
 
-	// userID, err := middleware.GetUID(c)
-	// if err != nil {
-	// 	// c.AbortWithError(http.StatusUnauthorized, err)
-	// 	appG.ResponseError(http.StatusUnauthorized, err, nil)
-	// 	return
-	// }
+	var input *domain.ResetPassword
+	if er := c.BindJSON(&input); er != nil {
+		appG.ResponseError(http.StatusBadRequest, er, nil)
+		return
+	}
 	id := c.Param("id")
 	if id == "" {
 		// c.AbortWithError(http.StatusUnauthorized, err)
@@ -214,7 +214,27 @@ func (h *HandlerV1) ResetPassword(c *gin.Context) {
 		return
 	}
 
-	newPassword, err := h.Services.Authorization.ResetPassword(id)
+	// implementation roles for user.
+	userForAuth, err := h.Services.User.GetUser(userID)
+	if err != nil {
+		appG.ResponseError(http.StatusUnauthorized, err, nil)
+		return
+	}
+	roles, err := middleware.GetRoles(c)
+	if err != nil {
+		appG.ResponseError(http.StatusUnauthorized, err, nil)
+		return
+	}
+
+	fmt.Println("Reset password: ", input, id, userID, userForAuth.UserID.Hex())
+	if userForAuth.UserID.Hex() != id {
+		if !slices.Contains(roles, "auth-resetpass") {
+			appG.ResponseError(http.StatusUnauthorized, domain.ErrNotRole, nil)
+			return
+		}
+	}
+
+	newPassword, err := h.Services.Authorization.ResetPassword(id, userID, input)
 	if err != nil {
 		appG.ResponseError(http.StatusBadRequest, err, nil)
 		return
@@ -254,7 +274,7 @@ func (h *HandlerV1) SignIn(c *gin.Context) {
 	}
 
 	if input.Email == "" && input.Login == "" {
-		appG.ResponseError(http.StatusBadRequest, errors.New("request must be with email or login"), nil)
+		appG.ResponseError(http.StatusBadRequest, errors.New("error.notLogin"), nil)
 		return
 	}
 	// if input.Password == "" {
@@ -409,6 +429,38 @@ func (h *HandlerV1) VerificationAuth(c *gin.Context) {
 
 	if er := h.Services.Authorization.VerificationCode(userID, code); er != nil {
 		appG.ResponseError(http.StatusBadRequest, er, nil)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "success",
+	})
+}
+
+func (h *HandlerV1) UpdateAuth(c *gin.Context) {
+	appG := app.Gin{C: c}
+	// userID, err := middleware.GetUID(c)
+	// if err != nil {
+	// 	// c.AbortWithError(http.StatusUnauthorized, err)
+	// 	appG.ResponseError(http.StatusUnauthorized, err, gin.H{"hello": "world"})
+	// 	return
+	// }
+	id := c.Param("id")
+
+	var a map[string]json.RawMessage //  map[string]interface{}
+	if er := c.ShouldBindBodyWith(&a, binding.JSON); er != nil {
+		appG.ResponseError(http.StatusBadRequest, er, nil)
+		return
+	}
+	data, er := utils.BindJSON2[domain.AuthInput](a)
+	if er != nil {
+		appG.ResponseError(http.StatusBadRequest, er, nil)
+		return
+	}
+
+	_, err := h.Services.Authorization.UpdateAuth(id, &data)
+	if err != nil {
+		appG.ResponseError(http.StatusInternalServerError, err, nil)
 		return
 	}
 

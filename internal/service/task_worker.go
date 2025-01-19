@@ -3,6 +3,7 @@ package service
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/mikalai2006/kingwood-api/internal/domain"
 	"github.com/mikalai2006/kingwood-api/internal/repository"
@@ -76,7 +77,14 @@ func (s *TaskWorkerService) CreateTaskWorker(userID string, data *domain.TaskWor
 		return result, err
 	}
 
-	s.Hub.HandleMessage(domain.Message{Type: "message", Method: "ADD", Sender: userID, Recipient: "sobesednikID.Hex()", Content: result, ID: "room1", Service: "taskWorker"})
+	s.Hub.HandleMessage(domain.MessageSocket{Type: "message", Method: "CREATE", Sender: userID, Recipient: "", Content: result, ID: "room1", Service: "taskWorker"})
+
+	// add notify.
+	_, err = s.Services.Notify.CreateNotify(userID, &domain.NotifyInput{
+		UserTo:  result.WorkerId.Hex(),
+		Title:   domain.CreateTaskWorkerTitle,
+		Message: fmt.Sprintf(domain.CreateTaskWorker, result.Task.Name, result.Order.Number, result.Order.Name, result.Object.Name),
+	})
 
 	// add taskWorker for all task on the object for inserted worker (montaj).
 	if autoCreate > 0 {
@@ -92,36 +100,36 @@ func (s *TaskWorkerService) CreateTaskWorker(userID string, data *domain.TaskWor
 		}
 		// fmt.Println("allOperation length: ", len(allOperation.Data), currentOperation.Group)
 		if currentOperation.Group == "5" {
-			objectId := result.ObjectId.Hex()
-			operationId := result.OperationId.Hex()
-			allTaskForObject, err := s.Services.Task.FindTaskPopulate(domain.TaskFilter{ObjectId: []*string{&objectId}, OperationId: []*string{&operationId}})
+			allTaskForObject, err := s.Services.Task.FindTaskPopulate(domain.TaskFilter{ObjectId: []string{result.ObjectId.Hex()}, OperationId: []string{result.OperationId.Hex()}})
 			if err != nil {
 				return result, err
 			}
 			fmt.Println("allTaskForObject length: ", len(allTaskForObject.Data))
 			if len(allTaskForObject.Data) > 0 {
 				for i := range allTaskForObject.Data {
-					workerIds := []string{}
-					for i := range allTaskForObject.Data[i].Workers {
-						workerIds = append(workerIds, allTaskForObject.Data[i].Workers[i].WorkerId.Hex())
-					}
-					if allTaskForObject.Data[i].ID.Hex() != result.TaskId.Hex() && !utils.Contains(workerIds, result.WorkerId.Hex()) {
-						newTaskWorker := domain.TaskWorker{
-							ObjectId:    allTaskForObject.Data[i].ObjectId,
-							OrderId:     allTaskForObject.Data[i].OrderId,
-							TaskId:      allTaskForObject.Data[i].ID,
-							OperationId: allTaskForObject.Data[i].OperationId,
-							WorkerId:    result.WorkerId,
-							SortOrder:   result.SortOrder,
-							StatusId:    result.StatusId,
-							Status:      result.Status,
-							From:        result.From,
-							To:          result.To,
-							TypeGo:      result.TypeGo,
+					if allTaskForObject.Data[i].Status != "finish" {
+						workerIds := []string{}
+						for j := range allTaskForObject.Data[i].Workers {
+							workerIds = append(workerIds, allTaskForObject.Data[i].Workers[j].WorkerId.Hex())
 						}
-						_, err := s.CreateTaskWorker(userID, &newTaskWorker, 0)
-						if err != nil {
-							return result, err
+						if allTaskForObject.Data[i].ID.Hex() != result.TaskId.Hex() && !utils.Contains(workerIds, result.WorkerId.Hex()) {
+							newTaskWorker := domain.TaskWorker{
+								ObjectId:    allTaskForObject.Data[i].ObjectId,
+								OrderId:     allTaskForObject.Data[i].OrderId,
+								TaskId:      allTaskForObject.Data[i].ID,
+								OperationId: allTaskForObject.Data[i].OperationId,
+								WorkerId:    result.WorkerId,
+								SortOrder:   result.SortOrder,
+								StatusId:    result.StatusId,
+								Status:      result.Status,
+								From:        result.From,
+								To:          result.To,
+								TypeGo:      result.TypeGo,
+							}
+							_, err := s.CreateTaskWorker(userID, &newTaskWorker, 0)
+							if err != nil {
+								return result, err
+							}
 						}
 					}
 				}
@@ -138,15 +146,52 @@ func (s *TaskWorkerService) UpdateTaskWorker(id string, userID string, data *dom
 		return result, err
 	}
 
-	s.Hub.HandleMessage(domain.Message{Type: "message", Method: "PATCH", Sender: userID, Recipient: "sobesednikID.Hex()", Content: result, ID: "room1", Service: "taskWorker"})
+	s.Hub.HandleMessage(domain.MessageSocket{Type: "message", Method: "PATCH", Sender: userID, Recipient: "", Content: result, ID: "room1", Service: "taskWorker"})
 
-	_, err = s.CheckStatusTask(userID, result)
-	if err != nil {
-		return result, err
+	// roles, err := s.Services.Role.FindRole(&domain.RoleFilter{Code: []string{"admin", "boss"}})
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// ids := []string{}
+	// var users []domain.User
+	// if len(roles.Data) > 0 {
+	// 	for i := range roles.Data {
+	// 		ids = append(ids, roles.Data[i].ID.Hex())
+	// 	}
+
+	// 	_users, err := s.Services.User.FindUser(&domain.UserFilter{RoleId: ids})
+	// 	//domain.RequestParams{Filter: bson.M{"roleId": bson.D{{"$in", ids}}}})
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	// 	users = _users.Data
+
+	// }
+
+	// for i := range users {
+	// 	_, err = s.Services.Notify.CreateNotify(userID, &domain.NotifyInput{
+	// 		UserTo:  users[i].ID.Hex(),
+	// 		Title:   domain.NewOrderTitle,
+	// 		Message: fmt.Sprintf(domain.NewOrder, result.Name, result.Object.Name),
+	// 	})
+	// }
+
+	// add notify.
+	if result.Worker.ID.Hex() != userID {
+		_, err = s.Services.Notify.CreateNotify(userID, &domain.NotifyInput{
+			UserTo:  result.WorkerId.Hex(),
+			Title:   domain.PatchTaskWorkerTitle,
+			Message: fmt.Sprintf(domain.PatchTaskWorker, result.Task.Name, result.Order.Number, result.Order.Name, result.Object.Name),
+		})
 	}
 
 	// change taskWorker for all task on the object for updated worker (montaj).
 	if autoUpdate > 0 {
+		_, err = s.CheckStatusTask(userID, result)
+		if err != nil {
+			return result, err
+		}
+
 		allOperation, err := s.Services.Operation.FindOperation(domain.RequestParams{Filter: bson.D{}})
 		if err != nil {
 			return result, err
@@ -194,10 +239,48 @@ func (s *TaskWorkerService) UpdateTaskWorker(id string, userID string, data *dom
 		}
 	}
 
+	status := 0
+	if result.Status == "process" {
+		newWorkHistory := domain.WorkHistory{
+			ObjectId:    result.ObjectId,
+			OrderId:     result.OrderId,
+			TaskId:      result.TaskId,
+			WorkerId:    result.WorkerId,
+			OperationId: result.OperationId,
+			Status:      0,
+			From:        time.Now(),
+			Oklad:       result.Worker.Oklad,
+		}
+
+		workTimeActual, err := s.Services.WorkTime.FindWorkTimePopulate(domain.WorkTimeFilter{WorkerId: []string{result.WorkerId.Hex()}, Status: &status})
+		if err != nil {
+			return result, err
+		}
+		if len(workTimeActual.Data) > 0 {
+			newWorkHistory.WorkTimeId = workTimeActual.Data[0].ID
+		}
+		// create wortHistory from.
+		s.Services.WorkHistory.CreateWorkHistory(userID, &newWorkHistory)
+	} else {
+		// close wortHistory to.
+		existOpenWorkHistory, err := s.Services.WorkHistory.FindWorkHistoryPopulate(domain.WorkHistoryFilter{WorkerId: []string{result.WorkerId.Hex()}, TaskId: []string{result.TaskId.Hex()}, Status: &status})
+		if err != nil {
+			return result, err
+		}
+
+		if len(existOpenWorkHistory.Data) > 0 {
+			statusPatch := 1
+			s.Services.WorkHistory.UpdateWorkHistory(existOpenWorkHistory.Data[0].ID.Hex(), userID, &domain.WorkHistoryInput{
+				Status: &statusPatch,
+				To:     time.Now(),
+			})
+		}
+	}
+
 	return result, err
 }
 
-func (s *TaskWorkerService) DeleteTaskWorker(id string) (*domain.TaskWorker, error) {
+func (s *TaskWorkerService) DeleteTaskWorker(id string, userID string) (*domain.TaskWorker, error) {
 	result, err := s.repo.DeleteTaskWorker(id)
 	if err != nil {
 		return result, err
@@ -208,7 +291,14 @@ func (s *TaskWorkerService) DeleteTaskWorker(id string) (*domain.TaskWorker, err
 		return result, err
 	}
 
-	s.Hub.HandleMessage(domain.Message{Type: "message", Method: "DELETE", Sender: "userID", Recipient: "sobesednikID.Hex()", Content: result, ID: "room1", Service: "taskWorker"})
+	s.Hub.HandleMessage(domain.MessageSocket{Type: "message", Method: "DELETE", Sender: "userID", Recipient: "", Content: result, ID: "room1", Service: "taskWorker"})
+
+	// add notify.
+	_, err = s.Services.Notify.CreateNotify(userID, &domain.NotifyInput{
+		UserTo:  result.WorkerId.Hex(),
+		Title:   domain.DeleteTaskWorkerTitle,
+		Message: fmt.Sprintf(domain.DeleteTaskWorker, result.Task.Name, result.Order.Number, result.Order.Name, result.Object.Name),
+	})
 
 	return result, err
 }
@@ -224,7 +314,7 @@ func (s *TaskWorkerService) CheckStatusTask(userID string, result *domain.TaskWo
 	}
 
 	// get all taskWorkers.
-	fmt.Println("taskId: ", result.TaskId)
+	fmt.Println("taskId: ", result.TaskId, result.Task.Operation.Group)
 	taskId := result.TaskId.Hex()
 	taskWorkers, err := s.FindTaskWorkerPopulate(&domain.TaskWorkerFilter{TaskId: []*string{&taskId}})
 	var taskWorkersStatus []string
@@ -301,11 +391,14 @@ func (s *TaskWorkerService) CheckStatusTask(userID string, result *domain.TaskWo
 
 			newStatus := result.Status
 			newStatusId := result.TaskStatus.ID
+			isFinishCount := 0
 
 			if val, ok := listStatusTask["finish"]; ok {
 				newStatus = "finish"
 				newStatusId = val.ID
+				isFinishCount++
 			}
+
 			if val, ok := listStatusTask["wait"]; ok {
 				newStatus = "wait"
 				newStatusId = val.ID
@@ -317,6 +410,35 @@ func (s *TaskWorkerService) CheckStatusTask(userID string, result *domain.TaskWo
 			if val, ok := listStatusTask["process"]; ok {
 				newStatus = "process"
 				newStatusId = val.ID
+			}
+
+			if result.Task.Operation.Group == "5" && isFinishCount > 0 {
+				if val, ok := listStatusTask["finish"]; ok {
+					newStatus = "finish"
+					newStatusId = val.ID
+				}
+
+				// autofinish all taskWorker if one montaj finish
+				var autoFinihStatus domain.TaskStatus
+				allStatus, err := s.Services.TaskStatus.FindTaskStatus(domain.RequestParams{Filter: bson.D{{"status", "autofinish"}}})
+				if err != nil {
+					return result, err
+				}
+				if len(allStatus.Data) > 0 {
+					autoFinihStatus = allStatus.Data[0]
+				}
+
+				stopStatus := []string{"finish", "process", "autofinish"}
+				if !autoFinihStatus.ID.IsZero() {
+					for k := range taskWorkers.Data {
+						if !utils.Contains(stopStatus, taskWorkers.Data[k].Status) {
+							_, err := s.UpdateTaskWorker(taskWorkers.Data[k].ID.Hex(), userID, &domain.TaskWorkerInput{StatusId: autoFinihStatus.ID, Status: autoFinihStatus.Status}, 0)
+							if err != nil {
+								return result, err
+							}
+						}
+					}
+				}
 			}
 
 			// task, err := s.taskService.UpdateTask(result.TaskId.Hex(), userID, &domain.TaskInput{StatusId: result.StatusId, Status: result.Status, Active: &active})

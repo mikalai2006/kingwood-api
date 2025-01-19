@@ -1,6 +1,10 @@
 package service
 
 import (
+	"fmt"
+	"math"
+	"time"
+
 	"github.com/mikalai2006/kingwood-api/internal/domain"
 	"github.com/mikalai2006/kingwood-api/internal/repository"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -71,6 +75,77 @@ func (s *WorkTimeService) UpdateWorkTime(id string, userID string, data *domain.
 	result, err := s.repo.UpdateWorkTime(id, userID, data)
 	if err != nil {
 		return result, err
+	}
+
+	// update total.
+	newRobotUpdateData := &domain.WorkTimeInput{}
+	total := int64(0)
+	if !result.From.IsZero() && !result.To.IsZero() {
+		totalMinutes := result.To.Sub(result.From).Minutes()
+		total = int64(math.Ceil(totalMinutes * (float64(*result.Oklad) / 60)))
+	}
+
+	if total > 0 {
+		newRobotUpdateData.Total = &total
+	}
+
+	explodeDate := false
+	oldTo := result.To
+	var fromNew time.Time
+	var toNew time.Time
+
+	eastOfUTC := time.FixedZone("UTC-3", -3*60*60)
+	to1 := time.Date(result.To.Year(), result.To.Month(), result.To.Day(), result.To.Hour(), result.To.Minute(), result.To.Second(), 0, eastOfUTC)
+	from1 := time.Date(result.From.Year(), result.From.Month(), result.From.Day(), result.From.Hour(), result.From.Minute(), result.From.Second(), 0, eastOfUTC)
+
+	fmt.Println("======================PATCH TIME WORK====================")
+	fmt.Println("from: ", from1, "====>", from1.UTC())
+	fmt.Println("to: ", to1, "====>", to1.UTC())
+	fmt.Println("========================================================")
+
+	// fmt.Println("result.From: ", to1, to1.UTC(), from1, from1.UTC())
+	if from1.UTC().Day() != to1.UTC().Day() {
+		explodeDate = true
+
+		// prevDay := oldTo.AddDate(0, 0, -1)
+		year, month, _ := oldTo.Date()
+		yearPrev, monthPrev, dayPrev := from1.Date()
+		// fromNew :=  result.From
+		// time.Date(year, month, day, 0, 0, 0, 0, prevDay.Location())
+		fromNew = time.Date(year, month, dayPrev, 21, 0, 0, 0, time.UTC)
+		toNew = time.Date(yearPrev, monthPrev, dayPrev, 20, 59, 59, 0, time.UTC)
+
+		newRobotUpdateData.To = toNew
+
+		totalMinutesPrev := toNew.Sub(result.From).Minutes()
+		totalPrev := int64(math.Ceil(totalMinutesPrev * (float64(*result.Oklad) / 60)))
+		// update total.
+		newRobotUpdateData.Total = &totalPrev
+	}
+
+	result, err = s.repo.UpdateWorkTime(id, userID, newRobotUpdateData)
+	if err != nil {
+		return result, err
+	}
+
+	if explodeDate {
+		// Переносим часть рабочего времени на другой день
+		totalMinutesNext := oldTo.Sub(fromNew).Minutes()
+		totalNext := int64(math.Ceil(totalMinutesNext * (float64(*result.Oklad) / 60)))
+		// fmt.Println("totalMinutesNext:", totalMinutesNext, " totalNext:", totalNext, " oldTo:", oldTo)
+		result, err = s.repo.CreateWorkTime(userID, &domain.WorkTime{
+			UserID:   result.UserID,
+			WorkerId: result.WorkerId,
+			Status:   result.Status,
+			Date:     fromNew,
+			From:     fromNew,
+			To:       oldTo,
+			Oklad:    result.Oklad,
+			Total:    &totalNext,
+		})
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return result, err

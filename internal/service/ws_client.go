@@ -42,14 +42,14 @@ type Client struct {
 	UserId   string
 	RoomId   string
 	Conn     *websocket.Conn
-	send     chan domain.Message
+	send     chan domain.MessageSocket
 	hub      *Hub
 	Services *Services
 }
 
 // NewClient creates a new client
 func NewClient(userId string, roomId string, conn *websocket.Conn, hub *Hub, services *Services) *Client {
-	return &Client{UserId: userId, RoomId: roomId, Conn: conn, send: make(chan domain.Message, 256), hub: hub, Services: services}
+	return &Client{UserId: userId, RoomId: roomId, Conn: conn, send: make(chan domain.MessageSocket, 256), hub: hub, Services: services}
 }
 
 // Client goroutine to read messages from client
@@ -63,7 +63,7 @@ func (c *Client) Read() {
 	fmt.Println("Read: ", c.UserId)
 	c.Conn.SetReadDeadline(time.Now().Add(10 * time.Second))
 	for {
-		var msg domain.Message
+		var msg domain.MessageSocket
 		err := c.Conn.ReadJSON(&msg)
 		if err != nil {
 			fmt.Println("Error Read: ", err)
@@ -77,7 +77,7 @@ func (c *Client) Read() {
 			tokenManager, err := auths.NewManager(os.Getenv("SIGNING_KEY"))
 			if err != nil {
 				// c.AbortWithError(http.StatusUnauthorized, err)
-				c.hub.HandleMessage(domain.Message{
+				c.hub.HandleMessage(domain.MessageSocket{
 					Type:      "error",
 					Content:   errors.New("Access denied!").Error(),
 					ID:        "room1",
@@ -92,7 +92,7 @@ func (c *Client) Read() {
 			if err != nil {
 				// c.AbortWithError(http.StatusUnauthorized, err)
 				// appG.ResponseError(http.StatusUnauthorized, err, nil)
-				c.hub.HandleMessage(domain.Message{
+				c.hub.HandleMessage(domain.MessageSocket{
 					Type:      "error",
 					Content:   errors.New("Access denied!").Error(),
 					ID:        "room1",
@@ -106,7 +106,7 @@ func (c *Client) Read() {
 			_, err = c.Services.Authorization.GetAuth(claims.Subject)
 			if err != nil {
 				// appG.ResponseError(http.StatusUnauthorized, err, nil)
-				c.hub.HandleMessage(domain.Message{
+				c.hub.HandleMessage(domain.MessageSocket{
 					Type:      "error",
 					Content:   errors.New("Access denied!").Error(),
 					ID:        "room1",

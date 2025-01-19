@@ -24,3 +24,12 @@ type RoleInput struct {
 	Value     []string `json:"value" bson:"value"`
 	SortOrder int64    `json:"sortOrder" bson:"sortOrder"`
 }
+
+type RoleFilter struct {
+	ID    []string            `json:"id,omitempty"`
+	Name  []string            `json:"name,omitempty"`
+	Code  []string            `json:"code,omitempty"`
+	Sort  []*FilterSortParams `json:"sort,omitempty"`
+	Limit *int                `json:"$limit,omitempty"`
+	Skip  *int                `json:"$skip,omitempty"`
+}

@@ -115,14 +115,27 @@ func (r *TaskMongo) FindTaskPopulate(input domain.TaskFilter) (domain.Response[d
 	// Filters
 	q := bson.D{}
 
-	if input.Name != nil && *input.Name != "" {
-		strName := primitive.Regex{Pattern: fmt.Sprintf("%v", *input.Name), Options: "i"}
+	if input.Name != "" {
+		strName := primitive.Regex{Pattern: fmt.Sprintf("%v", input.Name), Options: "i"}
 		q = append(q, bson.E{"name", bson.D{{"$regex", strName}}})
+	}
+	if input.ID != nil && len(input.ID) > 0 {
+		ids := []primitive.ObjectID{}
+		for i, _ := range input.ID {
+			iDPrimitive, err := primitive.ObjectIDFromHex(input.ID[i])
+			if err != nil {
+				return response, err
+			}
+
+			ids = append(ids, iDPrimitive)
+		}
+
+		q = append(q, bson.E{"_id", bson.D{{"$in", ids}}})
 	}
 	if input.OrderId != nil && len(input.OrderId) > 0 {
 		orderIds := []primitive.ObjectID{}
 		for i, _ := range input.OrderId {
-			orderIDPrimitive, err := primitive.ObjectIDFromHex(*input.OrderId[i])
+			orderIDPrimitive, err := primitive.ObjectIDFromHex(input.OrderId[i])
 			if err != nil {
 				return response, err
 			}
@@ -135,7 +148,7 @@ func (r *TaskMongo) FindTaskPopulate(input domain.TaskFilter) (domain.Response[d
 	if input.ObjectId != nil && len(input.ObjectId) > 0 {
 		objectIds := []primitive.ObjectID{}
 		for i, _ := range input.ObjectId {
-			objectIDPrimitive, err := primitive.ObjectIDFromHex(*input.ObjectId[i])
+			objectIDPrimitive, err := primitive.ObjectIDFromHex(input.ObjectId[i])
 			if err != nil {
 				return response, err
 			}
@@ -148,7 +161,7 @@ func (r *TaskMongo) FindTaskPopulate(input domain.TaskFilter) (domain.Response[d
 	if input.OperationId != nil && len(input.OperationId) > 0 {
 		ids := []primitive.ObjectID{}
 		for i, _ := range input.OperationId {
-			iDPrimitive, err := primitive.ObjectIDFromHex(*input.OperationId[i])
+			iDPrimitive, err := primitive.ObjectIDFromHex(input.OperationId[i])
 			if err != nil {
 				return response, err
 			}
@@ -157,6 +170,14 @@ func (r *TaskMongo) FindTaskPopulate(input domain.TaskFilter) (domain.Response[d
 		}
 
 		q = append(q, bson.E{"operationId", bson.D{{"$in", ids}}})
+	}
+	if input.Status != nil && len(input.Status) > 0 {
+		arr := []string{}
+		for i, _ := range input.Status {
+			arr = append(arr, input.Status[i])
+		}
+
+		q = append(q, bson.E{"status", bson.D{{"$in", arr}}})
 	}
 
 	pipe := mongo.Pipeline{}
@@ -410,9 +431,21 @@ func (r *TaskMongo) UpdateTask(id string, userID string, data *domain.TaskInput)
 		return result, err
 	}
 
-	err = collection.FindOne(ctx, filter).Decode(&result)
+	// err = collection.FindOne(ctx, filter).Decode(&result)
+	// if err != nil {
+	// 	return result, err
+	// }
+	tasks, err := r.FindTaskPopulate(domain.TaskFilter{ID: []string{id}})
+	// taskWorkers, err := r.FindTaskWorkerPopulate(domain.RequestParams{Filter: bson.D{{"_id", idPrimitive}}})
+	// collection.FindOne(ctx, filter).Decode(&result)
 	if err != nil {
 		return result, err
+	}
+
+	if len(tasks.Data) > 0 {
+		result = &tasks.Data[0]
+	} else {
+		fmt.Println("Len tasks.Data = ", len(tasks.Data))
 	}
 
 	return result, nil

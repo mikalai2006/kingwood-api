@@ -1,7 +1,6 @@
 package service
 
 import (
-	"github.com/mikalai2006/kingwood-api/graph/model"
 	"github.com/mikalai2006/kingwood-api/internal/domain"
 	"github.com/mikalai2006/kingwood-api/internal/repository"
 )
@@ -16,35 +15,35 @@ func NewMessageService(repo repository.Message, Hub *Hub, messageRoomService *Me
 	return &MessageService{repo: repo, Hub: Hub, messageRoomService: messageRoomService}
 }
 
-func (s *MessageService) FindMessage(params *model.MessageFilter) (domain.Response[model.Message], error) {
+func (s *MessageService) FindMessage(params *domain.MessageFilter) (domain.Response[domain.Message], error) {
 	return s.repo.FindMessage(params)
 }
 
-func (s *MessageService) CreateMessage(userID string, data *model.MessageInput) (*model.Message, error) {
+func (s *MessageService) CreateMessage(userID string, data *domain.MessageInput) (*domain.Message, error) {
 	result, err := s.repo.CreateMessage(userID, data)
 
-	room, err := s.messageRoomService.FindMessageRoom(&model.MessageRoomFilter{ID: &result.RoomID})
+	// room, err := s.messageRoomService.FindMessageRoom(&domain.MessageRoomFilter{ID: &result.RoomID})
 
-	if err == nil && len(room.Data) > 0 {
-		sobesednikID := room.Data[0].UserID
-		if room.Data[0].UserID == result.UserID {
-			sobesednikID = room.Data[0].TakeUserID
-		}
+	// if err == nil && len(room.Data) > 0 {
+	// 	sobesednikID := room.Data[0].UserID
+	// 	if room.Data[0].UserID == result.UserID {
+	// 		sobesednikID = room.Data[0].TakeUserID
+	// 	}
 
-		s.Hub.HandleMessage(domain.Message{Type: "message", Method: "ADD", Sender: userID, Recipient: sobesednikID.Hex(), Content: result, ID: "room1", Service: "message"})
-	}
+	// 	s.Hub.HandleMessage(domain.MessageSocket{Type: "message", Method: "ADD", Sender: userID, Recipient: sobesednikID.Hex(), Content: result, ID: "room1", Service: "message"})
+	// }
 
 	return result, err
 }
 
-func (s *MessageService) UpdateMessage(id string, userID string, data *model.MessageInput) (*model.Message, error) {
+func (s *MessageService) UpdateMessage(id string, userID string, data *domain.MessageInput) (*domain.Message, error) {
 	return s.repo.UpdateMessage(id, userID, data)
 }
 
-func (s *MessageService) DeleteMessage(id string) (model.Message, error) {
+func (s *MessageService) DeleteMessage(id string) (domain.Message, error) {
 	return s.repo.DeleteMessage(id)
 }
 
-func (s *MessageService) GetGroupForUser(userID string) ([]model.MessageGroupForUser, error) {
+func (s *MessageService) GetGroupForUser(userID string) ([]domain.MessageGroupForUser, error) {
 	return s.repo.GetGroupForUser(userID)
 }

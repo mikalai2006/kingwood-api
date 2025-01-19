@@ -11,29 +11,29 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-type PayMongo struct {
+type AppErrorMongo struct {
 	db   *mongo.Database
 	i18n config.I18nConfig
 }
 
-func NewPayMongo(db *mongo.Database, i18n config.I18nConfig) *PayMongo {
-	return &PayMongo{db: db, i18n: i18n}
+func NewAppErrorMongo(db *mongo.Database, i18n config.I18nConfig) *AppErrorMongo {
+	return &AppErrorMongo{db: db, i18n: i18n}
 }
 
-func (r *PayMongo) FindPay(input *domain.PayFilter) (domain.Response[domain.Pay], error) {
+func (r *AppErrorMongo) FindAppError(input *domain.AppErrorFilter) (domain.Response[domain.AppError], error) {
 	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
 	defer cancel()
 
-	var results []domain.Pay
-	var response domain.Response[domain.Pay]
+	var results []domain.AppError
+	var response domain.Response[domain.AppError]
 
 	// Filters
 	q := bson.D{}
-	if input.Month != nil {
-		q = append(q, bson.E{"month", &input.Month})
+	if input.Error != "" {
+		q = append(q, bson.E{"error", input.Error})
 	}
-	if input.Year != nil {
-		q = append(q, bson.E{"year", &input.Year})
+	if input.Status != nil {
+		q = append(q, bson.E{"status", &input.Status})
 	}
 	if input.ID != nil && len(input.ID) > 0 {
 		ids := []primitive.ObjectID{}
@@ -48,24 +48,24 @@ func (r *PayMongo) FindPay(input *domain.PayFilter) (domain.Response[domain.Pay]
 
 		q = append(q, bson.E{"_id", bson.D{{"$in", ids}}})
 	}
-	if input.WorkerId != nil && len(input.WorkerId) > 0 {
-		workerIds := []primitive.ObjectID{}
-		for i, _ := range input.WorkerId {
-			workerIDPrimitive, err := primitive.ObjectIDFromHex(input.WorkerId[i])
+	if input.UserId != nil && len(input.UserId) > 0 {
+		ids := []primitive.ObjectID{}
+		for i, _ := range input.UserId {
+			iDPrimitive, err := primitive.ObjectIDFromHex(input.UserId[i])
 			if err != nil {
 				return response, err
 			}
 
-			workerIds = append(workerIds, workerIDPrimitive)
+			ids = append(ids, iDPrimitive)
 		}
 
-		q = append(q, bson.E{"workerId", bson.D{{"$in", workerIds}}})
+		q = append(q, bson.E{"_id", bson.D{{"$in", ids}}})
 	}
 
 	pipe := mongo.Pipeline{}
 	pipe = append(pipe, bson.D{{"$match", q}})
 
-	// worker.
+	// user.
 	pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
 		"from": tblUsers,
 		"as":   "usera",
@@ -154,7 +154,7 @@ func (r *PayMongo) FindPay(input *domain.PayFilter) (domain.Response[domain.Pay]
 		limit = *input.Limit
 	}
 
-	cursor, err := r.db.Collection(tblPay).Aggregate(ctx, pipe) // Find(ctx, params.Filter, opts)
+	cursor, err := r.db.Collection(tblAppError).Aggregate(ctx, pipe) // Find(ctx, params.Filter, opts)
 	// cursor, err := r.db.Collection(TblNode).Find(ctx, filter, opts)
 	if err != nil {
 		return response, err
@@ -165,7 +165,7 @@ func (r *PayMongo) FindPay(input *domain.PayFilter) (domain.Response[domain.Pay]
 		return response, er
 	}
 
-	response = domain.Response[domain.Pay]{
+	response = domain.Response[domain.AppError]{
 		Total: 0,
 		Skip:  skip,
 		Limit: limit,
@@ -174,10 +174,10 @@ func (r *PayMongo) FindPay(input *domain.PayFilter) (domain.Response[domain.Pay]
 	return response, nil
 }
 
-func (r *PayMongo) CreatePay(userID string, data *domain.Pay) (*domain.Pay, error) {
-	var result *domain.Pay
+func (r *AppErrorMongo) CreateAppError(userID string, data *domain.AppError) (*domain.AppError, error) {
+	var result *domain.AppError
 
-	collection := r.db.Collection(tblPay)
+	collection := r.db.Collection(tblAppError)
 
 	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
 	defer cancel()
@@ -187,55 +187,52 @@ func (r *PayMongo) CreatePay(userID string, data *domain.Pay) (*domain.Pay, erro
 		return nil, err
 	}
 
-	// var existPay domain.Pay
-	// r.db.Collection(TblPay).FindOne(ctx, bson.M{"node_id": Pay.NodeID, "user_id": userIDPrimitive}).Decode(&existPay)
+	// var existAppError domain.AppError
+	// r.db.Collection(TblAppError).FindOne(ctx, bson.M{"node_id": AppError.NodeID, "user_id": userIDPrimitive}).Decode(&existAppError)
 
-	// if existPay.NodeID.IsZero() {
+	// if existAppError.NodeID.IsZero() {
 	updatedAt := data.UpdatedAt
 	if updatedAt.IsZero() {
 		updatedAt = time.Now()
 	}
 
-	newPay := domain.PayInput{
-		UserID:   userIDPrimitive,
-		Name:     data.Name,
-		WorkerId: data.WorkerId,
-		Year:     &data.Year,
-		Month:    &data.Month,
-		Total:    data.Total,
+	newAppError := domain.AppErrorInput{
+		UserID: userIDPrimitive,
+		Error:  data.Error,
+		Status: data.Status,
 
 		CreatedAt: updatedAt,
 		UpdatedAt: updatedAt,
 	}
 
-	res, err := collection.InsertOne(ctx, newPay)
+	res, err := collection.InsertOne(ctx, newAppError)
 	if err != nil {
 		return nil, err
 	}
 
-	// err = r.db.Collection(tblPay).FindOne(ctx, bson.M{"_id": res.InsertedID}).Decode(&result)
+	// err = r.db.Collection(tblAppError).FindOne(ctx, bson.M{"_id": res.InsertedID}).Decode(&result)
 	// if err != nil {
 	// 	return nil, err
 	// }
 
 	insertedID := res.InsertedID.(primitive.ObjectID)
-	pays, err := r.FindPay(&domain.PayFilter{ID: []string{insertedID.Hex()}})
+	AppErrors, err := r.FindAppError(&domain.AppErrorFilter{ID: []string{insertedID.Hex()}})
 	if err != nil {
 		return nil, err
 	}
-	if len(pays.Data) > 0 {
-		result = &pays.Data[0]
+	if len(AppErrors.Data) > 0 {
+		result = &AppErrors.Data[0]
 	}
 
 	return result, nil
 }
 
-func (r *PayMongo) UpdatePay(id string, userID string, data *domain.PayInput) (*domain.Pay, error) {
-	var result *domain.Pay
+func (r *AppErrorMongo) UpdateAppError(id string, userID string, data *domain.AppErrorInput) (*domain.AppError, error) {
+	var result *domain.AppError
 	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
 	defer cancel()
 
-	collection := r.db.Collection(tblPay)
+	collection := r.db.Collection(tblAppError)
 
 	idPrimitive, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
@@ -245,20 +242,12 @@ func (r *PayMongo) UpdatePay(id string, userID string, data *domain.PayInput) (*
 	filter := bson.M{"_id": idPrimitive}
 
 	newData := bson.M{}
-	if data.Name != "" {
-		newData["name"] = data.Name
+	if data.Error != "" {
+		newData["error"] = data.Error
 	}
-	if data.Total != nil {
-		newData["total"] = &data.Total
-	}
-	if data.Month != nil {
-		newData["month"] = &data.Month
-	}
-	if data.Year != nil {
-		newData["year"] = &data.Year
-	}
-	if data.Props != nil {
-		newData["props"] = data.Props
+
+	if data.Status != nil {
+		newData["status"] = &data.Status
 	}
 	newData["updatedAt"] = time.Now()
 
@@ -267,28 +256,23 @@ func (r *PayMongo) UpdatePay(id string, userID string, data *domain.PayInput) (*
 		return result, err
 	}
 
-	// err = collection.FindOne(ctx, filter).Decode(&result)
-	// if err != nil {
-	// 	return result, err
-	// }
-
-	pays, err := r.FindPay(&domain.PayFilter{ID: []string{id}})
+	AppErrors, err := r.FindAppError(&domain.AppErrorFilter{ID: []string{id}})
 	if err != nil {
 		return nil, err
 	}
-	if len(pays.Data) > 0 {
-		result = &pays.Data[0]
+	if len(AppErrors.Data) > 0 {
+		result = &AppErrors.Data[0]
 	}
 
 	return result, nil
 }
 
-func (r *PayMongo) DeletePay(id string, userID string) (*domain.Pay, error) {
+func (r *AppErrorMongo) DeleteAppError(id string, userID string) (*domain.AppError, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
 	defer cancel()
 
-	var result = &domain.Pay{}
-	collection := r.db.Collection(tblPay)
+	var result = &domain.AppError{}
+	collection := r.db.Collection(tblAppError)
 
 	idPrimitive, err := primitive.ObjectIDFromHex(id)
 	if err != nil {

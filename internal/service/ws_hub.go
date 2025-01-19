@@ -15,7 +15,7 @@ type Hub struct {
 	// Регистрация заявок от клиентов.
 	register chan *Client
 	// Входящие сообщения от клиентов.
-	broadcast chan domain.Message
+	broadcast chan domain.MessageSocket
 }
 
 // // Message struct to hold message data
@@ -32,7 +32,7 @@ func NewHub() *Hub {
 		clients:    make(map[string]map[*Client]bool),
 		unregister: make(chan *Client),
 		register:   make(chan *Client),
-		broadcast:  make(chan domain.Message),
+		broadcast:  make(chan domain.MessageSocket),
 	}
 }
 
@@ -85,7 +85,7 @@ func (h *Hub) RemoveClient(client *Client) {
 		user, err :=
 			client.Services.User.UpdateUser(client.UserId, &domain.UserInput{Online: &status})
 		if err == nil {
-			h.HandleMessage(domain.Message{Type: "message", Sender: client.UserId, Recipient: "user2", Content: user, ID: "room1", Service: "user"})
+			h.HandleMessage(domain.MessageSocket{Type: "message", Sender: client.UserId, Recipient: "", Content: user, ID: "room1", Service: "user"})
 		}
 
 		delete(h.clients[client.RoomId], client)
@@ -95,19 +95,26 @@ func (h *Hub) RemoveClient(client *Client) {
 }
 
 // function to handle message based on type of message
-func (h *Hub) HandleMessage(message domain.Message) {
+func (h *Hub) HandleMessage(message domain.MessageSocket) {
 
 	//Check if the message is a type of "message"
 	if message.Type == "message" || message.Type == "error" {
 		clients := h.clients[message.ID]
+		fmt.Println("===============MESSAGE====================")
+		fmt.Println("len clients=", len(clients))
+		fmt.Println("Recipient=", message.Recipient)
 		for client := range clients {
-			select {
-			case client.send <- message:
-			default:
-				close(client.send)
-				delete(h.clients[message.ID], client)
+			if client.UserId == message.Recipient || message.Recipient == "" {
+				fmt.Println("Send message client=====>", client.UserId)
+				select {
+				case client.send <- message:
+				default:
+					close(client.send)
+					delete(h.clients[message.ID], client)
+				}
 			}
 		}
+		fmt.Println("===========================================")
 	}
 
 	//Check if the message is a type of "notification"

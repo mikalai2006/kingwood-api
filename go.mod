@@ -1,6 +1,8 @@
 module github.com/mikalai2006/kingwood-api
 
-go 1.19
+go 1.22.1
+
+toolchain go1.23.1
 
 require (
 	github.com/99designs/gqlgen v0.17.48
@@ -55,7 +57,9 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/montanaflynn/stats v0.6.6 // indirect
+	github.com/montovaneli/go-expo-notification v0.0.0-20240430211656-4cf4348e542e // indirect
 	github.com/oliveroneill/exponent-server-sdk-golang v0.0.0-20210823140141-d050598be512 // indirect
+	github.com/opus-domini/fast-shot v0.10.0 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect

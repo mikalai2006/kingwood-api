@@ -11,21 +11,21 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-type TaskHistoryMongo struct {
+type WorkHistoryMongo struct {
 	db   *mongo.Database
 	i18n config.I18nConfig
 }
 
-func NewTaskHistoryMongo(db *mongo.Database, i18n config.I18nConfig) *TaskHistoryMongo {
-	return &TaskHistoryMongo{db: db, i18n: i18n}
+func NewWorkHistoryMongo(db *mongo.Database, i18n config.I18nConfig) *WorkHistoryMongo {
+	return &WorkHistoryMongo{db: db, i18n: i18n}
 }
 
-func (r *TaskHistoryMongo) FindTaskHistory(input domain.TaskHistoryFilter) (domain.Response[domain.TaskHistory], error) {
+func (r *WorkHistoryMongo) FindWorkHistory(input domain.WorkHistoryFilter) (domain.Response[domain.WorkHistory], error) {
 	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
 	defer cancel()
 
-	var results []domain.TaskHistory
-	var response domain.Response[domain.TaskHistory]
+	var results []domain.WorkHistory
+	var response domain.Response[domain.WorkHistory]
 
 	q := bson.D{}
 
@@ -33,7 +33,7 @@ func (r *TaskHistoryMongo) FindTaskHistory(input domain.TaskHistoryFilter) (doma
 	if input.WorkerId != nil && len(input.WorkerId) > 0 {
 		workerIds := []primitive.ObjectID{}
 		for i, _ := range input.WorkerId {
-			workerIDPrimitive, err := primitive.ObjectIDFromHex(*input.WorkerId[i])
+			workerIDPrimitive, err := primitive.ObjectIDFromHex(input.WorkerId[i])
 			if err != nil {
 				return response, err
 			}
@@ -43,9 +43,35 @@ func (r *TaskHistoryMongo) FindTaskHistory(input domain.TaskHistoryFilter) (doma
 
 		q = append(q, bson.E{"workerId", bson.D{{"$in", workerIds}}})
 	}
-	// if input.Group != nil && len(input.Group) > 0 {
-	// 	q = append(q, bson.E{"group", bson.M{"$elemMatch": bson.D{{"$in", input.Group}}}})
-	// }
+	if input.WorkTimeId != nil && len(input.WorkTimeId) > 0 {
+		ids := []primitive.ObjectID{}
+		for i, _ := range input.WorkTimeId {
+			iDPrimitive, err := primitive.ObjectIDFromHex(input.WorkTimeId[i])
+			if err != nil {
+				return response, err
+			}
+
+			ids = append(ids, iDPrimitive)
+		}
+
+		q = append(q, bson.E{"workTimeId", bson.D{{"$in", ids}}})
+	}
+	if input.TaskId != nil && len(input.TaskId) > 0 {
+		ids := []primitive.ObjectID{}
+		for i, _ := range input.TaskId {
+			iDPrimitive, err := primitive.ObjectIDFromHex(input.TaskId[i])
+			if err != nil {
+				return response, err
+			}
+
+			ids = append(ids, iDPrimitive)
+		}
+
+		q = append(q, bson.E{"taskId", bson.D{{"$in", ids}}})
+	}
+	if input.Status != nil {
+		q = append(q, bson.E{"status", input.Status})
+	}
 	// if input.Status != nil {
 	// 	q = append(q, bson.E{"status", input.Status})
 	// }
@@ -85,7 +111,7 @@ func (r *TaskHistoryMongo) FindTaskHistory(input domain.TaskHistoryFilter) (doma
 		limit = *input.Limit
 	}
 
-	cursor, err := r.db.Collection(tblTaskHistory).Aggregate(ctx, pipe) // Find(ctx, params.Filter, opts)
+	cursor, err := r.db.Collection(tblWorkHistory).Aggregate(ctx, pipe) // Find(ctx, params.Filter, opts)
 	// cursor, err := r.db.Collection(TblNode).Find(ctx, filter, opts)
 	if err != nil {
 		return response, err
@@ -101,7 +127,7 @@ func (r *TaskHistoryMongo) FindTaskHistory(input domain.TaskHistoryFilter) (doma
 	// 	return response, err
 	// }
 
-	response = domain.Response[domain.TaskHistory]{
+	response = domain.Response[domain.WorkHistory]{
 		Total: int(0),
 		Skip:  skip,
 		Limit: limit,
@@ -110,12 +136,12 @@ func (r *TaskHistoryMongo) FindTaskHistory(input domain.TaskHistoryFilter) (doma
 	return response, nil
 }
 
-func (r *TaskHistoryMongo) FindTaskHistoryPopulate(input domain.TaskHistoryFilter) (domain.Response[domain.TaskHistory], error) {
+func (r *WorkHistoryMongo) FindWorkHistoryPopulate(input domain.WorkHistoryFilter) (domain.Response[domain.WorkHistory], error) {
 	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
 	defer cancel()
 
-	var results []domain.TaskHistory
-	var response domain.Response[domain.TaskHistory]
+	var results []domain.WorkHistory
+	var response domain.Response[domain.WorkHistory]
 
 	q := bson.D{}
 
@@ -123,7 +149,7 @@ func (r *TaskHistoryMongo) FindTaskHistoryPopulate(input domain.TaskHistoryFilte
 	if input.WorkerId != nil && len(input.WorkerId) > 0 {
 		workerIds := []primitive.ObjectID{}
 		for i, _ := range input.WorkerId {
-			workerIDPrimitive, err := primitive.ObjectIDFromHex(*input.WorkerId[i])
+			workerIDPrimitive, err := primitive.ObjectIDFromHex(input.WorkerId[i])
 			if err != nil {
 				return response, err
 			}
@@ -132,6 +158,35 @@ func (r *TaskHistoryMongo) FindTaskHistoryPopulate(input domain.TaskHistoryFilte
 		}
 
 		q = append(q, bson.E{"workerId", bson.D{{"$in", workerIds}}})
+	}
+	if input.WorkTimeId != nil && len(input.WorkTimeId) > 0 {
+		ids := []primitive.ObjectID{}
+		for i, _ := range input.WorkTimeId {
+			iDPrimitive, err := primitive.ObjectIDFromHex(input.WorkTimeId[i])
+			if err != nil {
+				return response, err
+			}
+
+			ids = append(ids, iDPrimitive)
+		}
+
+		q = append(q, bson.E{"workTimeId", bson.D{{"$in", ids}}})
+	}
+	if input.TaskId != nil && len(input.TaskId) > 0 {
+		ids := []primitive.ObjectID{}
+		for i, _ := range input.TaskId {
+			iDPrimitive, err := primitive.ObjectIDFromHex(input.TaskId[i])
+			if err != nil {
+				return response, err
+			}
+
+			ids = append(ids, iDPrimitive)
+		}
+
+		q = append(q, bson.E{"taskId", bson.D{{"$in", ids}}})
+	}
+	if input.Status != nil {
+		q = append(q, bson.E{"status", input.Status})
 	}
 
 	pipe := mongo.Pipeline{}
@@ -169,7 +224,7 @@ func (r *TaskHistoryMongo) FindTaskHistoryPopulate(input domain.TaskHistoryFilte
 		limit = *input.Limit
 	}
 
-	cursor, err := r.db.Collection(tblTaskHistory).Aggregate(ctx, pipe) // Find(ctx, params.Filter, opts)
+	cursor, err := r.db.Collection(tblWorkHistory).Aggregate(ctx, pipe) // Find(ctx, params.Filter, opts)
 	// cursor, err := r.db.Collection(TblNode).Find(ctx, filter, opts)
 	if err != nil {
 		return response, err
@@ -185,7 +240,7 @@ func (r *TaskHistoryMongo) FindTaskHistoryPopulate(input domain.TaskHistoryFilte
 	// 	return response, err
 	// }
 
-	response = domain.Response[domain.TaskHistory]{
+	response = domain.Response[domain.WorkHistory]{
 		Total: int(0),
 		Skip:  skip,
 		Limit: limit,
@@ -194,10 +249,10 @@ func (r *TaskHistoryMongo) FindTaskHistoryPopulate(input domain.TaskHistoryFilte
 	return response, nil
 }
 
-func (r *TaskHistoryMongo) CreateTaskHistory(userID string, data *domain.TaskHistory) (*domain.TaskHistory, error) {
-	var result *domain.TaskHistory
+func (r *WorkHistoryMongo) CreateWorkHistory(userID string, data *domain.WorkHistory) (*domain.WorkHistory, error) {
+	var result *domain.WorkHistory
 
-	collection := r.db.Collection(tblTaskHistory)
+	collection := r.db.Collection(tblWorkHistory)
 
 	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
 	defer cancel()
@@ -228,14 +283,18 @@ func (r *TaskHistoryMongo) CreateTaskHistory(userID string, data *domain.TaskHis
 	// 	return result, er
 	// }
 
-	newTask := domain.TaskHistoryInput{
-		OrderId:  data.OrderId,
-		TaskId:   data.TaskId,
-		WorkerId: data.WorkerId,
-		UserID:   userIDPrimitive,
-		Status:   data.Status,
-		From:     data.From,
-		To:       data.To,
+	newTask := domain.WorkHistoryInput{
+		OrderId:     data.OrderId,
+		TaskId:      data.TaskId,
+		WorkerId:    data.WorkerId,
+		ObjectId:    data.ObjectId,
+		OperationId: data.OperationId,
+		UserID:      userIDPrimitive,
+		Status:      &data.Status,
+		From:        data.From,
+		To:          data.To,
+		WorkTimeId:  data.WorkTimeId,
+		Oklad:       data.Oklad,
 
 		CreatedAt: updatedAt,
 		UpdatedAt: updatedAt,
@@ -246,7 +305,7 @@ func (r *TaskHistoryMongo) CreateTaskHistory(userID string, data *domain.TaskHis
 		return nil, err
 	}
 
-	err = r.db.Collection(tblTaskHistory).FindOne(ctx, bson.M{"_id": res.InsertedID}).Decode(&result)
+	err = r.db.Collection(tblWorkHistory).FindOne(ctx, bson.M{"_id": res.InsertedID}).Decode(&result)
 	if err != nil {
 		return nil, err
 	}
@@ -254,12 +313,12 @@ func (r *TaskHistoryMongo) CreateTaskHistory(userID string, data *domain.TaskHis
 	return result, nil
 }
 
-func (r *TaskHistoryMongo) UpdateTaskHistory(id string, userID string, data *domain.TaskHistoryInput) (*domain.TaskHistory, error) {
-	var result *domain.TaskHistory
+func (r *WorkHistoryMongo) UpdateWorkHistory(id string, userID string, data *domain.WorkHistoryInput) (*domain.WorkHistory, error) {
+	var result *domain.WorkHistory
 	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
 	defer cancel()
 
-	collection := r.db.Collection(tblTaskHistory)
+	collection := r.db.Collection(tblWorkHistory)
 
 	idPrimitive, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
@@ -275,6 +334,9 @@ func (r *TaskHistoryMongo) UpdateTaskHistory(id string, userID string, data *dom
 	// if !data.OperationId.IsZero() {
 	// 	newData["operationId"] = data.OperationId
 	// }
+	if data.Status != nil {
+		newData["status"] = &data.Status
+	}
 	if !data.OrderId.IsZero() {
 		newData["orderId"] = data.OrderId
 	}
@@ -284,8 +346,8 @@ func (r *TaskHistoryMongo) UpdateTaskHistory(id string, userID string, data *dom
 	if !data.WorkerId.IsZero() {
 		newData["workerId"] = data.WorkerId
 	}
-	if data.Status != "" {
-		newData["status"] = data.Status
+	if !data.WorkTimeId.IsZero() {
+		newData["workTimeId"] = data.WorkTimeId
 	}
 	if !data.From.IsZero() {
 		newData["from"] = data.From
@@ -308,12 +370,12 @@ func (r *TaskHistoryMongo) UpdateTaskHistory(id string, userID string, data *dom
 	return result, nil
 }
 
-func (r *TaskHistoryMongo) DeleteTaskHistory(id string) (*domain.TaskHistory, error) {
+func (r *WorkHistoryMongo) DeleteWorkHistory(id string) (*domain.WorkHistory, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
 	defer cancel()
 
-	var result = &domain.TaskHistory{}
-	collection := r.db.Collection(tblTaskHistory)
+	var result = &domain.WorkHistory{}
+	collection := r.db.Collection(tblWorkHistory)
 
 	idPrimitive, err := primitive.ObjectIDFromHex(id)
 	if err != nil {

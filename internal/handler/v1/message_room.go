@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/mikalai2006/kingwood-api/graph/model"
+	"github.com/mikalai2006/kingwood-api/internal/domain"
 	"github.com/mikalai2006/kingwood-api/internal/middleware"
 	"github.com/mikalai2006/kingwood-api/pkg/app"
 )
@@ -27,7 +27,7 @@ func (h *HandlerV1) CreateMessageRoom(c *gin.Context) {
 	// 	return
 	// }
 
-	var input *model.MessageRoom
+	var input *domain.MessageRoom
 	if er := c.BindJSON(&input); er != nil {
 		appG.ResponseError(http.StatusBadRequest, er, nil)
 		return
@@ -66,12 +66,12 @@ func (h *HandlerV1) FindMessageRoom(c *gin.Context) {
 	// authData, err := middleware.GetAuthFromCtx(c)
 	// fmt.Println("auth ", authData.Roles)
 
-	// params, err := utils.GetParamsFromRequest(c, model.Message{}, &h.i18n)
+	// params, err := utils.GetParamsFromRequest(c, domain.Message{}, &h.i18n)
 	// if err != nil {
 	// 	appG.ResponseError(http.StatusBadRequest, err, nil)
 	// 	return
 	// }
-	var input *model.MessageRoomFilter
+	var input *domain.MessageRoomFilter
 	if er := c.BindJSON(&input); er != nil {
 		appG.ResponseError(http.StatusBadRequest, er, nil)
 		return
@@ -113,7 +113,7 @@ func (h *HandlerV1) UpdateMessageRoom(c *gin.Context) {
 	// 	return
 	// }
 	// fmt.Println(data)
-	var input *model.MessageRoom
+	var input *domain.MessageRoom
 	if er := c.BindJSON(&input); er != nil {
 		appG.ResponseError(http.StatusBadRequest, er, nil)
 		return
@@ -159,7 +159,7 @@ func (h *HandlerV1) DeleteMessageRoom(c *gin.Context) {
 	c.JSON(http.StatusOK, node)
 }
 
-func (h *HandlerV1) CreateOrExistMessageRoom(c *gin.Context, input *model.MessageRoom) (*model.MessageRoom, error) {
+func (h *HandlerV1) CreateOrExistMessageRoom(c *gin.Context, input *domain.MessageRoom) (*domain.MessageRoom, error) {
 	appG := app.Gin{C: c}
 	userID, err := middleware.GetUID(c)
 	if err != nil {
@@ -178,7 +178,7 @@ func (h *HandlerV1) CreateOrExistMessageRoom(c *gin.Context, input *model.Messag
 	// 	return nil, err
 	// }
 
-	var result *model.MessageRoom
+	var result *domain.MessageRoom
 
 	// check exist product.
 	// domain.RequestParams{
@@ -189,8 +189,8 @@ func (h *HandlerV1) CreateOrExistMessageRoom(c *gin.Context, input *model.Messag
 	// 		Limit: 1,
 	// 	},
 	// }
-	prodID := input.ProductID.Hex()
-	existNode, err := h.Services.Product.FindProduct(&model.ProductFilter{ID: []*string{&prodID}})
+	orderID := input.OrderID.Hex()
+	existNode, err := h.Services.Order.FindOrder(&domain.OrderFilter{ID: []*string{&orderID}})
 	if err != nil {
 		appG.ResponseError(http.StatusBadRequest, err, nil)
 		return nil, err
@@ -200,7 +200,7 @@ func (h *HandlerV1) CreateOrExistMessageRoom(c *gin.Context, input *model.Messag
 		return result, nil
 	}
 
-	input.TakeUserID = existNode.Data[0].UserID
+	input.OrderID = existNode.Data[0].ID
 
 	// // check exist message
 	// existMessage, err := h.services.Message.FindMessage(domain.RequestParams{

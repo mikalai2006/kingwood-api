@@ -1,4 +1,4 @@
-package model
+package domain
 
 import (
 	"time"
@@ -66,16 +66,16 @@ type MessageFilter struct {
 	ID     *primitive.ObjectID `json:"id,omitempty"`
 	UserID *primitive.ObjectID `json:"userId,omitempty"`
 	// ProductID *primitive.ObjectID        `json:"productId,omitempty"`
-	RoomID []*primitive.ObjectID      `json:"roomId" bson:"roomId"`
-	Sort   []*ProductFilterSortParams `json:"sort,omitempty"`
-	Limit  *int                       `json:"limit,omitempty"`
-	Skip   *int                       `json:"skip,omitempty"`
+	RoomID []*primitive.ObjectID `json:"roomId" bson:"roomId"`
+	Sort   []*FilterSortParams   `json:"sort,omitempty"`
+	Limit  *int                  `json:"limit,omitempty"`
+	Skip   *int                  `json:"skip,omitempty"`
 }
 
 type MessageGroupForUser struct {
-	UserID    *primitive.ObjectID `json:"userId,omitempty" bson:"userId"`
-	ProductID *primitive.ObjectID `json:"productId,omitempty" bson:"productId"`
+	UserID  *primitive.ObjectID `json:"userId,omitempty" bson:"userId"`
+	OrderID *primitive.ObjectID `json:"orderId,omitempty" bson:"orderId"`
 	// UserProductID primitive.ObjectID  `json:"userProductId" bson:"userProductId"`
-	Count   int     `json:"count" bson:"count"`
-	Product Product `json:"product" bson:"product"`
+	Count int `json:"count" bson:"count"`
+	// Product Product `json:"product" bson:"product"`
 }

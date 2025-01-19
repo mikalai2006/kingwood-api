@@ -1,6 +1,8 @@
 package service
 
 import (
+	"fmt"
+
 	"github.com/mikalai2006/kingwood-api/internal/domain"
 	"github.com/mikalai2006/kingwood-api/internal/repository"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -11,6 +13,7 @@ type OrderService struct {
 	userService      *UserService
 	Hub              *Hub
 	operationService *OperationService
+	Services         *Services
 }
 
 func NewOrderService(repo repository.Order, userService *UserService, hub *Hub, operationService *OperationService) *OrderService {
@@ -64,6 +67,41 @@ func (s *OrderService) CreateOrder(userID string, data *domain.Order) (*domain.O
 	// 	_, _ = s.userService.SetStat(userID, domain.UserStat{AddReview: 1})
 	// }
 
+	roles, err := s.Services.Role.FindRole(&domain.RoleFilter{Code: []string{"admin", "boss"}})
+	//domain.RequestParams{Filter: bson.M{"code": bson.D{{"$in", bson.A{"admin", "boss"}}}}})
+	if err != nil {
+		return nil, err
+	}
+	ids := []string{}
+	var users []domain.User
+	if len(roles.Data) > 0 {
+		for i := range roles.Data {
+			ids = append(ids, roles.Data[i].ID.Hex())
+		}
+
+		_users, err := s.Services.User.FindUser(&domain.UserFilter{RoleId: ids})
+		//domain.RequestParams{Filter: bson.M{"roleId": bson.D{{"$in", ids}}}})
+		if err != nil {
+			return nil, err
+		}
+		users = _users.Data
+
+	}
+
+	for i := range users {
+		// add notify.
+		_, err = s.Services.Notify.CreateNotify(userID, &domain.NotifyInput{
+			UserTo:  users[i].ID.Hex(),
+			Title:   domain.NewOrderTitle,
+			Message: fmt.Sprintf(domain.NewOrder, result.Name, result.Object.Name),
+		})
+	}
+
+	fmt.Println("===============ORDER CREATE===================")
+	fmt.Println("ids=", ids)
+	fmt.Println("users=", len(users))
+	fmt.Println("==============================================")
+
 	return result, err
 }
 
@@ -89,7 +127,7 @@ func (s *OrderService) UpdateOrder(id string, userID string, data *domain.OrderI
 		result, err = s.repo.UpdateOrder(id, userID, &dataUpdate)
 	}
 
-	s.Hub.HandleMessage(domain.Message{Type: "message", Method: "PATCH", Sender: userID, Recipient: "sobesednikID.Hex()", Content: result, ID: "room1", Service: "order"})
+	s.Hub.HandleMessage(domain.MessageSocket{Type: "message", Method: "PATCH", Sender: userID, Recipient: "", Content: result, ID: "room1", Service: "order"})
 
 	return result, err
 }

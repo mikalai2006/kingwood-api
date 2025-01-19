@@ -188,6 +188,7 @@ func (r *UserMongo) GetUser(id string) (domain.User, error) {
 		},
 	}})
 	pipe = append(pipe, bson.D{{Key: "$set", Value: bson.M{"auth": bson.M{"$first": "$auths"}}}})
+	pipe = append(pipe, bson.D{{Key: "$set", Value: bson.M{"authPrivate": bson.M{"$first": "$auths"}}}})
 	// pipe = append(pipe, bson.D{{
 	// 	Key: "$lookup",
 	// 	Value: bson.M{
@@ -365,18 +366,63 @@ func (r *UserMongo) GetUser(id string) (domain.User, error) {
 	return result, nil
 }
 
-func (r *UserMongo) FindUser(params domain.RequestParams) (domain.Response[domain.User], error) {
+func (r *UserMongo) FindUser(input *domain.UserFilter) (domain.Response[domain.User], error) {
 	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
 	defer cancel()
 
 	var results []domain.User
 	var response domain.Response[domain.User]
-	pipe, err := CreatePipeline(params, &r.i18n)
-	if err != nil {
-		return domain.Response[domain.User]{}, err
-	}
-	fmt.Println("params:::", params)
+	// pipe, err := CreatePipeline(params, &r.i18n)
+	// if err != nil {
+	// 	return domain.Response[domain.User]{}, err
+	// }
+	// fmt.Println("params:::", params)
 
+	q := bson.D{}
+
+	// Filters
+	if input.ID != nil && len(input.ID) > 0 {
+		ids := []primitive.ObjectID{}
+		for i, _ := range input.ID {
+			iDPrimitive, err := primitive.ObjectIDFromHex(input.ID[i])
+			if err != nil {
+				return response, err
+			}
+
+			ids = append(ids, iDPrimitive)
+		}
+
+		q = append(q, bson.E{"_id", bson.D{{"$in", ids}}})
+	}
+	if input.UserId != nil && len(input.UserId) > 0 {
+		ids := []primitive.ObjectID{}
+		for i, _ := range input.UserId {
+			iDPrimitive, err := primitive.ObjectIDFromHex(input.UserId[i])
+			if err != nil {
+				return response, err
+			}
+
+			ids = append(ids, iDPrimitive)
+		}
+
+		q = append(q, bson.E{"userId", bson.D{{"$in", ids}}})
+	}
+	if input.RoleId != nil && len(input.RoleId) > 0 {
+		ids := []primitive.ObjectID{}
+		for i, _ := range input.RoleId {
+			iDPrimitive, err := primitive.ObjectIDFromHex(input.RoleId[i])
+			if err != nil {
+				return response, err
+			}
+
+			ids = append(ids, iDPrimitive)
+		}
+
+		q = append(q, bson.E{"roleId", bson.D{{"$in", ids}}})
+	}
+
+	pipe := mongo.Pipeline{}
+	pipe = append(pipe, bson.D{{"$match", q}})
 	// add populate.
 	pipe = append(pipe, bson.D{{
 		Key: "$lookup",
@@ -440,6 +486,17 @@ func (r *UserMongo) FindUser(params domain.RequestParams) (domain.Response[domai
 	}})
 	pipe = append(pipe, bson.D{{Key: "$set", Value: bson.M{"auth": bson.M{"$first": "$auths"}}}})
 
+	skip := 0
+	limit := 10
+	if input.Skip != nil {
+		pipe = append(pipe, bson.D{{"$skip", input.Skip}})
+		skip = *input.Skip
+	}
+	if input.Limit != nil {
+		pipe = append(pipe, bson.D{{"$limit", input.Limit}})
+		limit = *input.Limit
+	}
+
 	cursor, err := r.db.Collection(tblUsers).Aggregate(ctx, pipe) // Find(ctx, params.Filter, opts)
 	if err != nil {
 		return response, err
@@ -460,8 +517,8 @@ func (r *UserMongo) FindUser(params domain.RequestParams) (domain.Response[domai
 
 	response = domain.Response[domain.User]{
 		Total: int(count),
-		Skip:  int(params.Options.Skip),
-		Limit: int(params.Options.Limit),
+		Skip:  skip,
+		Limit: limit,
 		Data:  resultSlice,
 	}
 	return response, nil
@@ -606,7 +663,9 @@ func (r *UserMongo) UpdateUser(id string, user *domain.UserInput) (domain.User, 
 	}
 
 	// err = collection.FindOne(ctx, filter).Decode(&result)
-	results, err := r.FindUser(domain.RequestParams{Filter: bson.M{"_id": idPrimitive}, Options: domain.Options{Limit: 1}})
+	limit := 1
+	results, err := r.FindUser(&domain.UserFilter{ID: []string{id}, Limit: &limit})
+	// domain.RequestParams{Filter: bson.M{"_id": idPrimitive}, Options: domain.Options{Limit: 1}})
 	if err != nil {
 		return result, err
 	}

@@ -23,8 +23,8 @@ func (s *RoleService) GetRole(id string) (domain.Role, error) {
 	return s.repo.GetRole(id)
 }
 
-func (s *RoleService) FindRole(params domain.RequestParams) (domain.Response[domain.Role], error) {
-	return s.repo.FindRole(params)
+func (s *RoleService) FindRole(filter *domain.RoleFilter) (domain.Response[domain.Role], error) {
+	return s.repo.FindRole(filter)
 }
 
 func (s *RoleService) UpdateRole(id string, data interface{}) (domain.Role, error) {

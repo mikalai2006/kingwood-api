@@ -1,7 +1,7 @@
 package domain
 
-// Message struct to hold message data
-type Message struct {
+// MessageSocket struct to hold message data
+type MessageSocket struct {
 	Type      string      `json:"type"`
 	Method    string      `json:"method"`
 	Sender    string      `json:"sender"`

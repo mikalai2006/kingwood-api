@@ -6,27 +6,27 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type TaskHistoryService struct {
-	repo        repository.TaskHistory
+type WorkHistoryService struct {
+	repo        repository.WorkHistory
 	Hub         *Hub
 	userService *UserService
 	taskStatus  *TaskStatusService
 }
 
-func NewTaskHistoryService(repo repository.TaskHistory, hub *Hub, userService *UserService, TaskStatus *TaskStatusService) *TaskHistoryService {
-	return &TaskHistoryService{repo: repo, Hub: hub, userService: userService, taskStatus: TaskStatus}
+func NewWorkHistoryService(repo repository.WorkHistory, hub *Hub, userService *UserService, TaskStatus *TaskStatusService) *WorkHistoryService {
+	return &WorkHistoryService{repo: repo, Hub: hub, userService: userService, taskStatus: TaskStatus}
 }
 
-func (s *TaskHistoryService) FindTaskHistory(input domain.TaskHistoryFilter) (domain.Response[domain.TaskHistory], error) {
-	return s.repo.FindTaskHistory(input)
+func (s *WorkHistoryService) FindWorkHistory(input domain.WorkHistoryFilter) (domain.Response[domain.WorkHistory], error) {
+	return s.repo.FindWorkHistory(input)
 }
 
-func (s *TaskHistoryService) FindTaskHistoryPopulate(input domain.TaskHistoryFilter) (domain.Response[domain.TaskHistory], error) {
-	return s.repo.FindTaskHistoryPopulate(input)
+func (s *WorkHistoryService) FindWorkHistoryPopulate(input domain.WorkHistoryFilter) (domain.Response[domain.WorkHistory], error) {
+	return s.repo.FindWorkHistoryPopulate(input)
 }
 
-func (s *TaskHistoryService) CreateTaskHistory(userID string, data *domain.TaskHistory) (*domain.TaskHistory, error) {
-	var result *domain.TaskHistory
+func (s *WorkHistoryService) CreateWorkHistory(userID string, data *domain.WorkHistory) (*domain.WorkHistory, error) {
+	var result *domain.WorkHistory
 
 	_, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {
@@ -41,7 +41,7 @@ func (s *TaskHistoryService) CreateTaskHistory(userID string, data *domain.TaskH
 	// }
 
 	// if len(existReview.Data) > 0 {
-	// 	updateReview := &domain.TaskInput{
+	// 	updateReview := &domain.WorkInput{
 	// 		Rate:   review.Rate,
 	// 		Review: review.Review,
 	// 	}
@@ -55,7 +55,7 @@ func (s *TaskHistoryService) CreateTaskHistory(userID string, data *domain.TaskH
 	// 	}
 	// }
 
-	result, err = s.repo.CreateTaskHistory(userID, data)
+	result, err = s.repo.CreateWorkHistory(userID, data)
 	if err != nil {
 		return nil, err
 	}
@@ -67,8 +67,8 @@ func (s *TaskHistoryService) CreateTaskHistory(userID string, data *domain.TaskH
 	return result, err
 }
 
-func (s *TaskHistoryService) UpdateTaskHistory(id string, userID string, data *domain.TaskHistoryInput) (*domain.TaskHistory, error) {
-	result, err := s.repo.UpdateTaskHistory(id, userID, data)
+func (s *WorkHistoryService) UpdateWorkHistory(id string, userID string, data *domain.WorkHistoryInput) (*domain.WorkHistory, error) {
+	result, err := s.repo.UpdateWorkHistory(id, userID, data)
 	if err != nil {
 		return result, err
 	}
@@ -76,8 +76,8 @@ func (s *TaskHistoryService) UpdateTaskHistory(id string, userID string, data *d
 	return result, err
 }
 
-func (s *TaskHistoryService) DeleteTaskHistory(id string) (*domain.TaskHistory, error) {
-	result, err := s.repo.DeleteTaskHistory(id)
+func (s *WorkHistoryService) DeleteWorkHistory(id string) (*domain.WorkHistory, error) {
+	result, err := s.repo.DeleteWorkHistory(id)
 
 	return result, err
 }

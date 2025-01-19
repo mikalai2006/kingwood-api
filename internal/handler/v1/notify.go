@@ -3,6 +3,7 @@ package v1
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -11,17 +12,19 @@ import (
 	"github.com/mikalai2006/kingwood-api/internal/middleware"
 	"github.com/mikalai2006/kingwood-api/internal/utils"
 	"github.com/mikalai2006/kingwood-api/pkg/app"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func (h *HandlerV1) registerTaskHistory(router *gin.RouterGroup) {
-	route := router.Group("/task_history")
-	route.POST("", h.CreateTaskHistory)
-	route.POST("/find", h.FindTaskHistory)
-	route.PATCH("/:id", h.SetUserFromRequest, h.UpdateTaskHistory)
-	route.POST("/list", h.CreateTaskHistoryList)
+func (h *HandlerV1) registerNotify(router *gin.RouterGroup) {
+	route := router.Group("/notify")
+	route.POST("", h.CreateNotify)
+	route.POST("/list", h.CreateNotifyList)
+	route.POST("/populate", h.FindNotifyPopulate)
+	route.PATCH("/:id", h.SetUserFromRequest, h.UpdateNotify)
+	route.DELETE("/:id", h.DeleteNotify)
 }
 
-func (h *HandlerV1) CreateTaskHistory(c *gin.Context) {
+func (h *HandlerV1) CreateNotify(c *gin.Context) {
 	appG := app.Gin{C: c}
 	// userID, err := middleware.GetUID(c)
 	// if err != nil {
@@ -30,22 +33,22 @@ func (h *HandlerV1) CreateTaskHistory(c *gin.Context) {
 	// 	return
 	// }
 
-	var input *domain.TaskHistory
-	if er := c.BindJSON(&input); er != nil {
+	var input *domain.NotifyInput
+	if er := c.Bind(&input); er != nil {
 		appG.ResponseError(http.StatusBadRequest, er, nil)
 		return
 	}
 
-	Task, err := h.CreateOrExistTaskHistory(c, input) //h.services.Task.CreateTask(userID, input)
+	notify, err := h.CreateOrExistNotify(c, input) //h.services.Notify.CreateNotify(userID, input)
 	if err != nil {
 		appG.ResponseError(http.StatusBadRequest, err, nil)
 		return
 	}
 
-	c.JSON(http.StatusOK, Task)
+	c.JSON(http.StatusOK, notify)
 }
 
-func (h *HandlerV1) CreateTaskHistoryList(c *gin.Context) {
+func (h *HandlerV1) CreateNotifyList(c *gin.Context) {
 	appG := app.Gin{C: c}
 	userID, err := middleware.GetUID(c)
 	if err != nil || userID == "" {
@@ -54,7 +57,7 @@ func (h *HandlerV1) CreateTaskHistoryList(c *gin.Context) {
 		return
 	}
 
-	var input []*domain.TaskHistory
+	var input []*domain.NotifyInput
 	if er := c.BindJSON(&input); er != nil {
 		appG.ResponseError(http.StatusBadRequest, er, nil)
 		return
@@ -65,56 +68,55 @@ func (h *HandlerV1) CreateTaskHistoryList(c *gin.Context) {
 		return
 	}
 
-	var result []*domain.TaskHistory
+	var result []*domain.Notify
 	for i := range input {
-		Task, err := h.CreateOrExistTaskHistory(c, input[i]) //h.services.Task.CreateTask(userID, input)
+		Notify, err := h.CreateOrExistNotify(c, input[i]) //h.services.Notify.CreateNotify(userID, input)
 		if err != nil {
 			appG.ResponseError(http.StatusBadRequest, err, nil)
 			return
 		}
-		result = append(result, Task)
+		result = append(result, Notify)
 	}
 
 	c.JSON(http.StatusOK, result)
 }
 
-// @Summary Find Tasks by params
+// @Summary Find Notifys by params
 // @Security ApiKeyAuth
-// @Tags Task
-// @Description Input params for search Tasks
-// @ModuleID Task
+// @Tags Notify
+// @Description Input params for search Notifys
+// @ModuleID Notify
 // @Accept  json
 // @Produce  json
-// @Param input query TaskInput true "params for search Task"
-// @Success 200 {object} []domain.Task
+// @Param input query NotifyInput true "params for search Notify"
+// @Success 200 {object} []domain.Notify
 // @Failure 400,404 {object} domain.ErrorResponse
 // @Failure 500 {object} domain.ErrorResponse
 // @Failure default {object} domain.ErrorResponse
-// @Router /api/Task [get].
-func (h *HandlerV1) FindTaskHistory(c *gin.Context) {
+// @Router /api/Notify [get].
+func (h *HandlerV1) FindNotifyPopulate(c *gin.Context) {
 	appG := app.Gin{C: c}
-
-	// params, err := utils.GetParamsFromRequest(c, domain.TaskHistoryInputData{}, &h.i18n)
+	// params, err := utils.GetParamsFromRequest(c, domain.NotifyInputData{}, &h.i18n)
 	// if err != nil {
 	// 	appG.ResponseError(http.StatusBadRequest, err, nil)
 	// 	return
 	// }
-	var input *domain.TaskHistoryFilter
+	var input *domain.NotifyFilter
 	if er := c.BindJSON(&input); er != nil {
 		appG.ResponseError(http.StatusBadRequest, er, nil)
 		return
 	}
 
-	Tasks, err := h.Services.TaskHistory.FindTaskHistory(*input)
+	Notifys, err := h.Services.Notify.FindNotifyPopulate(input)
 	if err != nil {
 		appG.ResponseError(http.StatusBadRequest, err, nil)
 		return
 	}
 
-	c.JSON(http.StatusOK, Tasks)
+	c.JSON(http.StatusOK, Notifys)
 }
 
-func (h *HandlerV1) UpdateTaskHistory(c *gin.Context) {
+func (h *HandlerV1) UpdateNotify(c *gin.Context) {
 	appG := app.Gin{C: c}
 	userID, err := middleware.GetUID(c)
 	if err != nil {
@@ -147,13 +149,13 @@ func (h *HandlerV1) UpdateTaskHistory(c *gin.Context) {
 		appG.ResponseError(http.StatusBadRequest, er, nil)
 		return
 	}
-	data, er := utils.BindJSON2[domain.TaskHistoryInput](a)
+	data, er := utils.BindJSON2[domain.NotifyInput](a)
 	if er != nil {
 		appG.ResponseError(http.StatusBadRequest, er, nil)
 		return
 	}
 
-	document, err := h.Services.TaskHistory.UpdateTaskHistory(id, userID, &data)
+	document, err := h.Services.Notify.UpdateNotify(id, userID, &data)
 	if err != nil {
 		appG.ResponseError(http.StatusInternalServerError, err, nil)
 		return
@@ -162,11 +164,7 @@ func (h *HandlerV1) UpdateTaskHistory(c *gin.Context) {
 	c.JSON(http.StatusOK, document)
 }
 
-func (h *HandlerV1) DeleteTaskHistory(c *gin.Context) {
-
-}
-
-func (h *HandlerV1) CreateOrExistTaskHistory(c *gin.Context, input *domain.TaskHistory) (*domain.TaskHistory, error) {
+func (h *HandlerV1) CreateOrExistNotify(c *gin.Context, input *domain.NotifyInput) (*domain.Notify, error) {
 	appG := app.Gin{C: c}
 	userID, err := middleware.GetUID(c)
 	if err != nil {
@@ -174,32 +172,61 @@ func (h *HandlerV1) CreateOrExistTaskHistory(c *gin.Context, input *domain.TaskH
 		appG.ResponseError(http.StatusUnauthorized, err, gin.H{"hello": "world"})
 		return nil, err
 	}
-	var result *domain.TaskHistory
+	var result *domain.Notify
 
-	// userIDPrimitive, err := primitive.ObjectIDFromHex(userID)
-	// if err != nil {
-	// 	appG.ResponseError(http.StatusBadRequest, err, nil)
-	// 	return result, err
-	// }
+	// upload images.
+	var imageInput = &domain.MessageImage{}
+	imageInput.Service = "notify"
+	imageInput.ServiceID = primitive.NilObjectID.Hex()
+	imageInput.UserID = userID
 
-	// existTasks, err := h.services.Task.FindTask(domain.RequestParams{
-	// 	Options: domain.Options{Limit: 1},
-	// 	Filter:  bson.D{{"node_id", input.NodeID}, {"user_id", userIDPrimitive}},
-	// })
-	// if err != nil {
-	// 	appG.ResponseError(http.StatusBadRequest, err, nil)
-	// 	return result, err
-	// }
-	// if len(existTasks.Data) > 0 {
-	// 	fmt.Println("existTasks =")
-	// 	// appG.ResponseError(http.StatusBadRequest, model.ErrNodedataVoteExistValue, nil)
-	// 	return &existTasks.Data[0], nil
-	// }
+	paths, err := utils.UploadResizeMultipleFileForMessage(c, imageInput, "images", &h.imageConfig)
+	if err != nil {
+		appG.ResponseError(http.StatusInternalServerError, err, nil)
+	}
 
-	result, err = h.Services.TaskHistory.CreateTaskHistory(userID, input)
+	resultImages := []string{}
+	for i := range paths {
+		imageInput.Path = paths[i].Path
+		imageInput.Ext = paths[i].Ext
+		// imageInput.Service= "message"
+		// image, err := h.Services.MessageImage.CreateMessageImage(userID, imageInput)
+		// if err != nil {
+		// 	appG.ResponseError(http.StatusBadRequest, err, nil)
+		// 	return result, err
+		// }
+		// imageInput.URL =
+		resultImages = append(resultImages, fmt.Sprintf("%s/%s/%s/%s%s", imageInput.UserID, imageInput.Service, imageInput.ServiceID, imageInput.Path, imageInput.Ext))
+	}
+
+	input.Images = resultImages
+
+	// create notify.
+	result, err = h.Services.Notify.CreateNotify(userID, input)
 	if err != nil {
 		appG.ResponseError(http.StatusBadRequest, err, nil)
 		return result, err
 	}
+
 	return result, nil
+}
+
+func (h *HandlerV1) DeleteNotify(c *gin.Context) {
+	appG := app.Gin{C: c}
+
+	id := c.Param("id")
+	if id == "" {
+		// c.AbortWithError(http.StatusBadRequest, errors.New("for remove need id"))
+		appG.ResponseError(http.StatusBadRequest, errors.New("for remove need id"), nil)
+		return
+	}
+
+	user, err := h.Services.Notify.DeleteNotify(id) // , input
+	if err != nil {
+		// c.AbortWithError(http.StatusBadRequest, err)
+		appG.ResponseError(http.StatusBadRequest, err, nil)
+		return
+	}
+
+	c.JSON(http.StatusOK, user)
 }

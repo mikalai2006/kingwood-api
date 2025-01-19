@@ -81,11 +81,12 @@ type TaskInputData struct {
 }
 
 type TaskFilter struct {
-	ID          []*string           `json:"id,omitempty"`
-	ObjectId    []*string           `json:"objectId,omitempty"`
-	OrderId     []*string           `json:"orderId,omitempty"`
-	OperationId []*string           `json:"operationId,omitempty"`
-	Name        *string             `json:"name,omitempty"`
+	ID          []string            `json:"id,omitempty"`
+	ObjectId    []string            `json:"objectId,omitempty"`
+	OrderId     []string            `json:"orderId,omitempty"`
+	OperationId []string            `json:"operationId,omitempty"`
+	Status      []string            `json:"status,omitempty"`
+	Name        string              `json:"name,omitempty"`
 	Sort        []*FilterSortParams `json:"sort,omitempty"`
 	Limit       *int                `json:"$limit,omitempty"`
 	Skip        *int                `json:"$skip,omitempty"`

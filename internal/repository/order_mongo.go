@@ -88,8 +88,20 @@ func (r *OrderMongo) FindOrder(input *domain.OrderFilter) (domain.Response[domai
 	// }}})
 	// pipe = append(pipe, bson.D{{Key: "$set", Value: bson.M{"user": bson.M{"$first": "$usera"}}}})
 	q := bson.D{}
-
 	// Filters
+	if input.From != nil && !input.From.IsZero() {
+		q = append(q, bson.E{"createdAt", bson.D{{"$gte", primitive.NewDateTimeFromTime(*input.From)}}})
+	}
+	if input.To != nil && !input.To.IsZero() {
+		q = append(q, bson.E{"createdAt", bson.D{{"$lte", primitive.NewDateTimeFromTime(*input.To)}}})
+	}
+	if input.Date != nil && !input.Date.IsZero() {
+		// q = append(q, bson.E{"from", bson.D{{"$lte", primitive.NewDateTimeFromTime(*input.Date)}}})
+		q = append(q, bson.E{"dateStart", bson.D{{"$gte", primitive.NewDateTimeFromTime(*input.Date)}}})
+	}
+	if input.Year != nil && *input.Year > 0 {
+		q = append(q, bson.E{"year", input.Year})
+	}
 	if input.ID != nil && len(input.ID) > 0 {
 		ids := []primitive.ObjectID{}
 		for key, _ := range input.ID {
@@ -215,12 +227,19 @@ func (r *OrderMongo) FindOrder(input *domain.OrderFilter) (domain.Response[domai
 		return response, er
 	}
 	resultFacetOne := ResultFacet{}
-	bsonBytes, errs := bson.Marshal(resultMap[0])
-	if errs != nil {
-		fmt.Println("rrrrr: errs ", errs)
+	if len(resultMap) > 0 {
+		bsonBytes, errs := bson.Marshal(resultMap[0])
+		if errs != nil {
+			fmt.Println("rrrrr: errs ", errs)
+		}
+
+		bson.Unmarshal(bsonBytes, &resultFacetOne)
 	}
 
-	bson.Unmarshal(bsonBytes, &resultFacetOne)
+	total := 0
+	if len(resultFacetOne.Metadata) > 0 {
+		total = resultFacetOne.Metadata[0].Total
+	}
 	// fmt.Println("rrrrr: ", resultMap[0])
 
 	// count, err := r.db.Collection(TblOrder).CountDocuments(ctx, params.Filter)
@@ -229,7 +248,7 @@ func (r *OrderMongo) FindOrder(input *domain.OrderFilter) (domain.Response[domai
 	// }
 
 	response = domain.Response[domain.Order]{
-		Total: resultFacetOne.Metadata[0].Total,
+		Total: total,
 		Skip:  skip,
 		Limit: limit,
 		Data:  resultFacetOne.Data, //results,

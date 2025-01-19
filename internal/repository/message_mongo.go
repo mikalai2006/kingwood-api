@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/mikalai2006/kingwood-api/graph/model"
 	"github.com/mikalai2006/kingwood-api/internal/config"
 	"github.com/mikalai2006/kingwood-api/internal/domain"
 	"go.mongodb.org/mongo-driver/bson"
@@ -21,19 +20,19 @@ func NewMessageMongo(db *mongo.Database, i18n config.I18nConfig) *MessageMongo {
 	return &MessageMongo{db: db, i18n: i18n}
 }
 
-func (r *MessageMongo) FindMessage(params *model.MessageFilter) (domain.Response[model.Message], error) {
+func (r *MessageMongo) FindMessage(params *domain.MessageFilter) (domain.Response[domain.Message], error) {
 	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
 	defer cancel()
 
-	var results []model.Message
-	var response domain.Response[model.Message]
+	var results []domain.Message
+	var response domain.Response[domain.Message]
 	// filter, opts, err := CreateFilterAndOptions(params)
 	// if err != nil {
 	// 	return domain.Response[model.Node]{}, err
 	// }
 	// pipe, err := CreatePipeline(params, &r.i18n)
 	// if err != nil {
-	// 	return domain.Response[model.Message]{}, err
+	// 	return domain.Response[domain.Message]{}, err
 	// }
 	// fmt.Println(params)
 	q := bson.D{}
@@ -121,7 +120,7 @@ func (r *MessageMongo) FindMessage(params *model.MessageFilter) (domain.Response
 		return response, er
 	}
 
-	resultSlice := make([]model.Message, len(results))
+	resultSlice := make([]domain.Message, len(results))
 	// for i, d := range results {
 	// 	resultSlice[i] = d
 	// }
@@ -133,7 +132,7 @@ func (r *MessageMongo) FindMessage(params *model.MessageFilter) (domain.Response
 	// 	return response, err
 	// }
 
-	response = domain.Response[model.Message]{
+	response = domain.Response[domain.Message]{
 		Total: count,
 		Skip:  skip,
 		Limit: limit,
@@ -142,8 +141,8 @@ func (r *MessageMongo) FindMessage(params *model.MessageFilter) (domain.Response
 	return response, nil
 }
 
-func (r *MessageMongo) CreateMessage(userID string, input *model.MessageInput) (*model.Message, error) {
-	var result *model.Message
+func (r *MessageMongo) CreateMessage(userID string, input *domain.MessageInput) (*domain.Message, error) {
+	var result *domain.Message
 
 	collection := r.db.Collection(TblMessage)
 
@@ -167,7 +166,7 @@ func (r *MessageMongo) CreateMessage(userID string, input *model.MessageInput) (
 		input.Images = make([]string, 0)
 	}
 
-	newMessage := model.MessageInputMongo{
+	newMessage := domain.MessageInputMongo{
 		UserID: userIDPrimitive,
 		// ProductID: Message.ProductID,
 		Status:    1,
@@ -192,8 +191,8 @@ func (r *MessageMongo) CreateMessage(userID string, input *model.MessageInput) (
 	return result, nil
 }
 
-func (r *MessageMongo) UpdateMessage(id string, userID string, data *model.MessageInput) (*model.Message, error) {
-	var result *model.Message
+func (r *MessageMongo) UpdateMessage(id string, userID string, data *domain.MessageInput) (*domain.Message, error) {
+	var result *domain.Message
 	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
 	defer cancel()
 
@@ -211,12 +210,12 @@ func (r *MessageMongo) UpdateMessage(id string, userID string, data *model.Messa
 	filter := bson.M{"_id": idPrimitive}
 
 	// // Find old data
-	// var oldResult *model.Message
+	// var oldResult *domain.Message
 	// err = collection.FindOne(ctx, filter).Decode(&oldResult)
 	// if err != nil {
 	// 	return result, err
 	// }
-	// oldMessage := model.Message{
+	// oldMessage := domain.Message{
 	// 	UserID:  oldResult.UserID,
 	// 	NodeID:  oldResult.NodeID,
 	// 	Message: oldResult.Message,
@@ -261,7 +260,7 @@ func (r *MessageMongo) UpdateMessage(id string, userID string, data *model.Messa
 	// if err != nil {
 	// 	return result, err
 	// }
-	resultResponse, err := r.FindMessage(&model.MessageFilter{ID: &idPrimitive})
+	resultResponse, err := r.FindMessage(&domain.MessageFilter{ID: &idPrimitive})
 	if err != nil {
 		return result, err
 	}
@@ -271,11 +270,11 @@ func (r *MessageMongo) UpdateMessage(id string, userID string, data *model.Messa
 	return result, nil
 }
 
-func (r *MessageMongo) DeleteMessage(id string) (model.Message, error) {
+func (r *MessageMongo) DeleteMessage(id string) (domain.Message, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
 	defer cancel()
 
-	var result = model.Message{}
+	var result = domain.Message{}
 	collection := r.db.Collection(TblMessage)
 
 	idPrimitive, err := primitive.ObjectIDFromHex(id)
@@ -298,11 +297,11 @@ func (r *MessageMongo) DeleteMessage(id string) (model.Message, error) {
 	return result, nil
 }
 
-func (r *MessageMongo) GetGroupForUser(userID string) ([]model.MessageGroupForUser, error) {
+func (r *MessageMongo) GetGroupForUser(userID string) ([]domain.MessageGroupForUser, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
 	defer cancel()
 
-	var results []model.MessageGroupForUser
+	var results []domain.MessageGroupForUser
 
 	q := bson.D{}
 

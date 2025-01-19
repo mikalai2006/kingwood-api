@@ -32,34 +32,26 @@ type Authorization interface {
 	UpdateAuth(id string, auth *domain.AuthInput) (domain.Auth, error)
 }
 
-type Product interface {
-	FindProduct(params *model.ProductFilter) (domain.Response[model.Product], error)
-	CreateProduct(userID string, product *model.ProductInputData) (*model.Product, error)
-	UpdateProduct(id string, userID string, data *model.Product) (*model.Product, error)
-	DeleteProduct(id string) (model.Product, error)
-}
-
 type Message interface {
-	CreateMessage(userID string, message *model.MessageInput) (*model.Message, error)
-	FindMessage(params *model.MessageFilter) (domain.Response[model.Message], error)
-	UpdateMessage(id string, userID string, data *model.MessageInput) (*model.Message, error)
-	DeleteMessage(id string) (model.Message, error)
-	GetGroupForUser(userID string) ([]model.MessageGroupForUser, error)
+	CreateMessage(userID string, message *domain.MessageInput) (*domain.Message, error)
+	FindMessage(params *domain.MessageFilter) (domain.Response[domain.Message], error)
+	UpdateMessage(id string, userID string, data *domain.MessageInput) (*domain.Message, error)
+	DeleteMessage(id string) (domain.Message, error)
+	GetGroupForUser(userID string) ([]domain.MessageGroupForUser, error)
 }
 type MessageRoom interface {
-	CreateMessageRoom(userID string, message *model.MessageRoom) (*model.MessageRoom, error)
-	FindMessageRoom(params *model.MessageRoomFilter) (domain.Response[model.MessageRoom], error)
-	UpdateMessageRoom(id string, userID string, data *model.MessageRoom) (*model.MessageRoom, error)
-	DeleteMessageRoom(id string) (model.MessageRoom, error)
-	// GetGroupForUser(userID string) ([]model.MessageGroupForUser, error)
+	CreateMessageRoom(userID string, message *domain.MessageRoom) (*domain.MessageRoom, error)
+	FindMessageRoom(params *domain.MessageRoomFilter) (domain.Response[domain.MessageRoom], error)
+	UpdateMessageRoom(id string, userID string, data *domain.MessageRoom) (*domain.MessageRoom, error)
+	DeleteMessageRoom(id string) (domain.MessageRoom, error)
+	GetGroupForUser(userID string) ([]domain.MessageGroupForUser, error)
 }
 
-type Offer interface {
-	FindOffer(params *model.OfferFilter) (domain.Response[model.Offer], error)
-	GetOffer(id string) (*model.Offer, error)
-	CreateOffer(userID string, data *model.OfferInput) (*model.Offer, error)
-	UpdateOffer(id string, userID string, data *model.Offer) (*model.Offer, error)
-	DeleteOffer(id string) (model.Offer, error)
+type Notify interface {
+	CreateNotify(userID string, data *domain.NotifyInput) (*domain.Notify, error)
+	FindNotifyPopulate(input *domain.NotifyFilter) (domain.Response[domain.Notify], error)
+	UpdateNotify(id string, userID string, data *domain.NotifyInput) (*domain.Notify, error)
+	DeleteNotify(id string) (*domain.Notify, error)
 }
 
 type Order interface {
@@ -84,21 +76,6 @@ type Task interface {
 	UpdateTask(id string, userID string, data *domain.TaskInput) (*domain.Task, error)
 	DeleteTask(id string) (*domain.Task, error)
 }
-type TaskMontajWorker interface {
-	FindTaskMontajWorkerPopulate(input *domain.TaskMontajWorkerFilter) (domain.Response[domain.TaskMontajWorker], error)
-	FindTaskMontajWorker(params domain.RequestParams) (domain.Response[domain.TaskMontajWorker], error)
-	CreateTaskMontajWorker(userID string, Order *domain.TaskMontajWorker) (*domain.TaskMontajWorker, error)
-	UpdateTaskMontajWorker(id string, userID string, data *domain.TaskMontajWorkerInput) (*domain.TaskMontajWorker, error)
-	DeleteTaskMontajWorker(id string) (*domain.TaskMontajWorker, error)
-}
-
-type TaskMontaj interface {
-	FindTaskMontaj(input domain.TaskMontajFilter) (domain.Response[domain.TaskMontaj], error)
-	FindTaskPopulate(params domain.TaskMontajFilter) (domain.Response[domain.TaskMontaj], error)
-	CreateTaskMontaj(userID string, Order *domain.TaskMontaj) (*domain.TaskMontaj, error)
-	UpdateTaskMontaj(id string, userID string, data *domain.TaskMontajInput) (*domain.TaskMontaj, error)
-	DeleteTaskMontaj(id string) (*domain.TaskMontaj, error)
-}
 
 type WorkTime interface {
 	FindWorkTime(input domain.WorkTimeFilter) (domain.Response[domain.WorkTime], error)
@@ -108,12 +85,12 @@ type WorkTime interface {
 	DeleteWorkTime(id string) (*domain.WorkTime, error)
 }
 
-type TaskHistory interface {
-	FindTaskHistory(input domain.TaskHistoryFilter) (domain.Response[domain.TaskHistory], error)
-	FindTaskHistoryPopulate(params domain.TaskHistoryFilter) (domain.Response[domain.TaskHistory], error)
-	CreateTaskHistory(userID string, Order *domain.TaskHistory) (*domain.TaskHistory, error)
-	UpdateTaskHistory(id string, userID string, data *domain.TaskHistoryInput) (*domain.TaskHistory, error)
-	DeleteTaskHistory(id string) (*domain.TaskHistory, error)
+type WorkHistory interface {
+	FindWorkHistory(input domain.WorkHistoryFilter) (domain.Response[domain.WorkHistory], error)
+	FindWorkHistoryPopulate(params domain.WorkHistoryFilter) (domain.Response[domain.WorkHistory], error)
+	CreateWorkHistory(userID string, Order *domain.WorkHistory) (*domain.WorkHistory, error)
+	UpdateWorkHistory(id string, userID string, data *domain.WorkHistoryInput) (*domain.WorkHistory, error)
+	DeleteWorkHistory(id string) (*domain.WorkHistory, error)
 }
 
 type Object interface {
@@ -132,10 +109,24 @@ type TaskWorker interface {
 }
 
 type Pay interface {
-	FindPay(params domain.RequestParams) (domain.Response[domain.Pay], error)
+	FindPay(input *domain.PayFilter) (domain.Response[domain.Pay], error)
 	CreatePay(userID string, Order *domain.Pay) (*domain.Pay, error)
 	UpdatePay(id string, userID string, data *domain.PayInput) (*domain.Pay, error)
-	DeletePay(id string) (*domain.Pay, error)
+	DeletePay(id string, userID string) (*domain.Pay, error)
+}
+
+type AppError interface {
+	FindAppError(input *domain.AppErrorFilter) (domain.Response[domain.AppError], error)
+	CreateAppError(userID string, Order *domain.AppError) (*domain.AppError, error)
+	UpdateAppError(id string, userID string, data *domain.AppErrorInput) (*domain.AppError, error)
+	DeleteAppError(id string, userID string) (*domain.AppError, error)
+}
+
+type PayTemplate interface {
+	FindPayTemplate(params domain.RequestParams) (domain.Response[domain.PayTemplate], error)
+	CreatePayTemplate(userID string, data *domain.PayTemplate) (*domain.PayTemplate, error)
+	UpdatePayTemplate(id string, userID string, data *domain.PayTemplateInput) (*domain.PayTemplate, error)
+	DeletePayTemplate(id string) (domain.PayTemplate, error)
 }
 
 type TaskStatus interface {
@@ -147,7 +138,7 @@ type TaskStatus interface {
 
 type User interface {
 	GetUser(id string) (domain.User, error)
-	FindUser(params domain.RequestParams) (domain.Response[domain.User], error)
+	FindUser(filter *domain.UserFilter) (domain.Response[domain.User], error)
 	CreateUser(userID string, user *domain.User) (*domain.User, error)
 	DeleteUser(id string) (domain.User, error)
 	UpdateUser(id string, user *domain.UserInput) (domain.User, error)
@@ -173,33 +164,9 @@ type Lang interface {
 type Role interface {
 	CreateRole(userID string, data *domain.RoleInput) (domain.Role, error)
 	GetRole(id string) (domain.Role, error)
-	FindRole(params domain.RequestParams) (domain.Response[domain.Role], error)
+	FindRole(filter *domain.RoleFilter) (domain.Response[domain.Role], error)
 	UpdateRole(id string, data interface{}) (domain.Role, error)
 	DeleteRole(id string) (domain.Role, error)
-}
-
-type Country interface {
-	CreateCountry(userID string, data *domain.CountryInput) (domain.Country, error)
-	GetCountry(id string) (domain.Country, error)
-	FindCountry(params domain.RequestParams) (domain.Response[domain.Country], error)
-	UpdateCountry(id string, data interface{}) (domain.Country, error)
-	DeleteCountry(id string) (domain.Country, error)
-}
-
-type Question interface {
-	FindQuestion(params *model.QuestionFilter) (domain.Response[model.Question], error)
-	CreateQuestion(userID string, data *model.QuestionInput) (*model.Question, error)
-	UpdateQuestion(id string, userID string, data *model.QuestionInput) (*model.Question, error)
-	DeleteQuestion(id string) (model.Question, error)
-}
-
-type Ticket interface {
-	FindTicket(params domain.RequestParams) (domain.Response[model.Ticket], error)
-	GetAllTicket(params domain.RequestParams) (domain.Response[model.Ticket], error)
-	CreateTicket(userID string, ticket *model.Ticket) (*model.Ticket, error)
-	CreateTicketMessage(userID string, message *model.TicketMessage) (*model.TicketMessage, error)
-	DeleteTicket(id string) (model.Ticket, error)
-	GqlGetTickets(params domain.RequestParams) ([]*model.Ticket, error)
 }
 
 type Post interface {
@@ -212,62 +179,52 @@ type Post interface {
 }
 
 type Repositories struct {
+	AppError
 	Action
 	Post
 	Authorization
 	Lang
-	Country
 	Role
-
 	Image
 	Order
 	User
-	Product
 	Message
 	MessageRoom
-	Offer
-	Question
-	Ticket
 	Task
-	TaskMontaj
 	TaskStatus
 	TaskWorker
-	TaskMontajWorker
 	Operation
 	Pay
+	PayTemplate
 	Object
 	WorkTime
-	TaskHistory
+	WorkHistory
+	Notify
 }
 
 func NewRepositories(mongodb *mongo.Database, i18n config.I18nConfig) *Repositories {
 	return &Repositories{
+		AppError:      NewAppErrorMongo(mongodb, i18n),
 		Action:        NewActionMongo(mongodb, i18n),
 		Post:          NewPostMongo(mongodb, i18n),
 		Authorization: NewAuthMongo(mongodb),
 		Lang:          NewLangMongo(mongodb, i18n),
-		Country:       NewCountryMongo(mongodb, i18n),
 		Role:          NewRoleMongo(mongodb, i18n),
 		Image:         NewImageMongo(mongodb, i18n),
 		Order:         NewOrderMongo(mongodb, i18n),
 		User:          NewUserMongo(mongodb, i18n),
-		Product:       NewProductMongo(mongodb, i18n),
 		Message:       NewMessageMongo(mongodb, i18n),
 		MessageRoom:   NewMessageRoomMongo(mongodb, i18n),
-		// MessageImage:  NewMessageImageMongo(mongodb, i18n),
-		Offer:            NewOfferMongo(mongodb, i18n),
-		Question:         NewQuestionMongo(mongodb, i18n),
-		Ticket:           NewTicketMongo(mongodb, i18n),
-		Task:             NewTaskMongo(mongodb, i18n),
-		TaskWorker:       NewTaskWorkerMongo(mongodb, i18n),
-		TaskStatus:       NewTaskStatusMongo(mongodb, i18n),
-		TaskMontaj:       NewTaskMontajMongo(mongodb, i18n),
-		TaskMontajWorker: NewTaskMontajWorkerMongo(mongodb, i18n),
-		Operation:        NewOperationMongo(mongodb, i18n),
-		Pay:              NewPayMongo(mongodb, i18n),
-		Object:           NewObjectMongo(mongodb, i18n),
-		WorkTime:         NewWorkTimeMongo(mongodb, i18n),
-		TaskHistory:      NewTaskHistoryMongo(mongodb, i18n),
+		Task:          NewTaskMongo(mongodb, i18n),
+		TaskWorker:    NewTaskWorkerMongo(mongodb, i18n),
+		TaskStatus:    NewTaskStatusMongo(mongodb, i18n),
+		Operation:     NewOperationMongo(mongodb, i18n),
+		Pay:           NewPayMongo(mongodb, i18n),
+		PayTemplate:   NewPayTemplateMongo(mongodb, i18n),
+		Object:        NewObjectMongo(mongodb, i18n),
+		WorkTime:      NewWorkTimeMongo(mongodb, i18n),
+		WorkHistory:   NewWorkHistoryMongo(mongodb, i18n),
+		Notify:        NewNotifyMongo(mongodb, i18n),
 	}
 }
 

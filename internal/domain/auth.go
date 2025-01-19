@@ -20,12 +20,27 @@ type Auth struct {
 	// GithubID     string       `json:"githubId" bson:"githubId"`
 	Verification Verification `json:"verification" bson:"verification"`
 	Session      Session      `json:"session" bson:"session"`
+	PushToken    string       `json:"pushToken" bson:"pushToken"`
 
 	// MaxDistance int    `json:"maxDistance" bson:"maxDistance"`
 	// Post []Post `json:"post" bson:"post,omitempty" gorm:"-"`
 
 	Role      Role      `json:"-" bson:"role"`
 	User      User      `json:"-" bson:"user"`
+	CreatedAt time.Time `json:"createdAt" bson:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt" bson:"updatedAt"`
+}
+type AuthPrivate struct {
+	// swagger:ignore
+	ID           primitive.ObjectID `json:"id" bson:"_id,omitempty"`
+	Login        string             `json:"login" bson:"login"`
+	Email        string             `json:"email" bson:"email"`
+	Password     string             `json:"password" bson:"password"`
+	Strategy     string             `json:"strategy" bson:"strategy"`
+	Verification Verification       `json:"verification" bson:"verification"`
+	Session      Session            `json:"session" bson:"session"`
+	PushToken    string             `json:"pushToken" bson:"pushToken"`
+
 	CreatedAt time.Time `json:"createdAt" bson:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt" bson:"updatedAt"`
 }
@@ -59,6 +74,7 @@ type AuthInput struct {
 
 	Verification Verification `json:"verification" bson:"verification"`
 	Session      Session      `json:"session" bson:"session"`
+	PushToken    string       `json:"pushToken" bson:"pushToken"`
 	// Roles        []string     `json:"roles" bson:"roles"`
 	// MaxDistance int `json:"maxDistance" bson:"max_distance"`
 
@@ -85,6 +101,7 @@ type AuthInputMongo struct {
 
 	Verification Verification `json:"verification" bson:"verification"`
 	Session      Session      `json:"session" bson:"session"`
+	PushToken    string       `json:"pushToken" bson:"pushToken"`
 	// Roles        []string     `json:"roles" bson:"roles"`
 	// MaxDistance int `json:"maxDistance" bson:"max_distance"`
 
@@ -106,4 +123,8 @@ type Verification struct {
 
 type AuthPublicData struct {
 	Login string `json:"login" bson:"login"`
+}
+
+type ResetPassword struct {
+	Password string `json:"password" bson:"password"`
 }

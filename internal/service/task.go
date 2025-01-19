@@ -225,7 +225,7 @@ func (s *TaskService) UpdateTask(id string, userID string, data *domain.TaskInpu
 		return result, err
 	}
 
-	s.Hub.HandleMessage(domain.Message{Type: "message", Method: "PATCH", Sender: userID, Recipient: "sobesednikID.Hex()", Content: result, ID: "room1", Service: "task"})
+	s.Hub.HandleMessage(domain.MessageSocket{Type: "message", Method: "PATCH", Sender: userID, Recipient: "", Content: result, ID: "room1", Service: "task"})
 
 	return result, err
 }
@@ -238,15 +238,14 @@ func (s *TaskService) DeleteTask(id string) (*domain.Task, error) {
 		return result, err
 	}
 
-	s.Hub.HandleMessage(domain.Message{Type: "message", Method: "DELETE", Sender: "userID", Recipient: "sobesednikID.Hex()", Content: result, ID: "room1", Service: "task"})
+	s.Hub.HandleMessage(domain.MessageSocket{Type: "message", Method: "DELETE", Sender: "userID", Recipient: "", Content: result, ID: "room1", Service: "task"})
 
 	return result, err
 }
 
 func (s *TaskService) CheckStatusOrder(userID string, result *domain.Task) (*domain.Task, error) {
 	// check all tasks for change status order.
-	orderId := result.OrderId.Hex()
-	tasksForOrder, err := s.FindTaskPopulate(domain.TaskFilter{OrderId: []*string{&orderId}})
+	tasksForOrder, err := s.FindTaskPopulate(domain.TaskFilter{OrderId: []string{result.OrderId.Hex()}})
 
 	type CheckedStruct struct {
 		Status      int64
@@ -254,6 +253,9 @@ func (s *TaskService) CheckStatusOrder(userID string, result *domain.Task) (*dom
 		CountAll    int
 	}
 
+	goComplete := CheckedStruct{
+		Status: 0,
+	}
 	stolyarComplete := CheckedStruct{
 		Status:      0,
 		CountFinish: 0,
@@ -309,8 +311,11 @@ func (s *TaskService) CheckStatusOrder(userID string, result *domain.Task) (*dom
 	if malyarComplete.CountAll == malyarComplete.CountFinish && malyarComplete.CountAll > 0 {
 		malyarComplete.Status = 1
 	}
-	if montajComplete.CountAll == montajComplete.CountFinish && montajComplete.CountAll > 0 {
+	if montajComplete.CountFinish > 0 && montajComplete.CountAll > 0 { //montajComplete.CountAll == montajComplete.CountFinish
 		montajComplete.Status = 1
+	}
+	if stolyarComplete.Status == 1 && (malyarComplete.Status == 1 || malyarComplete.CountAll == 0) {
+		goComplete.Status = 1
 	}
 	fmt.Println(stolyarComplete, malyarComplete, montajComplete)
 
@@ -324,6 +329,7 @@ func (s *TaskService) CheckStatusOrder(userID string, result *domain.Task) (*dom
 	// if result.Task.Operation.Group == "5" {
 	dataUpdateOrder.MontajComplete = &montajComplete.Status
 	// }
+	dataUpdateOrder.GoComplete = &goComplete.Status
 
 	// fmt.Println("update taskWorker dataUpdateOrder: ", *dataUpdateOrder.StolyarComplete, *dataUpdateOrder.MalyarComplete)
 

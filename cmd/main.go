@@ -1,8 +1,6 @@
 package main
 
 import (
-	"os"
-	"time"
 	_ "time/tzdata"
 
 	"github.com/mikalai2006/kingwood-api/internal/app"
@@ -26,12 +24,12 @@ func main() {
 	// 		),
 	// 	)
 	// }()
-	loc, err := time.LoadLocation("Europe/Minsk")
-	if err != nil {
-		panic("Wrong timezone")
-	}
-	time.Local = loc
-	os.Setenv("TZ", "Europe/Minsk")
+	// loc, err := time.LoadLocation("Europe/Minsk")
+	// if err != nil {
+	// 	panic("Wrong timezone")
+	// }
+	// time.Local = loc
+	// os.Setenv("TZ", "Europe/Minsk")
 
 	app.Run(configPath)
 

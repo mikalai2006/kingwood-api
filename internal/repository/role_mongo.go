@@ -9,7 +9,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type RoleMongo struct {
@@ -83,16 +82,64 @@ func (r *RoleMongo) GetRole(id string) (domain.Role, error) {
 	return result, nil
 }
 
-func (r *RoleMongo) FindRole(params domain.RequestParams) (domain.Response[domain.Role], error) {
+func (r *RoleMongo) FindRole(input *domain.RoleFilter) (domain.Response[domain.Role], error) {
 	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
 	defer cancel()
 
 	var results []domain.Role
 	var response domain.Response[domain.Role]
-	pipe, err := CreatePipeline(params, &r.i18n)
-	if err != nil {
-		return domain.Response[domain.Role]{}, err
+
+	q := bson.D{}
+
+	// pipe, err := CreatePipeline(params, &r.i18n)
+	// if err != nil {
+	// 	return domain.Response[domain.Role]{}, err
+	// }
+	// Filters
+	if input.ID != nil && len(input.ID) > 0 {
+		ids := []primitive.ObjectID{}
+		for i, _ := range input.ID {
+			iDPrimitive, err := primitive.ObjectIDFromHex(input.ID[i])
+			if err != nil {
+				return response, err
+			}
+
+			ids = append(ids, iDPrimitive)
+		}
+
+		q = append(q, bson.E{"_id", bson.D{{"$in", ids}}})
 	}
+	if input.Code != nil && len(input.Code) > 0 {
+		ids := []string{}
+		for i, _ := range input.Code {
+			ids = append(ids, input.Code[i])
+		}
+
+		q = append(q, bson.E{"code", bson.D{{"$in", ids}}})
+	}
+	if input.Name != nil && len(input.Name) > 0 {
+		ids := []string{}
+		for i, _ := range input.Name {
+			ids = append(ids, input.Code[i])
+		}
+
+		q = append(q, bson.E{"name", bson.D{{"$in", ids}}})
+	}
+
+	pipe := mongo.Pipeline{}
+	pipe = append(pipe, bson.D{{"$match", q}})
+
+	skip := 0
+	limit := 10
+	if input.Skip != nil {
+		pipe = append(pipe, bson.D{{"$skip", input.Skip}})
+		skip = *input.Skip
+	}
+	if input.Limit != nil {
+		pipe = append(pipe, bson.D{{"$limit", input.Limit}})
+		limit = *input.Limit
+	}
+
 	cursor, err := r.db.Collection(TblRole).Aggregate(ctx, pipe) // Find(ctx, params.Filter, opts)
 	if err != nil {
 		return response, err
@@ -109,18 +156,18 @@ func (r *RoleMongo) FindRole(params domain.RequestParams) (domain.Response[domai
 	// }
 	copy(resultSlice, results)
 
-	var options options.CountOptions
-	// options.SetLimit(params.Limit)
-	options.SetSkip(params.Skip)
-	count, err := r.db.Collection(TblRole).CountDocuments(ctx, params.Filter, &options)
-	if err != nil {
-		return response, err
-	}
+	// var options options.CountOptions
+	// // options.SetLimit(params.Limit)
+	// options.SetSkip(params.Skip)
+	// count, err := r.db.Collection(TblRole).CountDocuments(ctx, params.Filter, &options)
+	// if err != nil {
+	// 	return response, err
+	// }
 
 	response = domain.Response[domain.Role]{
-		Total: int(count),
-		Skip:  int(params.Options.Skip),
-		Limit: int(params.Options.Limit),
+		Total: 0,
+		Skip:  skip,
+		Limit: limit,
 		Data:  resultSlice,
 	}
 	return response, nil

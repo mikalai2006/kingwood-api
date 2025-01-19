@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/mikalai2006/kingwood-api/graph/model"
 	"github.com/mikalai2006/kingwood-api/internal/config"
 	"github.com/mikalai2006/kingwood-api/internal/domain"
 	"go.mongodb.org/mongo-driver/bson"
@@ -21,19 +20,19 @@ func NewMessageRoomMongo(db *mongo.Database, i18n config.I18nConfig) *MessageRoo
 	return &MessageRoomMongo{db: db, i18n: i18n}
 }
 
-func (r *MessageRoomMongo) FindMessageRoom(params *model.MessageRoomFilter) (domain.Response[model.MessageRoom], error) {
+func (r *MessageRoomMongo) FindMessageRoom(params *domain.MessageRoomFilter) (domain.Response[domain.MessageRoom], error) {
 	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
 	defer cancel()
 
-	var results []model.MessageRoom
-	var response domain.Response[model.MessageRoom]
+	var results []domain.MessageRoom
+	var response domain.Response[domain.MessageRoom]
 	// filter, opts, err := CreateFilterAndOptions(params)
 	// if err != nil {
 	// 	return domain.Response[model.Node]{}, err
 	// }
 	// pipe, err := CreatePipeline(params, &r.i18n)
 	// if err != nil {
-	// 	return domain.Response[model.Message]{}, err
+	// 	return domain.Response[domain.Message]{}, err
 	// }
 	// fmt.Println(params)
 	q := bson.D{}
@@ -55,17 +54,10 @@ func (r *MessageRoomMongo) FindMessageRoom(params *model.MessageRoomFilter) (dom
 		// }
 		q = append(q, bson.E{"_id", params.ID})
 	}
-	if params.TakeUserID != nil && !params.TakeUserID.IsZero() {
-		// userProductIDPrimitive, err := primitive.ObjectIDFromHex(*params.UserProductID)
-		// if err != nil {
-		// 	return response, err
-		// }
-		q = append(q, bson.E{"takeUserId", params.TakeUserID})
-	}
 
-	// Filter by products id.
-	if params.ProductID != nil && !params.ProductID.IsZero() {
-		q = append(q, bson.E{"productId", params.ProductID})
+	// Filter by order id.
+	if params.OrderID != nil && !params.OrderID.IsZero() {
+		q = append(q, bson.E{"orderId", params.OrderID})
 	}
 
 	// q = append(q, bson.E{"status", bson.M{"$gte": 0}})
@@ -127,7 +119,7 @@ func (r *MessageRoomMongo) FindMessageRoom(params *model.MessageRoomFilter) (dom
 		return response, er
 	}
 
-	resultSlice := make([]model.MessageRoom, len(results))
+	resultSlice := make([]domain.MessageRoom, len(results))
 	// for i, d := range results {
 	// 	resultSlice[i] = d
 	// }
@@ -139,7 +131,7 @@ func (r *MessageRoomMongo) FindMessageRoom(params *model.MessageRoomFilter) (dom
 	// 	return response, err
 	// }
 
-	response = domain.Response[model.MessageRoom]{
+	response = domain.Response[domain.MessageRoom]{
 		Total: count,
 		Skip:  skip,
 		Limit: limit,
@@ -148,8 +140,8 @@ func (r *MessageRoomMongo) FindMessageRoom(params *model.MessageRoomFilter) (dom
 	return response, nil
 }
 
-func (r *MessageRoomMongo) CreateMessageRoom(userID string, messageRoom *model.MessageRoom) (*model.MessageRoom, error) {
-	var result *model.MessageRoom
+func (r *MessageRoomMongo) CreateMessageRoom(userID string, data *domain.MessageRoom) (*domain.MessageRoom, error) {
+	var result *domain.MessageRoom
 
 	collection := r.db.Collection(TblMessageRoom)
 
@@ -161,22 +153,20 @@ func (r *MessageRoomMongo) CreateMessageRoom(userID string, messageRoom *model.M
 		return nil, err
 	}
 
-	createdAt := messageRoom.CreatedAt
+	createdAt := data.CreatedAt
 	if createdAt.IsZero() {
 		createdAt = time.Now()
 	}
 
 	statusDefault := 1
 
-	newMessageRoom := model.MessageRoomMongo{
-		UserID:     userIDPrimitive,
-		ProductID:  messageRoom.ProductID,
-		TakeUserID: messageRoom.TakeUserID,
-		OfferID:    messageRoom.OfferID,
-		Status:     &statusDefault,
-		Props:      messageRoom.Props,
-		CreatedAt:  createdAt,
-		UpdatedAt:  time.Now(),
+	newMessageRoom := domain.MessageRoomMongo{
+		UserID:    userIDPrimitive,
+		OrderID:   data.OrderID,
+		Status:    &statusDefault,
+		Props:     data.Props,
+		CreatedAt: createdAt,
+		UpdatedAt: time.Now(),
 	}
 
 	res, err := collection.InsertOne(ctx, newMessageRoom)
@@ -192,8 +182,8 @@ func (r *MessageRoomMongo) CreateMessageRoom(userID string, messageRoom *model.M
 	return result, nil
 }
 
-func (r *MessageRoomMongo) UpdateMessageRoom(id string, userID string, data *model.MessageRoom) (*model.MessageRoom, error) {
-	var result *model.MessageRoom
+func (r *MessageRoomMongo) UpdateMessageRoom(id string, userID string, data *domain.MessageRoom) (*domain.MessageRoom, error) {
+	var result *domain.MessageRoom
 	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
 	defer cancel()
 
@@ -211,12 +201,12 @@ func (r *MessageRoomMongo) UpdateMessageRoom(id string, userID string, data *mod
 	filter := bson.M{"_id": idPrimitive}
 
 	// // Find old data
-	// var oldResult *model.Message
+	// var oldResult *domain.Message
 	// err = collection.FindOne(ctx, filter).Decode(&oldResult)
 	// if err != nil {
 	// 	return result, err
 	// }
-	// oldMessage := model.Message{
+	// oldMessage := domain.Message{
 	// 	UserID:  oldResult.UserID,
 	// 	NodeID:  oldResult.NodeID,
 	// 	Message: oldResult.Message,
@@ -269,7 +259,7 @@ func (r *MessageRoomMongo) UpdateMessageRoom(id string, userID string, data *mod
 	// if err != nil {
 	// 	return result, err
 	// }
-	resultResponse, err := r.FindMessageRoom(&model.MessageRoomFilter{ID: &idPrimitive})
+	resultResponse, err := r.FindMessageRoom(&domain.MessageRoomFilter{ID: &idPrimitive})
 	if err != nil {
 		return result, err
 	}
@@ -281,11 +271,11 @@ func (r *MessageRoomMongo) UpdateMessageRoom(id string, userID string, data *mod
 	return result, nil
 }
 
-func (r *MessageRoomMongo) DeleteMessageRoom(id string) (model.MessageRoom, error) {
+func (r *MessageRoomMongo) DeleteMessageRoom(id string) (domain.MessageRoom, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
 	defer cancel()
 
-	var result = model.MessageRoom{}
+	var result = domain.MessageRoom{}
 	collection := r.db.Collection(TblMessageRoom)
 	collectionMessage := r.db.Collection(TblMessage)
 
@@ -321,94 +311,94 @@ func (r *MessageRoomMongo) DeleteMessageRoom(id string) (model.MessageRoom, erro
 	return result, nil
 }
 
-// func (r *MessageRoomMongo) GetGroupForUser(userID string) ([]model.MessageGroupForUser, error) {
-// 	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
-// 	defer cancel()
+func (r *MessageRoomMongo) GetGroupForUser(userID string) ([]domain.MessageGroupForUser, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
+	defer cancel()
 
-// 	var results []model.MessageGroupForUser
+	var results []domain.MessageGroupForUser
 
-// 	q := bson.D{}
+	q := bson.D{}
 
-// 	if userID != "" {
-// 		userIDPrimitive, err := primitive.ObjectIDFromHex(userID)
-// 		if err != nil {
-// 			return results, err
-// 		}
-// 		queryArr := []bson.M{}
-// 		queryArr = append(queryArr, bson.M{"userId": userIDPrimitive})
-// 		queryArr = append(queryArr, bson.M{"userProductId": userIDPrimitive})
-// 		q = append(q, bson.E{"$or", queryArr})
-// 		// q = append(q, bson.E{"status", 1})
-// 	}
+	if userID != "" {
+		userIDPrimitive, err := primitive.ObjectIDFromHex(userID)
+		if err != nil {
+			return results, err
+		}
+		queryArr := []bson.M{}
+		queryArr = append(queryArr, bson.M{"userId": userIDPrimitive})
+		queryArr = append(queryArr, bson.M{"userProductId": userIDPrimitive})
+		q = append(q, bson.E{"$or", queryArr})
+		// q = append(q, bson.E{"status", 1})
+	}
 
-// 	pipe := mongo.Pipeline{}
-// 	pipe = append(pipe, bson.D{{"$match", q}})
-// 	pipe = append(pipe,
-// 		bson.D{
-// 			{"$group", bson.D{
-// 				// {"_id", "$productId"},
-// 				{"_id", bson.D{
-// 					{"productId", "$productId"},
-// 					{"userId", "$userId"},
-// 				}},
-// 				{"productId", bson.D{{"$first", "$productId"}}},
-// 				{"userId", bson.D{{"$first", "$userId"}}},
-// 				// {"average_price", bson.D{{"$avg", "$price"}}},
-// 				{"count", bson.D{{"$sum", 1}}},
-// 			}}})
-// 	pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
-// 		"from": "product",
-// 		"as":   "products",
-// 		"let":  bson.D{{Key: "productId", Value: "$productId"}},
-// 		"pipeline": mongo.Pipeline{
-// 			bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$_id", "$$productId"}}}}},
-// 			bson.D{{
-// 				Key: "$lookup",
-// 				Value: bson.M{
-// 					"from": "image",
-// 					"as":   "images",
-// 					"let":  bson.D{{Key: "serviceId", Value: bson.D{{"$toString", "$_id"}}}},
-// 					"pipeline": mongo.Pipeline{
-// 						bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$service_id", "$$serviceId"}}}}},
-// 					},
-// 				},
-// 			}},
+	pipe := mongo.Pipeline{}
+	pipe = append(pipe, bson.D{{"$match", q}})
+	pipe = append(pipe,
+		bson.D{
+			{"$group", bson.D{
+				// {"_id", "$productId"},
+				{"_id", bson.D{
+					{"productId", "$productId"},
+					{"userId", "$userId"},
+				}},
+				{"productId", bson.D{{"$first", "$productId"}}},
+				{"userId", bson.D{{"$first", "$userId"}}},
+				// {"average_price", bson.D{{"$avg", "$price"}}},
+				{"count", bson.D{{"$sum", 1}}},
+			}}})
+	pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
+		"from": "product",
+		"as":   "products",
+		"let":  bson.D{{Key: "productId", Value: "$productId"}},
+		"pipeline": mongo.Pipeline{
+			bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$_id", "$$productId"}}}}},
+			bson.D{{
+				Key: "$lookup",
+				Value: bson.M{
+					"from": "image",
+					"as":   "images",
+					"let":  bson.D{{Key: "serviceId", Value: bson.D{{"$toString", "$_id"}}}},
+					"pipeline": mongo.Pipeline{
+						bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$service_id", "$$serviceId"}}}}},
+					},
+				},
+			}},
 
-// 			bson.D{{Key: "$lookup", Value: bson.M{
-// 				"from": "users",
-// 				"as":   "userb",
-// 				"let":  bson.D{{Key: "userId", Value: "$user_id"}},
-// 				"pipeline": mongo.Pipeline{
-// 					bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$_id", "$$userId"}}}}},
-// 					bson.D{{"$limit", 1}},
-// 					bson.D{{
-// 						Key: "$lookup",
-// 						Value: bson.M{
-// 							"from": "image",
-// 							"as":   "images",
-// 							"let":  bson.D{{Key: "serviceId", Value: bson.D{{"$toString", "$_id"}}}},
-// 							"pipeline": mongo.Pipeline{
-// 								bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$service_id", "$$serviceId"}}}}},
-// 							},
-// 						},
-// 					}},
-// 				},
-// 			}}},
-// 			bson.D{{Key: "$set", Value: bson.M{"user": bson.M{"$first": "$userb"}}}},
-// 		},
-// 	}}})
-// 	// pipe = append(pipe, bson.D{{"$unwind", "$product"}})
-// 	pipe = append(pipe, bson.D{{Key: "$set", Value: bson.M{"product": bson.M{"$first": "$products"}}}})
+			bson.D{{Key: "$lookup", Value: bson.M{
+				"from": "users",
+				"as":   "userb",
+				"let":  bson.D{{Key: "userId", Value: "$user_id"}},
+				"pipeline": mongo.Pipeline{
+					bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$_id", "$$userId"}}}}},
+					bson.D{{"$limit", 1}},
+					bson.D{{
+						Key: "$lookup",
+						Value: bson.M{
+							"from": "image",
+							"as":   "images",
+							"let":  bson.D{{Key: "serviceId", Value: bson.D{{"$toString", "$_id"}}}},
+							"pipeline": mongo.Pipeline{
+								bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$service_id", "$$serviceId"}}}}},
+							},
+						},
+					}},
+				},
+			}}},
+			bson.D{{Key: "$set", Value: bson.M{"user": bson.M{"$first": "$userb"}}}},
+		},
+	}}})
+	// pipe = append(pipe, bson.D{{"$unwind", "$product"}})
+	pipe = append(pipe, bson.D{{Key: "$set", Value: bson.M{"product": bson.M{"$first": "$products"}}}})
 
-// 	cursorGroup, err := r.db.Collection(TblMessage).Aggregate(ctx, pipe) // Find(ctx, params.Filter, opts)
-// 	if err != nil {
-// 		return results, err
-// 	}
-// 	defer cursorGroup.Close(ctx)
+	cursorGroup, err := r.db.Collection(TblMessage).Aggregate(ctx, pipe) // Find(ctx, params.Filter, opts)
+	if err != nil {
+		return results, err
+	}
+	defer cursorGroup.Close(ctx)
 
-// 	if er := cursorGroup.All(ctx, &results); er != nil {
-// 		return results, er
-// 	}
+	if er := cursorGroup.All(ctx, &results); er != nil {
+		return results, er
+	}
 
-// 	return results, nil
-// }
+	return results, nil
+}

@@ -17,6 +17,7 @@ func (h *HandlerV1) registerWorkTime(router *gin.RouterGroup) {
 	route := router.Group("/work_time")
 	route.POST("", h.CreateWorkTime)
 	route.POST("/find", h.FindWorkTime)
+	route.POST("/populate", h.FindWorkTimePopulate)
 	route.PATCH("/:id", h.SetUserFromRequest, h.UpdateWorkTime)
 	route.POST("/list", h.CreateWorkTimeList)
 }
@@ -106,6 +107,24 @@ func (h *HandlerV1) FindWorkTime(c *gin.Context) {
 	}
 
 	Tasks, err := h.Services.WorkTime.FindWorkTime(*input)
+	if err != nil {
+		appG.ResponseError(http.StatusBadRequest, err, nil)
+		return
+	}
+
+	c.JSON(http.StatusOK, Tasks)
+}
+
+func (h *HandlerV1) FindWorkTimePopulate(c *gin.Context) {
+	appG := app.Gin{C: c}
+
+	var input *domain.WorkTimeFilter
+	if er := c.BindJSON(&input); er != nil {
+		appG.ResponseError(http.StatusBadRequest, er, nil)
+		return
+	}
+
+	Tasks, err := h.Services.WorkTime.FindWorkTimePopulate(*input)
 	if err != nil {
 		appG.ResponseError(http.StatusBadRequest, err, nil)
 		return

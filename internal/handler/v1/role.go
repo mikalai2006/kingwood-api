@@ -16,7 +16,7 @@ import (
 func (h *HandlerV1) RegisterRole(router *gin.RouterGroup) {
 	role := router.Group("/role")
 	role.POST("", h.SetUserFromRequest, h.createRole)
-	role.GET("", h.findRole)
+	role.POST("/populate", h.findRole)
 	role.GET("/:id", h.getRole)
 	role.PATCH("/:id", h.SetUserFromRequest, h.updateRole)
 	role.DELETE("/:id", h.SetUserFromRequest, h.deleteRole)
@@ -73,13 +73,18 @@ func (h *HandlerV1) getRole(c *gin.Context) {
 func (h *HandlerV1) findRole(c *gin.Context) {
 	appG := app.Gin{C: c}
 
-	params, err := utils.GetParamsFromRequest(c, domain.RoleInput{}, &h.i18n)
-	if err != nil {
-		appG.ResponseError(http.StatusBadRequest, err, nil)
+	// params, err := utils.GetParamsFromRequest(c, domain.RoleInput{}, &h.i18n)
+	// if err != nil {
+	// 	appG.ResponseError(http.StatusBadRequest, err, nil)
+	// 	return
+	// }
+	var input *domain.RoleFilter
+	if er := c.BindJSON(&input); er != nil {
+		appG.ResponseError(http.StatusBadRequest, er, nil)
 		return
 	}
 
-	documents, err := h.Services.Role.FindRole(params)
+	documents, err := h.Services.Role.FindRole(input)
 	if err != nil {
 		appG.ResponseError(http.StatusBadRequest, err, nil)
 		return

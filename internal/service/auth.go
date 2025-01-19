@@ -120,12 +120,15 @@ func (s *AuthService) SignIn(auth *domain.AuthInput) (domain.ResponseTokens, err
 	return s.CreateSession(&user)
 }
 
-func (s *AuthService) ResetPassword(authID string) (string, error) {
+func (s *AuthService) ResetPassword(authID string, userID string, input *domain.ResetPassword) (string, error) {
 	result := ""
 
-	randomPassword := s.tokenManager.GetRandomPassword()
+	newPassword := input.Password
+	if newPassword == "" {
+		newPassword = s.tokenManager.GetRandomPassword()
+	}
 
-	passwordHash, err := s.hasher.Hash(randomPassword)
+	passwordHash, err := s.hasher.Hash(newPassword)
 	if err != nil {
 		return result, err
 	}
@@ -148,7 +151,7 @@ func (s *AuthService) ResetPassword(authID string) (string, error) {
 		return result, err
 	}
 
-	result = randomPassword
+	result = newPassword
 
 	return result, nil
 }

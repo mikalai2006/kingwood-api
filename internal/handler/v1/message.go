@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/mikalai2006/kingwood-api/graph/model"
+	"github.com/mikalai2006/kingwood-api/internal/domain"
 	"github.com/mikalai2006/kingwood-api/internal/middleware"
 	"github.com/mikalai2006/kingwood-api/internal/utils"
 	"github.com/mikalai2006/kingwood-api/pkg/app"
@@ -32,7 +32,7 @@ func (h *HandlerV1) CreateMessage(c *gin.Context) {
 	// 	return
 	// }
 
-	var input *model.MessageInput
+	var input *domain.MessageInput
 	if er := c.Bind(&input); er != nil {
 		appG.ResponseError(http.StatusBadRequest, er, nil)
 		return
@@ -61,7 +61,7 @@ func (h *HandlerV1) CreateListMessage(c *gin.Context) {
 	// 	return
 	// }
 
-	var input []*model.MessageInput
+	var input []*domain.MessageInput
 	if er := c.Bind(&input); er != nil {
 		appG.ResponseError(http.StatusBadRequest, er, nil)
 		return
@@ -72,7 +72,7 @@ func (h *HandlerV1) CreateListMessage(c *gin.Context) {
 		return
 	}
 
-	var result []*model.Message
+	var result []*domain.Message
 	for i := range input {
 		Message, err := h.CreateOrExistMessage(c, input[i])
 		if err != nil {
@@ -104,12 +104,12 @@ func (h *HandlerV1) FindMessage(c *gin.Context) {
 	// authData, err := middleware.GetAuthFromCtx(c)
 	// fmt.Println("auth ", authData.Roles)
 
-	// params, err := utils.GetParamsFromRequest(c, model.Message{}, &h.i18n)
+	// params, err := utils.GetParamsFromRequest(c, domain.Message{}, &h.i18n)
 	// if err != nil {
 	// 	appG.ResponseError(http.StatusBadRequest, err, nil)
 	// 	return
 	// }
-	var input *model.MessageFilter
+	var input *domain.MessageFilter
 	if er := c.BindJSON(&input); er != nil {
 		appG.ResponseError(http.StatusBadRequest, er, nil)
 		return
@@ -151,7 +151,7 @@ func (h *HandlerV1) UpdateMessage(c *gin.Context) {
 	// 	return
 	// }
 	// fmt.Println(data)
-	var input *model.MessageInput
+	var input *domain.MessageInput
 	if er := c.BindJSON(&input); er != nil {
 		appG.ResponseError(http.StatusBadRequest, er, nil)
 		return
@@ -197,7 +197,7 @@ func (h *HandlerV1) DeleteMessage(c *gin.Context) {
 	c.JSON(http.StatusOK, node)
 }
 
-func (h *HandlerV1) CreateOrExistMessage(c *gin.Context, input *model.MessageInput) (*model.Message, error) {
+func (h *HandlerV1) CreateOrExistMessage(c *gin.Context, input *domain.MessageInput) (*domain.Message, error) {
 	appG := app.Gin{C: c}
 	userID, err := middleware.GetUID(c)
 	if err != nil {
@@ -216,7 +216,7 @@ func (h *HandlerV1) CreateOrExistMessage(c *gin.Context, input *model.MessageInp
 	// 	return nil, err
 	// }
 
-	var result *model.Message
+	var result *domain.Message
 
 	// check exist product.
 	// domain.RequestParams{
@@ -229,7 +229,7 @@ func (h *HandlerV1) CreateOrExistMessage(c *gin.Context, input *model.MessageInp
 	// }
 	roomID, _ := primitive.ObjectIDFromHex(input.RoomID)
 	fmt.Println(roomID, input)
-	existRoom, err := h.Services.MessageRoom.FindMessageRoom(&model.MessageRoomFilter{ID: &roomID})
+	existRoom, err := h.Services.MessageRoom.FindMessageRoom(&domain.MessageRoomFilter{ID: &roomID})
 	if err != nil {
 		appG.ResponseError(http.StatusBadRequest, err, nil)
 		return nil, err
@@ -270,7 +270,7 @@ func (h *HandlerV1) CreateOrExistMessage(c *gin.Context, input *model.MessageInp
 	// }
 
 	// upload images.
-	var imageInput = &model.MessageImage{}
+	var imageInput = &domain.MessageImage{}
 	imageInput.Service = "message"
 	imageInput.ServiceID = input.RoomID
 	imageInput.UserID = userID

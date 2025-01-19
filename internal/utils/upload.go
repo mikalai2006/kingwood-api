@@ -10,7 +10,6 @@ import (
 
 	"github.com/disintegration/imaging"
 	"github.com/gin-gonic/gin"
-	"github.com/mikalai2006/kingwood-api/graph/model"
 	"github.com/mikalai2006/kingwood-api/internal/config"
 	"github.com/mikalai2006/kingwood-api/internal/domain"
 )
@@ -197,7 +196,7 @@ func UploadResizeMultipleFile(c *gin.Context, info *domain.ImageInput, nameField
 	return filePaths, nil
 }
 
-func UploadResizeMultipleFileForMessage(c *gin.Context, info *model.MessageImage, nameField string, imageConfig *config.IImageConfig) ([]domain.IImagePaths, error) {
+func UploadResizeMultipleFileForMessage(c *gin.Context, info *domain.MessageImage, nameField string, imageConfig *config.IImageConfig) ([]domain.IImagePaths, error) {
 	filePaths := []domain.IImagePaths{}
 	// fmt.Println("filePaths", filePaths)
 	// c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, int64(30<<20))
