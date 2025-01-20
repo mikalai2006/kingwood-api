@@ -92,7 +92,7 @@ func (r *AppErrorMongo) FindAppError(input *domain.AppErrorFilter) (domain.Respo
 					"as":   "images",
 					"let":  bson.D{{Key: "serviceId", Value: bson.D{{"$toString", "$_id"}}}},
 					"pipeline": mongo.Pipeline{
-						bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$service_id", "$$serviceId"}}}}},
+						bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$serviceId", "$$serviceId"}}}}},
 					},
 				},
 			}},
@@ -120,7 +120,7 @@ func (r *AppErrorMongo) FindAppError(input *domain.AppErrorFilter) (domain.Respo
 					"from": TblPost,
 					"as":   "posts",
 					// "localField":   "_id",
-					// "foreignField": "service_id",
+					// "foreignField": "serviceId",
 					"let": bson.D{{Key: "postId", Value: "$postId"}},
 					"pipeline": mongo.Pipeline{
 						bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$_id", "$$postId"}}}}},
@@ -132,7 +132,7 @@ func (r *AppErrorMongo) FindAppError(input *domain.AppErrorFilter) (domain.Respo
 			bson.D{{Key: "$lookup", Value: bson.M{
 				"from": TblRole,
 				"as":   "rolea",
-				// "localField":   "user_id",
+				// "localField":   "userId",
 				// "foreignField": "_id",
 				"let": bson.D{{Key: "roleId", Value: "$roleId"}},
 				"pipeline": mongo.Pipeline{
@@ -200,7 +200,7 @@ func (r *AppErrorMongo) CreateAppError(userID string, data *domain.AppError) (*d
 	}
 
 	// var existAppError domain.AppError
-	// r.db.Collection(TblAppError).FindOne(ctx, bson.M{"node_id": AppError.NodeID, "user_id": userIDPrimitive}).Decode(&existAppError)
+	// r.db.Collection(TblAppError).FindOne(ctx, bson.M{"node_id": AppError.NodeID, "userId": userIDPrimitive}).Decode(&existAppError)
 
 	// if existAppError.NodeID.IsZero() {
 	updatedAt := data.UpdatedAt

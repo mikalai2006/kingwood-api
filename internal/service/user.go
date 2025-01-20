@@ -3,11 +3,13 @@ package service
 import (
 	"github.com/mikalai2006/kingwood-api/internal/domain"
 	"github.com/mikalai2006/kingwood-api/internal/repository"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 type UserService struct {
-	repo repository.User
-	Hub  *Hub
+	repo     repository.User
+	Hub      *Hub
+	Services *Services
 }
 
 func NewUserService(repo repository.User, hub *Hub) *UserService {
@@ -26,8 +28,72 @@ func (s *UserService) CreateUser(userID string, user *domain.User) (*domain.User
 	return s.repo.CreateUser(userID, user)
 }
 
-func (s *UserService) DeleteUser(id string) (domain.User, error) {
-	return s.repo.DeleteUser(id)
+func (s *UserService) DeleteUser(id string, userID string) (domain.User, error) {
+	var result domain.User
+
+	// delete images.
+	allImages, err := s.Services.Image.FindImage(domain.RequestParams{Filter: bson.D{{"serviceId", id}}})
+	if err != nil {
+		return result, err
+	}
+	for i := range allImages.Data {
+		// fmt.Println("Remove image: ", allImages.Data[i].ID)
+		_, err = s.Services.Image.DeleteImage(allImages.Data[i].ID.Hex())
+	}
+
+	// delete taskWorkers.
+	allTaskWorkers, err := s.Services.TaskWorker.FindTaskWorkerPopulate(&domain.TaskWorkerFilter{WorkerId: []*string{&id}})
+	if err != nil {
+		return result, err
+	}
+	for i := range allTaskWorkers.Data {
+		// fmt.Println("Remove TaskWorkers: ", allTaskWorkers.Data[i].ID)
+		_, err = s.Services.TaskWorker.DeleteTaskWorker(allTaskWorkers.Data[i].ID.Hex(), userID, false)
+	}
+
+	// delete workTime.
+	allWorkTime, err := s.Services.WorkTime.FindWorkTimePopulate(domain.WorkTimeFilter{WorkerId: []string{id}})
+	if err != nil {
+		return result, err
+	}
+	for i := range allWorkTime.Data {
+		// fmt.Println("Remove WorkTime: ", allWorkTime.Data[i].ID)
+		_, err = s.Services.WorkTime.DeleteWorkTime(allWorkTime.Data[i].ID.Hex())
+	}
+
+	// delete workHistory.
+	allWorkHistory, err := s.Services.WorkHistory.FindWorkHistoryPopulate(domain.WorkHistoryFilter{WorkerId: []string{id}})
+	if err != nil {
+		return result, err
+	}
+	for i := range allWorkHistory.Data {
+		// fmt.Println("Remove WorkHistory: ", allWorkHistory.Data[i].ID)
+		_, err = s.Services.WorkHistory.DeleteWorkHistory(allWorkHistory.Data[i].ID.Hex())
+	}
+
+	// delete pay.
+	allPay, err := s.Services.Pay.FindPay(&domain.PayFilter{WorkerId: []string{id}})
+	if err != nil {
+		return result, err
+	}
+	for i := range allPay.Data {
+		// fmt.Println("Remove Pay: ", allPay.Data[i].ID)
+		_, err = s.Services.Pay.DeletePay(allPay.Data[i].ID.Hex(), userID)
+	}
+
+	// delete notify.
+	allNotify, err := s.Services.Notify.FindNotifyPopulate(&domain.NotifyFilter{UserTo: []*string{&id}})
+	if err != nil {
+		return result, err
+	}
+	for i := range allNotify.Data {
+		// fmt.Println("Remove Notify: ", allNotify.Data[i].ID)
+		_, err = s.Services.Notify.DeleteNotify(allNotify.Data[i].ID.Hex())
+	}
+
+	result, err = s.repo.DeleteUser(id)
+
+	return result, err
 }
 
 func (s *UserService) UpdateUser(id string, user *domain.UserInput) (domain.User, error) {

@@ -168,12 +168,13 @@ func (h *HandlerV1) SignUp(c *gin.Context) {
 		// Login:  input.Login,
 		Name:     input.Name,
 		Phone:    input.Phone,
-		Hidden:   1,
+		Hidden:   0,
 		RoleId:   input.RoleId,
 		PostId:   input.PostId,
 		TypeWork: input.TypeWork,
 		Oklad:    input.Oklad,
 		TypePay:  input.TypePay,
+		Birthday: &input.Birthday,
 		// Post:  input.Post,
 		// Roles: []string{"user"},
 		// Md:    1,
@@ -357,7 +358,7 @@ func (h *HandlerV1) tokenRefresh(c *gin.Context) {
 		c.SetCookie(h.auth.NameCookieRefresh, res.RefreshToken, int(h.auth.RefreshTokenTTL.Seconds()), "/", c.Request.URL.Hostname(), false, true)
 	}
 
-	// userData, err := h.services.User.FindUser(domain.RequestParams{Filter: bson.D{{"user_id": res.}}})
+	// userData, err := h.services.User.FindUser(domain.RequestParams{Filter: bson.D{{"userId": res.}}})
 	// if err != nil {
 	// 	appG.ResponseError(http.StatusBadRequest, err, nil)
 	// 	return

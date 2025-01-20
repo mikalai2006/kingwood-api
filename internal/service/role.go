@@ -27,7 +27,7 @@ func (s *RoleService) FindRole(filter *domain.RoleFilter) (domain.Response[domai
 	return s.repo.FindRole(filter)
 }
 
-func (s *RoleService) UpdateRole(id string, data interface{}) (domain.Role, error) {
+func (s *RoleService) UpdateRole(id string, data *domain.RoleInput) (domain.Role, error) {
 	return s.repo.UpdateRole(id, data)
 }
 func (s *RoleService) DeleteRole(id string) (domain.Role, error) {

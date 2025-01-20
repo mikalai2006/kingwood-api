@@ -41,7 +41,7 @@ func (s *TaskWorkerService) CreateTaskWorker(userID string, data *domain.TaskWor
 		return nil, err
 	}
 	// existReview, err := s.repo.FindReview(domain.RequestParams{
-	// 	Filter:  bson.M{"node_id": review.NodeID, "user_id": userIDPrimitive},
+	// 	Filter:  bson.M{"node_id": review.NodeID, "userId": userIDPrimitive},
 	// 	Options: domain.Options{Limit: 1},
 	// })
 	// if err != nil {
@@ -213,9 +213,10 @@ func (s *TaskWorkerService) UpdateTaskWorker(id string, userID string, data *dom
 			}
 			// fmt.Println("allTaskForObject length: ", len(allTaskForObject.Data))
 			if len(allTaskWorkerForObject.Data) > 0 {
+				stopStatus := []string{"finish", "process", "autofinish"}
 				// statusNotChange := []string{"finish",""}
 				for i := range allTaskWorkerForObject.Data {
-					if allTaskWorkerForObject.Data[i].ID.Hex() != result.ID.Hex() {
+					if allTaskWorkerForObject.Data[i].ID.Hex() != result.ID.Hex() && !utils.Contains(stopStatus, allTaskWorkerForObject.Data[i].Status) {
 						newTaskWorker := domain.TaskWorkerInput{
 							// ObjectId:    allTaskWorkerForObject.Data[i].ObjectId,
 							// OrderId:     allTaskWorkerForObject.Data[i].OrderId,
@@ -280,15 +281,17 @@ func (s *TaskWorkerService) UpdateTaskWorker(id string, userID string, data *dom
 	return result, err
 }
 
-func (s *TaskWorkerService) DeleteTaskWorker(id string, userID string) (*domain.TaskWorker, error) {
+func (s *TaskWorkerService) DeleteTaskWorker(id string, userID string, checkStatus bool) (*domain.TaskWorker, error) {
 	result, err := s.repo.DeleteTaskWorker(id)
 	if err != nil {
 		return result, err
 	}
 
-	_, err = s.CheckStatusTask("userID", result)
-	if err != nil {
-		return result, err
+	if checkStatus {
+		_, err = s.CheckStatusTask("userID", result)
+		if err != nil {
+			return result, err
+		}
 	}
 
 	s.Hub.HandleMessage(domain.MessageSocket{Type: "message", Method: "DELETE", Sender: "userID", Recipient: "", Content: result, ID: "room1", Service: "taskWorker"})

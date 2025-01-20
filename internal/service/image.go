@@ -43,9 +43,9 @@ func (s *ImageService) CreateImage(userID string, image *domain.ImageInput) (dom
 		}
 
 		existImage, err := s.repo.FindImage(domain.RequestParams{Filter: bson.D{
-			{"user_id", userIDPrimitive},
+			{"userId", userIDPrimitive},
 			{"service", image.Service},
-			{"service_id", image.ServiceID},
+			{"serviceId", image.ServiceID},
 		}})
 		if err != nil {
 			return result, err
@@ -75,7 +75,7 @@ func (s *ImageService) DeleteImage(id string) (domain.Image, error) {
 	if imageForRemove.Service == "" {
 		return result, errors.New("not found item for remove")
 	} else {
-		pathOfRemove := fmt.Sprintf("public/%s/%s", imageForRemove.UserID.Hex(), imageForRemove.Service)
+		pathOfRemove := fmt.Sprintf("public/%s", imageForRemove.Service)
 
 		if imageForRemove.ServiceID != "" {
 			pathOfRemove = fmt.Sprintf("%s/%s", pathOfRemove, imageForRemove.ServiceID)

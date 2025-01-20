@@ -3,7 +3,6 @@ package service
 import (
 	"time"
 
-	"github.com/mikalai2006/kingwood-api/graph/model"
 	"github.com/mikalai2006/kingwood-api/internal/config"
 	"github.com/mikalai2006/kingwood-api/internal/domain"
 	"github.com/mikalai2006/kingwood-api/internal/repository"
@@ -11,14 +10,6 @@ import (
 	"github.com/mikalai2006/kingwood-api/pkg/auths"
 	"github.com/mikalai2006/kingwood-api/pkg/hasher"
 )
-
-type Action interface {
-	FindAction(params domain.RequestParams) (domain.Response[model.Action], error)
-	GetAllAction(params domain.RequestParams) (domain.Response[model.Action], error)
-	CreateAction(userID string, data *model.ActionInput) (*model.Action, error)
-	UpdateAction(id string, userID string, data *model.ActionInput) (*model.Action, error)
-	DeleteAction(id string) (model.Action, error)
-}
 
 type Authorization interface {
 	CreateAuth(auth *domain.AuthInput) (string, error)
@@ -53,7 +44,7 @@ type Order interface {
 	CreateOrder(userID string, data *domain.Order) (*domain.Order, error)
 	FindOrder(input *domain.OrderFilter) (domain.Response[domain.Order], error)
 	UpdateOrder(id string, userID string, data *domain.OrderInput) (*domain.Order, error)
-	DeleteOrder(id string) (*domain.Order, error)
+	DeleteOrder(id string, userID string) (*domain.Order, error)
 }
 
 type Operation interface {
@@ -75,7 +66,7 @@ type Task interface {
 	FindTask(params domain.RequestParams) (domain.Response[domain.Task], error)
 	FindTaskPopulate(filter domain.TaskFilter) (domain.Response[domain.Task], error)
 	UpdateTask(id string, userID string, data *domain.TaskInput) (*domain.Task, error)
-	DeleteTask(id string) (*domain.Task, error)
+	DeleteTask(id string, userID string, checkStatus bool) (*domain.Task, error)
 }
 
 type WorkTime interface {
@@ -99,7 +90,7 @@ type TaskWorker interface {
 	FindTaskWorkerPopulate(input *domain.TaskWorkerFilter) (domain.Response[domain.TaskWorker], error)
 	// FindTaskWorker(params domain.RequestParams) (domain.Response[domain.TaskWorker], error)
 	UpdateTaskWorker(id string, userID string, data *domain.TaskWorkerInput, autoUpdate int) (*domain.TaskWorker, error)
-	DeleteTaskWorker(id string, userID string) (*domain.TaskWorker, error)
+	DeleteTaskWorker(id string, userID string, checkStatus bool) (*domain.TaskWorker, error)
 }
 
 type Notify interface {
@@ -120,7 +111,7 @@ type User interface {
 	GetUser(id string) (domain.User, error)
 	FindUser(filter *domain.UserFilter) (domain.Response[domain.User], error)
 	CreateUser(userID string, user *domain.User) (*domain.User, error)
-	DeleteUser(id string) (domain.User, error)
+	DeleteUser(id string, userID string) (domain.User, error)
 	UpdateUser(id string, user *domain.UserInput) (domain.User, error)
 	Iam(userID string) (domain.User, error)
 }
@@ -158,7 +149,7 @@ type Role interface {
 	CreateRole(userID string, data *domain.RoleInput) (domain.Role, error)
 	GetRole(id string) (domain.Role, error)
 	FindRole(filter *domain.RoleFilter) (domain.Response[domain.Role], error)
-	UpdateRole(id string, data interface{}) (domain.Role, error)
+	UpdateRole(id string, data *domain.RoleInput) (domain.Role, error)
 	DeleteRole(id string) (domain.Role, error)
 }
 
@@ -179,7 +170,6 @@ type Post interface {
 }
 
 type Services struct {
-	Action
 	AppError
 	Post
 	Authorization
@@ -228,7 +218,6 @@ func NewServices(cfgService *ConfigServices) *Services {
 		User,
 		cfgService.Hub,
 	)
-	Action := NewActionService(cfgService.Repositories.Action, cfgService.I18n)
 	Post := NewPostService(cfgService.Repositories.Post, cfgService.I18n)
 	TaskStatus := NewTaskStatusService(cfgService.Repositories.TaskStatus, cfgService.I18n)
 	Lang := NewLangService(cfgService.Repositories, cfgService.I18n)
@@ -248,7 +237,6 @@ func NewServices(cfgService *ConfigServices) *Services {
 	services := &Services{
 		AppError:      NewAppErrorService(cfgService.Repositories.AppError, cfgService.Hub),
 		Authorization: Authorization,
-		Action:        Action,
 		Post:          Post,
 		User:          User,
 		Lang:          Lang,
@@ -273,6 +261,7 @@ func NewServices(cfgService *ConfigServices) *Services {
 	Order.Services = services
 	Notify.Services = services
 	Pay.Services = services
+	User.Services = services
 
 	return services
 }

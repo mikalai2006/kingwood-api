@@ -48,7 +48,6 @@ func (h *HandlerV1) Init(api *gin.RouterGroup) {
 
 		authenticated := v1.Group("", h.SetUserFromRequest)
 		{
-			// h.registerAction(authenticated)
 			h.registerAppError(authenticated)
 			h.RegisterImage(authenticated)
 			h.registerMessage(authenticated)

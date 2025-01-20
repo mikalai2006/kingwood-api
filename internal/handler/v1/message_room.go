@@ -206,7 +206,7 @@ func (h *HandlerV1) CreateOrExistMessageRoom(c *gin.Context, input *domain.Messa
 	// existMessage, err := h.services.Message.FindMessage(domain.RequestParams{
 	// 	Filter: bson.D{
 	// 		{"product_id", input.ProductID},
-	// 		{"user_id", userIDPrimitive},
+	// 		{"userId", userIDPrimitive},
 	// 	},
 	// 	Options: domain.Options{
 	// 		Limit: 1,

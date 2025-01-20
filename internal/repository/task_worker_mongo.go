@@ -163,7 +163,7 @@ func (r *TaskWorkerMongo) FindTaskWorkerPopulate(input *domain.TaskWorkerFilter)
 	// pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
 	// 	"from": tblObject,
 	// 	"as":   "objecta",
-	// 	// "localField":   "user_id",
+	// 	// "localField":   "userId",
 	// 	// "foreignField": "_id",
 	// 	"let": bson.D{{Key: "objectId", Value: "$objectId"}},
 	// 	"pipeline": mongo.Pipeline{
@@ -177,7 +177,7 @@ func (r *TaskWorkerMongo) FindTaskWorkerPopulate(input *domain.TaskWorkerFilter)
 	pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
 		"from": tblObject,
 		"as":   "objecta",
-		// "localField":   "user_id",
+		// "localField":   "userId",
 		// "foreignField": "_id",
 		"let": bson.D{{Key: "objectId", Value: "$objectId"}},
 		"pipeline": mongo.Pipeline{
@@ -191,7 +191,7 @@ func (r *TaskWorkerMongo) FindTaskWorkerPopulate(input *domain.TaskWorkerFilter)
 	pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
 		"from": TblOrder,
 		"as":   "ordera",
-		// "localField":   "user_id",
+		// "localField":   "userId",
 		// "foreignField": "_id",
 		"let": bson.D{{Key: "orderId", Value: "$orderId"}},
 		"pipeline": mongo.Pipeline{
@@ -234,7 +234,7 @@ func (r *TaskWorkerMongo) FindTaskWorkerPopulate(input *domain.TaskWorkerFilter)
 					"as":   "images",
 					"let":  bson.D{{Key: "serviceId", Value: bson.D{{"$toString", "$_id"}}}},
 					"pipeline": mongo.Pipeline{
-						bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$service_id", "$$serviceId"}}}}},
+						bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$serviceId", "$$serviceId"}}}}},
 					},
 				},
 			}},
@@ -262,7 +262,7 @@ func (r *TaskWorkerMongo) FindTaskWorkerPopulate(input *domain.TaskWorkerFilter)
 					"from": TblPost,
 					"as":   "posts",
 					// "localField":   "_id",
-					// "foreignField": "service_id",
+					// "foreignField": "serviceId",
 					"let": bson.D{{Key: "postId", Value: "$postId"}},
 					"pipeline": mongo.Pipeline{
 						bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$_id", "$$postId"}}}}},
@@ -274,7 +274,7 @@ func (r *TaskWorkerMongo) FindTaskWorkerPopulate(input *domain.TaskWorkerFilter)
 			bson.D{{Key: "$lookup", Value: bson.M{
 				"from": TblRole,
 				"as":   "rolea",
-				// "localField":   "user_id",
+				// "localField":   "userId",
 				// "foreignField": "_id",
 				"let": bson.D{{Key: "roleId", Value: "$roleId"}},
 				"pipeline": mongo.Pipeline{
@@ -377,7 +377,7 @@ func (r *TaskWorkerMongo) FindTaskWorkerPopulate(input *domain.TaskWorkerFilter)
 // 	// pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
 // 	// 	"from": "users",
 // 	// 	"as":   "usera",
-// 	// 	// "localField":   "user_id",
+// 	// 	// "localField":   "userId",
 // 	// 	// "foreignField": "_id",
 // 	// 	"let": bson.D{{Key: "userId", Value: "$userId"}},
 // 	// 	"pipeline": mongo.Pipeline{
@@ -389,10 +389,10 @@ func (r *TaskWorkerMongo) FindTaskWorkerPopulate(input *domain.TaskWorkerFilter)
 // 	// 				"from": tblImage,
 // 	// 				"as":   "images",
 // 	// 				// "localField":   "_id",
-// 	// 				// "foreignField": "service_id",
+// 	// 				// "foreignField": "serviceId",
 // 	// 				"let": bson.D{{Key: "serviceId", Value: bson.D{{"$toString", "$_id"}}}},
 // 	// 				"pipeline": mongo.Pipeline{
-// 	// 					bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$service_id", "$$serviceId"}}}}},
+// 	// 					bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$serviceId", "$$serviceId"}}}}},
 // 	// 				},
 // 	// 			},
 // 	// 		}},
@@ -439,7 +439,7 @@ func (r *TaskWorkerMongo) CreateTaskWorker(userID string, data *domain.TaskWorke
 	}
 
 	// var existTaskWorker domain.TaskWorker
-	// r.db.Collection(TblTaskWorker).FindOne(ctx, bson.M{"node_id": TaskWorker.NodeID, "user_id": userIDPrimitive}).Decode(&existTaskWorker)
+	// r.db.Collection(TblTaskWorker).FindOne(ctx, bson.M{"node_id": TaskWorker.NodeID, "userId": userIDPrimitive}).Decode(&existTaskWorker)
 
 	// if existTaskWorker.NodeID.IsZero() {
 	updatedAt := data.UpdatedAt

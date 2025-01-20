@@ -23,13 +23,10 @@ const (
 	TblMessage       = "message"
 	TblMessageRoom   = "messageRoom"
 	TblMessageImage  = "messageImage"
-	TblOffer         = "offer"
 	TblQuestion      = "question"
 	TblTicket        = "ticket"
 	TblTicketMessage = "ticketMessage"
 	TblPost          = "post"
-	TblAction        = "action"
-	TblCountry       = "country"
 	tblNotify        = "notify"
 
 	tblTask             = "task"

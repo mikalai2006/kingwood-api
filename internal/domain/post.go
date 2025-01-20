@@ -14,6 +14,7 @@ type Post struct {
 	Props       map[string]interface{} `json:"props" bson:"props"`
 	Color       string                 `json:"color" bson:"color"`
 	SortOrder   int64                  `json:"sortOrder" bson:"sortOrder"`
+	Hidden      int                    `json:"hidden" bson:"hidden"`
 	CreatedAt   time.Time              `json:"createdAt" bson:"createdAt"`
 	UpdatedAt   time.Time              `json:"updatedAt" bson:"updatedAt"`
 }
@@ -26,6 +27,7 @@ type PostInput struct {
 	Props       map[string]interface{} `json:"props" bson:"props"`
 	Color       string                 `json:"color" bson:"color" form:"color"`
 	SortOrder   int64                  `json:"sortOrder" bson:"sortOrder" form:"sortOrder"`
+	Hidden      *int                   `json:"hidden" bson:"hidden" form:"hidden"`
 	CreatedAt   time.Time              `json:"createdAt" bson:"createdAt"`
 	UpdatedAt   time.Time              `json:"updatedAt" bson:"updatedAt"`
 }

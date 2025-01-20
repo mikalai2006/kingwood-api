@@ -206,8 +206,13 @@ func (h *HandlerV1) DeleteOrder(c *gin.Context) {
 		appG.ResponseError(http.StatusBadRequest, errors.New("for remove need id"), nil)
 		return
 	}
+	userID, err := middleware.GetUID(c)
+	if err != nil {
+		// c.AbortWithError(http.StatusUnauthorized, err)
+		appG.ResponseError(http.StatusUnauthorized, err, gin.H{"hello": "world"})
+	}
 
-	user, err := h.Services.Order.DeleteOrder(id) // , input
+	user, err := h.Services.Order.DeleteOrder(id, userID) // , input
 	if err != nil {
 		// c.AbortWithError(http.StatusBadRequest, err)
 		appG.ResponseError(http.StatusBadRequest, err, nil)
@@ -235,7 +240,7 @@ func (h *HandlerV1) CreateOrExistOrder(c *gin.Context, input *domain.Order) (*do
 
 	// existOrders, err := h.services.Order.FindOrder(domain.RequestParams{
 	// 	Options: domain.Options{Limit: 1},
-	// 	Filter:  bson.D{{"node_id", input.NodeID}, {"user_id", userIDPrimitive}},
+	// 	Filter:  bson.D{{"node_id", input.NodeID}, {"userId", userIDPrimitive}},
 	// })
 	// if err != nil {
 	// 	appG.ResponseError(http.StatusBadRequest, err, nil)

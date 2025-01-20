@@ -111,10 +111,10 @@ func (r *ImageMongo) GetImageDirs(id string) ([]interface{}, error) {
 		return result, err
 	}
 
-	filter := bson.M{"user_id": userIDPrimitive}
+	filter := bson.M{"userId": userIDPrimitive}
 	// pipe := mongo.Pipeline{}
 
-	// pipe = append(pipe, bson.D{{"$match", bson.M{"user_id": userIDPrimitive}}})
+	// pipe = append(pipe, bson.D{{"$match", bson.M{"userId": userIDPrimitive}}})
 	// pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
 	// 	"from":         "component_presets",
 	// 	"as":           "presets",

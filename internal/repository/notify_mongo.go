@@ -88,7 +88,7 @@ func (r *NotifyMongo) FindNotifyPopulate(input *domain.NotifyFilter) (domain.Res
 					"as":   "images",
 					"let":  bson.D{{Key: "serviceId", Value: bson.D{{"$toString", "$_id"}}}},
 					"pipeline": mongo.Pipeline{
-						bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$service_id", "$$serviceId"}}}}},
+						bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$serviceId", "$$serviceId"}}}}},
 					},
 				},
 			}},
@@ -111,7 +111,7 @@ func (r *NotifyMongo) FindNotifyPopulate(input *domain.NotifyFilter) (domain.Res
 					"as":   "images",
 					"let":  bson.D{{Key: "serviceId", Value: bson.D{{"$toString", "$_id"}}}},
 					"pipeline": mongo.Pipeline{
-						bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$service_id", "$$serviceId"}}}}},
+						bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$serviceId", "$$serviceId"}}}}},
 					},
 				},
 			}},
@@ -123,7 +123,7 @@ func (r *NotifyMongo) FindNotifyPopulate(input *domain.NotifyFilter) (domain.Res
 	// pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
 	// 	"from": TblOrder,
 	// 	"as":   "ordera",
-	// 	// "localField":   "user_id",
+	// 	// "localField":   "userId",
 	// 	// "foreignField": "_id",
 	// 	"let": bson.D{{Key: "orderId", Value: "$orderId"}},
 	// 	"pipeline": mongo.Pipeline{
@@ -166,7 +166,7 @@ func (r *NotifyMongo) FindNotifyPopulate(input *domain.NotifyFilter) (domain.Res
 	// 				"as":   "images",
 	// 				"let":  bson.D{{Key: "serviceId", Value: bson.D{{"$toString", "$_id"}}}},
 	// 				"pipeline": mongo.Pipeline{
-	// 					bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$service_id", "$$serviceId"}}}}},
+	// 					bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$serviceId", "$$serviceId"}}}}},
 	// 				},
 	// 			},
 	// 		}},
@@ -178,7 +178,7 @@ func (r *NotifyMongo) FindNotifyPopulate(input *domain.NotifyFilter) (domain.Res
 	// 				"from": TblPost,
 	// 				"as":   "posts",
 	// 				// "localField":   "_id",
-	// 				// "foreignField": "service_id",
+	// 				// "foreignField": "serviceId",
 	// 				"let": bson.D{{Key: "postId", Value: "$postId"}},
 	// 				"pipeline": mongo.Pipeline{
 	// 					bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$_id", "$$postId"}}}}},
@@ -190,7 +190,7 @@ func (r *NotifyMongo) FindNotifyPopulate(input *domain.NotifyFilter) (domain.Res
 	// 		bson.D{{Key: "$lookup", Value: bson.M{
 	// 			"from": TblRole,
 	// 			"as":   "rolea",
-	// 			// "localField":   "user_id",
+	// 			// "localField":   "userId",
 	// 			// "foreignField": "_id",
 	// 			"let": bson.D{{Key: "roleId", Value: "$roleId"}},
 	// 			"pipeline": mongo.Pipeline{

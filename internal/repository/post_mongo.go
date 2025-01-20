@@ -127,6 +127,7 @@ func (r *PostMongo) CreatePost(userID string, post *domain.Post) (*domain.Post, 
 		Name:        post.Name,
 		Description: post.Description,
 		Props:       post.Props,
+		Hidden:      post.Hidden,
 		Color:       post.Color,
 		SortOrder:   post.SortOrder,
 		CreatedAt:   time.Now(),
@@ -215,6 +216,9 @@ func (r *PostMongo) UpdatePost(id string, userID string, data *domain.PostInput)
 	if data.Description != "" {
 		newData["description"] = data.Description
 	}
+	if data.Hidden != nil {
+		newData["hidden"] = data.Hidden
+	}
 
 	if data.Props != nil {
 		//newProps := make(map[string]interface{})
@@ -222,7 +226,7 @@ func (r *PostMongo) UpdatePost(id string, userID string, data *domain.PostInput)
 		if val, ok := data.Props["status"]; ok {
 			if val == -1.0 {
 				newDel := make(map[string]interface{})
-				newDel["user_id"] = userID
+				newDel["userId"] = userID
 				newDel["del_at"] = time.Now()
 				newProps["del"] = newDel
 			}

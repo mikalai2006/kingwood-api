@@ -88,7 +88,7 @@ func (r *MessageRoomMongo) FindMessageRoom(params *domain.MessageRoomFilter) (do
 					"as":   "images",
 					"let":  bson.D{{Key: "serviceId", Value: bson.D{{"$toString", "$_id"}}}},
 					"pipeline": mongo.Pipeline{
-						bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$service_id", "$$serviceId"}}}}},
+						bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$serviceId", "$$serviceId"}}}}},
 					},
 				},
 			}},
@@ -242,7 +242,7 @@ func (r *MessageRoomMongo) UpdateMessageRoom(id string, userID string, data *dom
 	// 	if val, ok := data.Props["status"]; ok {
 	// 		if val == -1.0 {
 	// 			newDel := make(map[string]interface{})
-	// 			newDel["user_id"] = userID
+	// 			newDel["userId"] = userID
 	// 			newDel["del_at"] = time.Now()
 	// 			newProps["del"] = newDel
 	// 		}
@@ -359,7 +359,7 @@ func (r *MessageRoomMongo) GetGroupForUser(userID string) ([]domain.MessageGroup
 					"as":   "images",
 					"let":  bson.D{{Key: "serviceId", Value: bson.D{{"$toString", "$_id"}}}},
 					"pipeline": mongo.Pipeline{
-						bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$service_id", "$$serviceId"}}}}},
+						bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$serviceId", "$$serviceId"}}}}},
 					},
 				},
 			}},
@@ -367,7 +367,7 @@ func (r *MessageRoomMongo) GetGroupForUser(userID string) ([]domain.MessageGroup
 			bson.D{{Key: "$lookup", Value: bson.M{
 				"from": "users",
 				"as":   "userb",
-				"let":  bson.D{{Key: "userId", Value: "$user_id"}},
+				"let":  bson.D{{Key: "userId", Value: "$userId"}},
 				"pipeline": mongo.Pipeline{
 					bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$_id", "$$userId"}}}}},
 					bson.D{{"$limit", 1}},
@@ -378,7 +378,7 @@ func (r *MessageRoomMongo) GetGroupForUser(userID string) ([]domain.MessageGroup
 							"as":   "images",
 							"let":  bson.D{{Key: "serviceId", Value: bson.D{{"$toString", "$_id"}}}},
 							"pipeline": mongo.Pipeline{
-								bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$service_id", "$$serviceId"}}}}},
+								bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$serviceId", "$$serviceId"}}}}},
 							},
 						},
 					}},

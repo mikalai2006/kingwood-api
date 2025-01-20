@@ -8,6 +8,6 @@ var (
 	ErrLikeExist          = errors.New("like exist")
 	ErrQuestionExistValue = errors.New("question exist")
 
-	ErrNotItemMongo = errors.New("error.notFoundItem")
-	ErrNotRole      = errors.New("error.notRoles")
+	ErrNotItemMongo = errors.New("Не найдена запись!")
+	ErrNotRole      = errors.New("Нет прав для данной операции!")
 )

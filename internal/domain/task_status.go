@@ -16,10 +16,10 @@ type TaskStatus struct {
 	Enabled     *int64                 `json:"enabled" bson:"enabled"`
 	Icon        string                 `json:"icon" bson:"icon"`
 	Animate     string                 `json:"animate" bson:"animate"`
-	Start       *int64                 `json:"start" bson:"start"`
-	Finish      *int64                 `json:"finish" bson:"finish"`
-	Process     *int64                 `json:"process" bson:"process"`
-	Status      string                 `json:"status" bson:"status"`
+	// Start       *int64                 `json:"start" bson:"start"`
+	// Finish      *int64                 `json:"finish" bson:"finish"`
+	// Process     *int64                 `json:"process" bson:"process"`
+	Status string `json:"status" bson:"status"`
 
 	CreatedAt time.Time `json:"createdAt" bson:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt" bson:"updatedAt"`
@@ -35,10 +35,10 @@ type TaskStatusInput struct {
 	Enabled     *int64                 `json:"enabled" bson:"enabled" form:"enabled"`
 	Icon        string                 `json:"icon" bson:"icon" form:"icon"`
 	Animate     *string                `json:"animate" bson:"animate" form:"animate"`
-	Start       *int64                 `json:"start" bson:"start"`
-	Finish      *int64                 `json:"finish" bson:"finish"`
-	Process     *int64                 `json:"process" bson:"process"`
-	Status      string                 `json:"status" bson:"status"`
-	CreatedAt   time.Time              `json:"createdAt" bson:"createdAt"`
-	UpdatedAt   time.Time              `json:"updatedAt" bson:"updatedAt"`
+	// Start       *int64                 `json:"start" bson:"start"`
+	// Finish      *int64                 `json:"finish" bson:"finish"`
+	// Process     *int64                 `json:"process" bson:"process"`
+	Status    string    `json:"status" bson:"status"`
+	CreatedAt time.Time `json:"createdAt" bson:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt" bson:"updatedAt"`
 }

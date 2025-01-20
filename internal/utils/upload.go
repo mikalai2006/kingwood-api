@@ -36,7 +36,7 @@ func UploadResizeMultipleFile(c *gin.Context, info *domain.ImageInput, nameField
 		return filePaths, err
 	}
 
-	pathDir := fmt.Sprintf("public/%s/%s", info.UserID, info.Service)
+	pathDir := fmt.Sprintf("public/%s", info.Service)
 	if info.ServiceID != "" {
 		pathDir = fmt.Sprintf("%s/%s", pathDir, info.ServiceID)
 	}
@@ -210,7 +210,7 @@ func UploadResizeMultipleFileForMessage(c *gin.Context, info *domain.MessageImag
 		return filePaths, nil
 	}
 
-	pathDir := fmt.Sprintf("public/%s/%s", info.UserID, info.Service)
+	pathDir := fmt.Sprintf("public/%s", info.Service)
 	if info.ServiceID != "" {
 		pathDir = fmt.Sprintf("%s/%s", pathDir, info.ServiceID)
 	}

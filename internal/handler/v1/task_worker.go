@@ -198,7 +198,7 @@ func (h *HandlerV1) CreateOrExistTaskWorker(c *gin.Context, input *domain.TaskWo
 
 	// existTaskWorkers, err := h.services.TaskWorker.FindTaskWorker(domain.RequestParams{
 	// 	Options: domain.Options{Limit: 1},
-	// 	Filter:  bson.D{{"node_id", input.NodeID}, {"user_id", userIDPrimitive}},
+	// 	Filter:  bson.D{{"node_id", input.NodeID}, {"userId", userIDPrimitive}},
 	// })
 	// if err != nil {
 	// 	appG.ResponseError(http.StatusBadRequest, err, nil)
@@ -235,7 +235,7 @@ func (h *HandlerV1) DeleteTaskWorker(c *gin.Context) {
 		return
 	}
 
-	user, err := h.Services.TaskWorker.DeleteTaskWorker(id, userID) // , input
+	user, err := h.Services.TaskWorker.DeleteTaskWorker(id, userID, true) // , input
 	if err != nil {
 		// c.AbortWithError(http.StatusBadRequest, err)
 		appG.ResponseError(http.StatusBadRequest, err, nil)

@@ -57,7 +57,7 @@ func (r *TaskMongo) FindTask(params domain.RequestParams) (domain.Response[domai
 	// pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
 	// 	"from": "users",
 	// 	"as":   "usera",
-	// 	// "localField":   "user_id",
+	// 	// "localField":   "userId",
 	// 	// "foreignField": "_id",
 	// 	"let": bson.D{{Key: "userId", Value: "$userId"}},
 	// 	"pipeline": mongo.Pipeline{
@@ -69,10 +69,10 @@ func (r *TaskMongo) FindTask(params domain.RequestParams) (domain.Response[domai
 	// 				"from": tblImage,
 	// 				"as":   "images",
 	// 				// "localField":   "_id",
-	// 				// "foreignField": "service_id",
+	// 				// "foreignField": "serviceId",
 	// 				"let": bson.D{{Key: "serviceId", Value: bson.D{{"$toString", "$_id"}}}},
 	// 				"pipeline": mongo.Pipeline{
-	// 					bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$service_id", "$$serviceId"}}}}},
+	// 					bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$serviceId", "$$serviceId"}}}}},
 	// 				},
 	// 			},
 	// 		}},
@@ -186,7 +186,7 @@ func (r *TaskMongo) FindTaskPopulate(input domain.TaskFilter) (domain.Response[d
 	pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
 		"from": tblObject,
 		"as":   "objecta",
-		// "localField":   "user_id",
+		// "localField":   "userId",
 		// "foreignField": "_id",
 		"let": bson.D{{Key: "objectId", Value: "$objectId"}},
 		"pipeline": mongo.Pipeline{
@@ -199,7 +199,7 @@ func (r *TaskMongo) FindTaskPopulate(input domain.TaskFilter) (domain.Response[d
 	pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
 		"from": TblOrder,
 		"as":   "ordera",
-		// "localField":   "user_id",
+		// "localField":   "userId",
 		// "foreignField": "_id",
 		"let": bson.D{{Key: "orderId", Value: "$orderId"}},
 		"pipeline": mongo.Pipeline{
@@ -229,7 +229,7 @@ func (r *TaskMongo) FindTaskPopulate(input domain.TaskFilter) (domain.Response[d
 							"as":   "images",
 							"let":  bson.D{{Key: "serviceId", Value: bson.D{{"$toString", "$_id"}}}},
 							"pipeline": mongo.Pipeline{
-								bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$service_id", "$$serviceId"}}}}},
+								bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$serviceId", "$$serviceId"}}}}},
 							},
 						},
 					}},
@@ -306,7 +306,7 @@ func (r *TaskMongo) CreateTask(userID string, data *domain.Task) (*domain.Task, 
 	}
 
 	// var existTask domain.Task
-	// r.db.Collection(TblTask).FindOne(ctx, bson.M{"node_id": Task.NodeID, "user_id": userIDPrimitive}).Decode(&existTask)
+	// r.db.Collection(TblTask).FindOne(ctx, bson.M{"node_id": Task.NodeID, "userId": userIDPrimitive}).Decode(&existTask)
 
 	// if existTask.NodeID.IsZero() {
 	updatedAt := data.UpdatedAt

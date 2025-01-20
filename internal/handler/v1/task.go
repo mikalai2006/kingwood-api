@@ -229,7 +229,14 @@ func (h *HandlerV1) DeleteTask(c *gin.Context) {
 		return
 	}
 
-	user, err := h.Services.Task.DeleteTask(id) // , input
+	userID, err := middleware.GetUID(c)
+	if err != nil {
+		// c.AbortWithError(http.StatusUnauthorized, err)
+		appG.ResponseError(http.StatusUnauthorized, err, gin.H{"hello": "world"})
+		return
+	}
+
+	user, err := h.Services.Task.DeleteTask(id, userID, true) // , input
 	if err != nil {
 		// c.AbortWithError(http.StatusBadRequest, err)
 		appG.ResponseError(http.StatusBadRequest, err, nil)
@@ -257,7 +264,7 @@ func (h *HandlerV1) CreateOrExistTask(c *gin.Context, input *domain.Task) (*doma
 
 	// existTasks, err := h.services.Task.FindTask(domain.RequestParams{
 	// 	Options: domain.Options{Limit: 1},
-	// 	Filter:  bson.D{{"node_id", input.NodeID}, {"user_id", userIDPrimitive}},
+	// 	Filter:  bson.D{{"node_id", input.NodeID}, {"userId", userIDPrimitive}},
 	// })
 	// if err != nil {
 	// 	appG.ResponseError(http.StatusBadRequest, err, nil)

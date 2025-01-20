@@ -81,7 +81,7 @@ func (r *WorkHistoryMongo) FindWorkHistory(input domain.WorkHistoryFilter) (doma
 	// pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
 	// 	"from": tblObject,
 	// 	"as":   "objecta",
-	// 	// "localField":   "user_id",
+	// 	// "localField":   "userId",
 	// 	// "foreignField": "_id",
 	// 	"let": bson.D{{Key: "objectId", Value: "$objectId"}},
 	// 	"pipeline": mongo.Pipeline{
@@ -194,7 +194,7 @@ func (r *WorkHistoryMongo) FindWorkHistoryPopulate(input domain.WorkHistoryFilte
 	// pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
 	// 	"from": tblObject,
 	// 	"as":   "objecta",
-	// 	// "localField":   "user_id",
+	// 	// "localField":   "userId",
 	// 	// "foreignField": "_id",
 	// 	"let": bson.D{{Key: "objectId", Value: "$objectId"}},
 	// 	"pipeline": mongo.Pipeline{
@@ -263,7 +263,7 @@ func (r *WorkHistoryMongo) CreateWorkHistory(userID string, data *domain.WorkHis
 	}
 
 	// var existTask domain.TaskHistory
-	// r.db.Collection(TblTask).FindOne(ctx, bson.M{"node_id": Task.NodeID, "user_id": userIDPrimitive}).Decode(&existTask)
+	// r.db.Collection(TblTask).FindOne(ctx, bson.M{"node_id": Task.NodeID, "userId": userIDPrimitive}).Decode(&existTask)
 
 	// if existTask.NodeID.IsZero() {
 	updatedAt := data.UpdatedAt

@@ -8,8 +8,8 @@ import (
 
 type Image struct {
 	ID        primitive.ObjectID `json:"id" bson:"_id,omitempty"`
-	UserID    primitive.ObjectID `json:"userId" bson:"user_id"`
-	ServiceID string             `json:"serviceId" bson:"service_id"`
+	UserID    primitive.ObjectID `json:"userId" bson:"userId"`
+	ServiceID string             `json:"serviceId" bson:"serviceId"`
 	Service   string             `json:"service" bson:"service"`
 	Path      string             `json:"path" bson:"path"`
 	Ext       string             `json:"ext" bson:"ext"`
@@ -19,14 +19,14 @@ type Image struct {
 	//User User `json:"user,omitempty" bson:"user,omitempty"`
 
 	Description string    `json:"description" bson:"description"`
-	CreatedAt   time.Time `json:"createdAt" bson:"created_at"`
-	UpdatedAt   time.Time `json:"updatedAt" bson:"updated_at"`
+	CreatedAt   time.Time `json:"createdAt" bson:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt" bson:"updatedAt"`
 }
 
 type ImageInputMongo struct {
 	ID        primitive.ObjectID `json:"id" bson:"_id,omitempty"`
-	UserID    primitive.ObjectID `json:"userId" bson:"user_id"`
-	ServiceID string             `json:"serviceId" bson:"service_id"`
+	UserID    primitive.ObjectID `json:"userId" bson:"userId"`
+	ServiceID string             `json:"serviceId" bson:"serviceId"`
 	Service   string             `json:"service" bson:"service"`
 	Path      string             `json:"path" bson:"path"`
 	Ext       string             `json:"ext" bson:"ext"`
@@ -34,8 +34,8 @@ type ImageInputMongo struct {
 	Dir       string             `json:"dir" bson:"dir"`
 
 	Description string    `json:"description" bson:"description"`
-	CreatedAt   time.Time `json:"createdAt" bson:"created_at"`
-	UpdatedAt   time.Time `json:"updatedAt" bson:"updated_at"`
+	CreatedAt   time.Time `json:"createdAt" bson:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt" bson:"updatedAt"`
 }
 
 // type ImageSize struct {
@@ -47,8 +47,8 @@ type ImageInputMongo struct {
 // }
 
 type ImageInput struct {
-	UserID      string `json:"userId" bson:"user_id" form:"userId" primitive:"true"`
-	ServiceID   string `json:"serviceId" bson:"service_id" form:"serviceId" primitive:"true"`
+	UserID      string `json:"userId" bson:"userId" form:"userId" primitive:"true"`
+	ServiceID   string `json:"serviceId" bson:"serviceId" form:"serviceId" primitive:"true"`
 	Service     string `json:"service" bson:"service" form:"service"`
 	Path        string `json:"path" bson:"path"`
 	Description string `json:"description" bson:"description" form:"description"`

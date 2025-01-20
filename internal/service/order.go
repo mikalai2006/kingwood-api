@@ -5,6 +5,7 @@ import (
 
 	"github.com/mikalai2006/kingwood-api/internal/domain"
 	"github.com/mikalai2006/kingwood-api/internal/repository"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -36,7 +37,7 @@ func (s *OrderService) CreateOrder(userID string, data *domain.Order) (*domain.O
 		return nil, err
 	}
 	// existReview, err := s.repo.FindReview(domain.RequestParams{
-	// 	Filter:  bson.M{"node_id": review.NodeID, "user_id": userIDPrimitive},
+	// 	Filter:  bson.M{"node_id": review.NodeID, "userId": userIDPrimitive},
 	// 	Options: domain.Options{Limit: 1},
 	// })
 	// if err != nil {
@@ -132,8 +133,73 @@ func (s *OrderService) UpdateOrder(id string, userID string, data *domain.OrderI
 	return result, err
 }
 
-func (s *OrderService) DeleteOrder(id string) (*domain.Order, error) {
-	result, err := s.repo.DeleteOrder(id)
+func (s *OrderService) DeleteOrder(id string, userID string) (*domain.Order, error) {
+	var result *domain.Order
+
+	// delete images.
+	allImages, err := s.Services.Image.FindImage(domain.RequestParams{Filter: bson.D{{"serviceId", id}}})
+	if err != nil {
+		return result, err
+	}
+	for i := range allImages.Data {
+		_, err = s.Services.Image.DeleteImage(allImages.Data[i].ID.Hex())
+	}
+	// delete taskWorkers.
+	allTaskWorkers, err := s.Services.TaskWorker.FindTaskWorkerPopulate(&domain.TaskWorkerFilter{OrderId: []*string{&id}})
+	if err != nil {
+		return result, err
+	}
+	for i := range allTaskWorkers.Data {
+		_, err = s.Services.TaskWorker.DeleteTaskWorker(allTaskWorkers.Data[i].ID.Hex(), userID, false)
+	}
+
+	// delete task.
+	allTasks, err := s.Services.Task.FindTaskPopulate(domain.TaskFilter{OrderId: []string{id}})
+	if err != nil {
+		return result, err
+	}
+	for i := range allTasks.Data {
+		_, err = s.Services.Task.DeleteTask(allTasks.Data[i].ID.Hex(), userID, false)
+	}
+
+	// // delete workTime.
+	// allWorkTime, err := s.Services.WorkTime.FindWorkTimePopulate(domain.WorkTimeFilter{WorkerId: []string{id}})
+	// if err != nil {
+	// 	return result, err
+	// }
+	// for i := range allWorkTime.Data {
+	// 	_, err = s.Services.WorkTime.DeleteWorkTime(allWorkTime.Data[i].ID.Hex())
+	// }
+
+	// // delete workHistory.
+	// allWorkHistory, err := s.Services.WorkHistory.FindWorkHistoryPopulate(domain.WorkHistoryFilter{WorkerId: []string{id}})
+	// if err != nil {
+	// 	return result, err
+	// }
+	// for i := range allWorkHistory.Data {
+	// 	_, err = s.Services.WorkHistory.DeleteWorkHistory(allWorkHistory.Data[i].ID.Hex())
+	// }
+
+	// // delete pay.
+	// allPay, err := s.Services.Pay.FindPay(&domain.PayFilter{WorkerId: []string{id}})
+	// if err != nil {
+	// 	return result, err
+	// }
+	// for i := range allPay.Data {
+	// 	_, err = s.Services.Pay.DeletePay(allPay.Data[i].ID.Hex(), userID)
+	// }
+
+	// // delete notify.
+	// allNotify, err := s.Services.Notify.FindNotifyPopulate(&domain.NotifyFilter{UserTo: []*string{&id}})
+	// if err != nil {
+	// 	return result, err
+	// }
+	// for i := range allNotify.Data {
+	// 	_, err = s.Services.Notify.DeleteNotify(allNotify.Data[i].ID.Hex())
+	// }
+	result, err = s.repo.DeleteOrder(id)
+
+	s.Hub.HandleMessage(domain.MessageSocket{Type: "message", Method: "DELETE", Sender: userID, Recipient: "", Content: result, ID: "room1", Service: "order"})
 
 	return result, err
 }

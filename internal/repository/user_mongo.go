@@ -52,10 +52,10 @@ func (r *UserMongo) Iam(userID string) (domain.User, error) {
 			"from": tblImage,
 			"as":   "images",
 			// "localField":   "_id",
-			// "foreignField": "service_id",
+			// "foreignField": "serviceId",
 			"let": bson.D{{Key: "serviceId", Value: bson.D{{"$toString", "$_id"}}}},
 			"pipeline": mongo.Pipeline{
-				bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$service_id", "$$serviceId"}}}}},
+				bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$serviceId", "$$serviceId"}}}}},
 			},
 		},
 	}})
@@ -66,7 +66,7 @@ func (r *UserMongo) Iam(userID string) (domain.User, error) {
 			"from": TblPost,
 			"as":   "posts",
 			// "localField":   "_id",
-			// "foreignField": "service_id",
+			// "foreignField": "serviceId",
 			"let": bson.D{{Key: "postId", Value: "$postId"}},
 			"pipeline": mongo.Pipeline{
 				bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$_id", "$$postId"}}}}},
@@ -78,7 +78,7 @@ func (r *UserMongo) Iam(userID string) (domain.User, error) {
 	pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
 		"from": TblRole,
 		"as":   "rolea",
-		// "localField":   "user_id",
+		// "localField":   "userId",
 		// "foreignField": "_id",
 		"let": bson.D{{Key: "roleId", Value: "$roleId"}},
 		"pipeline": mongo.Pipeline{
@@ -95,7 +95,7 @@ func (r *UserMongo) Iam(userID string) (domain.User, error) {
 	// 		"from": TblRole,
 	// 		"as":   "roles",
 	// 		// "localField":   "_id",
-	// 		// "foreignField": "service_id",
+	// 		// "foreignField": "serviceId",
 	// 		"let": bson.D{{Key: "userId", Value: bson.D{{"$toString", "$_id"}}}},
 	// 		"pipeline": mongo.Pipeline{
 	// 			bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$userId", "$$userId"}}}}},
@@ -151,7 +151,7 @@ func (r *UserMongo) GetUser(id string) (domain.User, error) {
 			"from": TblPost,
 			"as":   "posts",
 			// "localField":   "_id",
-			// "foreignField": "service_id",
+			// "foreignField": "serviceId",
 			"let": bson.D{{Key: "postId", Value: "$postId"}},
 			"pipeline": mongo.Pipeline{
 				bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$_id", "$$postId"}}}}},
@@ -163,7 +163,7 @@ func (r *UserMongo) GetUser(id string) (domain.User, error) {
 	pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
 		"from": TblRole,
 		"as":   "rolea",
-		// "localField":   "user_id",
+		// "localField":   "userId",
 		// "foreignField": "_id",
 		"let": bson.D{{Key: "roleId", Value: "$roleId"}},
 		"pipeline": mongo.Pipeline{
@@ -195,10 +195,10 @@ func (r *UserMongo) GetUser(id string) (domain.User, error) {
 	// 		"from": tblImage,
 	// 		"as":   "images",
 	// 		// "localField":   "_id",
-	// 		// "foreignField": "service_id",
+	// 		// "foreignField": "serviceId",
 	// 		"let": bson.D{{Key: "serviceId", Value: bson.D{{"$toString", "$_id"}}}},
 	// 		"pipeline": mongo.Pipeline{
-	// 			bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$service_id", "$$serviceId"}}}}},
+	// 			bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$serviceId", "$$serviceId"}}}}},
 	// 		},
 	// 	},
 	// }})
@@ -210,7 +210,7 @@ func (r *UserMongo) GetUser(id string) (domain.User, error) {
 	// 		"from": tblImage,
 	// 		"as":   "roles",
 	// 		// "localField":   "_id",
-	// 		// "foreignField": "service_id",
+	// 		// "foreignField": "serviceId",
 	// 		"let": bson.D{{Key: "userId", Value: bson.D{{"$toString", "$_id"}}}},
 	// 		"pipeline": mongo.Pipeline{
 	// 			bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$userId", "$$userId"}}}}},
@@ -225,7 +225,7 @@ func (r *UserMongo) GetUser(id string) (domain.User, error) {
 	// 		"from": tblImage,
 	// 		"as":   "post",
 	// 		// "localField":   "_id",
-	// 		// "foreignField": "service_id",
+	// 		// "foreignField": "serviceId",
 	// 		"let": bson.D{{Key: "userId", Value: bson.D{{"$toString", "$_id"}}}},
 	// 		"pipeline": mongo.Pipeline{
 	// 			bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$userId", "$$userId"}}}}},
@@ -240,8 +240,8 @@ func (r *UserMongo) GetUser(id string) (domain.User, error) {
 	// 		"from": TblAuth,
 	// 		"as":   "authsx",
 	// 		// "localField":   "_id",
-	// 		// "foreignField": "service_id",
-	// 		"let": bson.D{{Key: "userId", Value: "$user_id"}},
+	// 		// "foreignField": "serviceId",
+	// 		"let": bson.D{{Key: "userId", Value: "$userId"}},
 	// 		"pipeline": mongo.Pipeline{
 	// 			bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$_id", "$$userId"}}}}},
 	// 			bson.D{{"$limit", 1}},
@@ -261,7 +261,7 @@ func (r *UserMongo) GetUser(id string) (domain.User, error) {
 	// 		"as":   "tests",
 	// 		"let":  bson.D{{Key: "userId", Value: "$_id"}},
 	// 		"pipeline": mongo.Pipeline{
-	// 			bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$user_id", "$$userId"}}}}},
+	// 			bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$userId", "$$userId"}}}}},
 	// 			bson.D{
 	// 				{
 	// 					"$group", bson.D{
@@ -287,7 +287,7 @@ func (r *UserMongo) GetUser(id string) (domain.User, error) {
 	// 		"as":   "tests2",
 	// 		"let":  bson.D{{Key: "userId", Value: "$_id"}},
 	// 		"pipeline": mongo.Pipeline{
-	// 			bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$user_id", "$$userId"}}}}},
+	// 			bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$userId", "$$userId"}}}}},
 	// 			bson.D{
 	// 				{
 	// 					"$group", bson.D{
@@ -319,7 +319,7 @@ func (r *UserMongo) GetUser(id string) (domain.User, error) {
 	// 		"as":   "countNodes",
 	// 		"let":  bson.D{{Key: "userId", Value: "$_id"}},
 	// 		"pipeline": mongo.Pipeline{
-	// 			bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$user_id", "$$userId"}}}}},
+	// 			bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$userId", "$$userId"}}}}},
 	// 		},
 	// 	},
 	// }})
@@ -339,7 +339,7 @@ func (r *UserMongo) GetUser(id string) (domain.User, error) {
 	// 		"as":   "countNodedatas",
 	// 		"let":  bson.D{{Key: "userId", Value: "$_id"}},
 	// 		"pipeline": mongo.Pipeline{
-	// 			bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$user_id", "$$userId"}}}}},
+	// 			bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$userId", "$$userId"}}}}},
 	// 		},
 	// 	},
 	// }})
@@ -381,6 +381,13 @@ func (r *UserMongo) FindUser(input *domain.UserFilter) (domain.Response[domain.U
 	q := bson.D{}
 
 	// Filters
+	if input.Archive != nil {
+		q = append(q, bson.E{"archive", input.Archive})
+	}
+	if input.Hidden != nil {
+		q = append(q, bson.E{"hidden", input.Hidden})
+	}
+
 	if input.ID != nil && len(input.ID) > 0 {
 		ids := []primitive.ObjectID{}
 		for i, _ := range input.ID {
@@ -430,10 +437,10 @@ func (r *UserMongo) FindUser(input *domain.UserFilter) (domain.Response[domain.U
 			"from": tblImage,
 			"as":   "images",
 			// "localField":   "_id",
-			// "foreignField": "service_id",
+			// "foreignField": "serviceId",
 			"let": bson.D{{Key: "serviceId", Value: bson.D{{"$toString", "$_id"}}}},
 			"pipeline": mongo.Pipeline{
-				bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$service_id", "$$serviceId"}}}}},
+				bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$serviceId", "$$serviceId"}}}}},
 			},
 		},
 	}})
@@ -537,16 +544,22 @@ func (r *UserMongo) CreateUser(userID string, data *domain.User) (*domain.User, 
 		return nil, err
 	}
 
+	typeWork := []string{}
+	if len(data.TypeWork) > 0 {
+		typeWork = data.TypeWork
+	}
+
 	newUser := domain.UserInputMongo{
 		// Avatar: user.Avatar,
 		Name:   data.Name,
 		UserID: userIDPrimitive,
 		// Online:    user.Online,
 		Phone:    data.Phone,
-		Hidden:   data.Hidden,
+		Hidden:   0,
 		RoleId:   data.RoleId,
 		PostId:   data.PostId,
-		TypeWork: data.TypeWork,
+		Archive:  data.Archive,
+		TypeWork: typeWork,
 		Birthday: data.Birthday,
 		TypePay:  data.TypePay,
 		Oklad:    data.Oklad,
@@ -593,6 +606,12 @@ func (r *UserMongo) DeleteUser(id string) (domain.User, error) {
 		return result, err
 	}
 
+	// remove auth.
+	_, err = r.db.Collection(TblAuth).DeleteOne(ctx, bson.D{{"_id", result.UserID}})
+	if err != nil {
+		return result, err
+	}
+
 	return result, nil
 }
 
@@ -632,6 +651,9 @@ func (r *UserMongo) UpdateUser(id string, user *domain.UserInput) (domain.User, 
 	if user.TypePay != nil {
 		newData["typePay"] = user.TypePay
 	}
+	if user.Archive != nil {
+		newData["archive"] = user.Archive
+	}
 	if user.RoleId != "" {
 		IDPrimitive, err := primitive.ObjectIDFromHex(user.RoleId)
 		if err != nil {
@@ -643,6 +665,9 @@ func (r *UserMongo) UpdateUser(id string, user *domain.UserInput) (domain.User, 
 	if user.TypeWork != nil {
 		newData["typeWork"] = user.TypeWork
 	}
+	//  else {
+	// 	newData["typeWork"] = []string{}
+	// }
 
 	if user.Online != nil {
 		newData["online"] = user.Online
@@ -695,10 +720,10 @@ func (r *UserMongo) GqlGetUsers(params domain.RequestParams) ([]*domain.User, er
 			"from": tblImage,
 			"as":   "images",
 			// "localField":   "_id",
-			// "foreignField": "service_id",
+			// "foreignField": "serviceId",
 			"let": bson.D{{Key: "serviceId", Value: bson.D{{"$toString", "$_id"}}}},
 			"pipeline": mongo.Pipeline{
-				bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$service_id", "$$serviceId"}}}}},
+				bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$serviceId", "$$serviceId"}}}}},
 			},
 		},
 	}})

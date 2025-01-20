@@ -74,7 +74,7 @@ func (r *WorkTimeMongo) FindWorkTime(input domain.WorkTimeFilter) (domain.Respon
 	// pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
 	// 	"from": tblObject,
 	// 	"as":   "objecta",
-	// 	// "localField":   "user_id",
+	// 	// "localField":   "userId",
 	// 	// "foreignField": "_id",
 	// 	"let": bson.D{{Key: "objectId", Value: "$objectId"}},
 	// 	"pipeline": mongo.Pipeline{
@@ -189,7 +189,7 @@ func (r *WorkTimeMongo) FindWorkTimePopulate(input domain.WorkTimeFilter) (domai
 	pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
 		"from": tblWorkHistory,
 		"as":   "workHistory",
-		// "localField":   "user_id",
+		// "localField":   "userId",
 		// "foreignField": "_id",
 		"let": bson.D{
 			{Key: "workerId", Value: "$workerId"},
@@ -282,7 +282,7 @@ func (r *WorkTimeMongo) CreateWorkTime(userID string, data *domain.WorkTime) (*d
 	}
 
 	// var existTask domain.WorkTime
-	// r.db.Collection(TblTask).FindOne(ctx, bson.M{"node_id": Task.NodeID, "user_id": userIDPrimitive}).Decode(&existTask)
+	// r.db.Collection(TblTask).FindOne(ctx, bson.M{"node_id": Task.NodeID, "userId": userIDPrimitive}).Decode(&existTask)
 
 	// if existTask.NodeID.IsZero() {
 	updatedAt := data.UpdatedAt

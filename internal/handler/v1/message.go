@@ -245,7 +245,7 @@ func (h *HandlerV1) CreateOrExistMessage(c *gin.Context, input *domain.MessageIn
 	// existMessage, err := h.services.Message.FindMessage(domain.RequestParams{
 	// 	Filter: bson.D{
 	// 		{"product_id", input.ProductID},
-	// 		{"user_id", userIDPrimitive},
+	// 		{"userId", userIDPrimitive},
 	// 	},
 	// 	Options: domain.Options{
 	// 		Limit: 1,

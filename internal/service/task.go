@@ -40,6 +40,18 @@ func (s *TaskService) CreateTask(userID string, data *domain.Task) (*domain.Task
 		return nil, err
 	}
 
+	// set default status.
+	if data.StatusId.IsZero() {
+		allStatus, err := s.Services.TaskStatus.FindTaskStatus(domain.RequestParams{Filter: bson.D{{"status", "wait"}}})
+		if err != nil {
+			return result, err
+		}
+		if len(allStatus.Data) > 0 {
+			data.StatusId = allStatus.Data[0].ID
+			data.Status = allStatus.Data[0].Status
+		}
+	}
+
 	result, err = s.repo.CreateTask(userID, data)
 	if err != nil {
 		return nil, err
@@ -230,12 +242,14 @@ func (s *TaskService) UpdateTask(id string, userID string, data *domain.TaskInpu
 	return result, err
 }
 
-func (s *TaskService) DeleteTask(id string) (*domain.Task, error) {
+func (s *TaskService) DeleteTask(id string, userID string, checkStatus bool) (*domain.Task, error) {
 	result, err := s.repo.DeleteTask(id)
 
-	_, err = s.CheckStatusOrder("userID", result)
-	if err != nil {
-		return result, err
+	if checkStatus {
+		_, err = s.CheckStatusOrder("userID", result)
+		if err != nil {
+			return result, err
+		}
 	}
 
 	s.Hub.HandleMessage(domain.MessageSocket{Type: "message", Method: "DELETE", Sender: "userID", Recipient: "", Content: result, ID: "room1", Service: "task"})

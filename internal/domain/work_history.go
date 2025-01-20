@@ -51,12 +51,13 @@ type WorkHistoryInput struct {
 }
 
 type WorkHistoryFilter struct {
-	ID         []string            `json:"id,omitempty"`
-	WorkTimeId []string            `json:"workTimeId,omitempty"`
-	WorkerId   []string            `json:"workerId,omitempty"`
-	TaskId     []string            `json:"taskId,omitempty"`
-	Status     *int                `json:"status,omitempty"`
-	Sort       []*FilterSortParams `json:"sort,omitempty"`
-	Limit      *int                `json:"$limit,omitempty"`
-	Skip       *int                `json:"$skip,omitempty"`
+	ID         []string `json:"id,omitempty"`
+	WorkTimeId []string `json:"workTimeId,omitempty"`
+	// OrderId    []string            `json:"orderId,omitempty"`
+	WorkerId []string            `json:"workerId,omitempty"`
+	TaskId   []string            `json:"taskId,omitempty"`
+	Status   *int                `json:"status,omitempty"`
+	Sort     []*FilterSortParams `json:"sort,omitempty"`
+	Limit    *int                `json:"$limit,omitempty"`
+	Skip     *int                `json:"$skip,omitempty"`
 }

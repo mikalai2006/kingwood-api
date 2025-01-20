@@ -55,7 +55,7 @@ func (r *OperationMongo) FindOperation(params domain.RequestParams) (domain.Resp
 	// pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
 	// 	"from": "users",
 	// 	"as":   "usera",
-	// 	// "localField":   "user_id",
+	// 	// "localField":   "userId",
 	// 	// "foreignField": "_id",
 	// 	"let": bson.D{{Key: "userId", Value: "$userId"}},
 	// 	"pipeline": mongo.Pipeline{
@@ -67,10 +67,10 @@ func (r *OperationMongo) FindOperation(params domain.RequestParams) (domain.Resp
 	// 				"from": tblImage,
 	// 				"as":   "images",
 	// 				// "localField":   "_id",
-	// 				// "foreignField": "service_id",
+	// 				// "foreignField": "serviceId",
 	// 				"let": bson.D{{Key: "serviceId", Value: bson.D{{"$toString", "$_id"}}}},
 	// 				"pipeline": mongo.Pipeline{
-	// 					bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$service_id", "$$serviceId"}}}}},
+	// 					bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$serviceId", "$$serviceId"}}}}},
 	// 				},
 	// 			},
 	// 		}},
@@ -157,7 +157,7 @@ func (r *OperationMongo) GqlGetOperations(params domain.RequestParams) ([]*domai
 	pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
 		"from": "users",
 		"as":   "usera",
-		"let":  bson.D{{Key: "userId", Value: "$user_id"}},
+		"let":  bson.D{{Key: "userId", Value: "$userId"}},
 		"pipeline": mongo.Pipeline{
 			bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$_id", "$$userId"}}}}},
 			bson.D{{"$limit", 1}},
@@ -168,7 +168,7 @@ func (r *OperationMongo) GqlGetOperations(params domain.RequestParams) ([]*domai
 					"as":   "images",
 					"let":  bson.D{{Key: "serviceId", Value: bson.D{{"$toString", "$_id"}}}},
 					"pipeline": mongo.Pipeline{
-						bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$service_id", "$$serviceId"}}}}},
+						bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$serviceId", "$$serviceId"}}}}},
 					},
 				},
 			}},
@@ -220,7 +220,7 @@ func (r *OperationMongo) CreateOperation(userID string, data *domain.Operation) 
 	}
 
 	// var existOperation domain.Operation
-	// r.db.Collection(tblOperation).FindOne(ctx, bson.M{"node_id": Operation.NodeID, "user_id": userIDPrimitive}).Decode(&existOperation)
+	// r.db.Collection(tblOperation).FindOne(ctx, bson.M{"node_id": Operation.NodeID, "userId": userIDPrimitive}).Decode(&existOperation)
 
 	// if existOperation.NodeID.IsZero() {
 	updatedAt := data.UpdatedAt
@@ -233,6 +233,7 @@ func (r *OperationMongo) CreateOperation(userID string, data *domain.Operation) 
 		Name:   data.Name,
 		Color:  data.Color,
 		Group:  data.Group,
+		Hidden: &data.Hidden,
 
 		CreatedAt: updatedAt,
 		UpdatedAt: updatedAt,
@@ -290,6 +291,9 @@ func (r *OperationMongo) UpdateOperation(id string, userID string, data *domain.
 	}
 	if data.Group != "" {
 		newData["group"] = data.Group
+	}
+	if data.Hidden != nil {
+		newData["hidden"] = data.Hidden
 	}
 	newData["updatedAt"] = time.Now()
 

@@ -39,11 +39,12 @@ func (r *RoleMongo) CreateRole(userID string, data *domain.RoleInput) (domain.Ro
 	// newId := count + 1
 
 	newRole := domain.Role{
-		Name:  data.Name,
-		Code:  data.Code,
-		Value: data.Value,
+		Name:   data.Name,
+		Code:   data.Code,
+		Value:  data.Value,
+		Hidden: *data.Hidden,
 		// UserID:    userIDPrimitive,
-		SortOrder: data.SortOrder,
+		SortOrder: *data.SortOrder,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
@@ -173,7 +174,7 @@ func (r *RoleMongo) FindRole(input *domain.RoleFilter) (domain.Response[domain.R
 	return response, nil
 }
 
-func (r *RoleMongo) UpdateRole(id string, data interface{}) (domain.Role, error) {
+func (r *RoleMongo) UpdateRole(id string, data *domain.RoleInput) (domain.Role, error) {
 	var result domain.Role
 	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
 	defer cancel()
@@ -187,7 +188,24 @@ func (r *RoleMongo) UpdateRole(id string, data interface{}) (domain.Role, error)
 
 	filter := bson.M{"_id": idPrimitive}
 
-	_, err = collection.UpdateOne(ctx, filter, bson.M{"$set": data})
+	newData := bson.M{}
+	if data.Code != "" {
+		newData["code"] = data.Code
+	}
+	if data.Name != "" {
+		newData["name"] = data.Name
+	}
+	if data.Value != nil {
+		newData["value"] = data.Value
+	}
+	if data.Hidden != nil {
+		newData["hidden"] = data.Hidden
+	}
+	if data.SortOrder != nil {
+		newData["sortOrder"] = data.SortOrder
+	}
+
+	_, err = collection.UpdateOne(ctx, filter, bson.M{"$set": newData})
 	if err != nil {
 		return result, err
 	}

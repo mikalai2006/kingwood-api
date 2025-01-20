@@ -151,15 +151,15 @@ func (r *TaskStatusMongo) UpdateTaskStatus(id string, userID string, data *domai
 	if data.Animate != nil {
 		newData["animate"] = data.Animate
 	}
-	if data.Start != nil {
-		newData["start"] = data.Start
-	}
-	if data.Finish != nil {
-		newData["finish"] = data.Finish
-	}
-	if data.Process != nil {
-		newData["process"] = data.Process
-	}
+	// if data.Start != nil {
+	// 	newData["start"] = data.Start
+	// }
+	// if data.Finish != nil {
+	// 	newData["finish"] = data.Finish
+	// }
+	// if data.Process != nil {
+	// 	newData["process"] = data.Process
+	// }
 	if data.Status != "" {
 		newData["status"] = data.Status
 	}
@@ -170,7 +170,7 @@ func (r *TaskStatusMongo) UpdateTaskStatus(id string, userID string, data *domai
 		if val, ok := data.Props["status"]; ok {
 			if val == -1.0 {
 				newDel := make(map[string]interface{})
-				newDel["user_id"] = userID
+				newDel["userId"] = userID
 				newDel["del_at"] = time.Now()
 				newProps["del"] = newDel
 			}

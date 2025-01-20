@@ -80,7 +80,7 @@ func (r *PayMongo) FindPay(input *domain.PayFilter) (domain.Response[domain.Pay]
 					"as":   "images",
 					"let":  bson.D{{Key: "serviceId", Value: bson.D{{"$toString", "$_id"}}}},
 					"pipeline": mongo.Pipeline{
-						bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$service_id", "$$serviceId"}}}}},
+						bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$serviceId", "$$serviceId"}}}}},
 					},
 				},
 			}},
@@ -108,7 +108,7 @@ func (r *PayMongo) FindPay(input *domain.PayFilter) (domain.Response[domain.Pay]
 					"from": TblPost,
 					"as":   "posts",
 					// "localField":   "_id",
-					// "foreignField": "service_id",
+					// "foreignField": "serviceId",
 					"let": bson.D{{Key: "postId", Value: "$postId"}},
 					"pipeline": mongo.Pipeline{
 						bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$_id", "$$postId"}}}}},
@@ -120,7 +120,7 @@ func (r *PayMongo) FindPay(input *domain.PayFilter) (domain.Response[domain.Pay]
 			bson.D{{Key: "$lookup", Value: bson.M{
 				"from": TblRole,
 				"as":   "rolea",
-				// "localField":   "user_id",
+				// "localField":   "userId",
 				// "foreignField": "_id",
 				"let": bson.D{{Key: "roleId", Value: "$roleId"}},
 				"pipeline": mongo.Pipeline{
@@ -188,7 +188,7 @@ func (r *PayMongo) CreatePay(userID string, data *domain.Pay) (*domain.Pay, erro
 	}
 
 	// var existPay domain.Pay
-	// r.db.Collection(TblPay).FindOne(ctx, bson.M{"node_id": Pay.NodeID, "user_id": userIDPrimitive}).Decode(&existPay)
+	// r.db.Collection(TblPay).FindOne(ctx, bson.M{"node_id": Pay.NodeID, "userId": userIDPrimitive}).Decode(&existPay)
 
 	// if existPay.NodeID.IsZero() {
 	updatedAt := data.UpdatedAt

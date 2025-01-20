@@ -212,7 +212,7 @@ func (h *HandlerV1) CreateOrExistPay(c *gin.Context, input *domain.Pay) (*domain
 
 	// existPays, err := h.services.Pay.FindPay(domain.RequestParams{
 	// 	Options: domain.Options{Limit: 1},
-	// 	Filter:  bson.D{{"node_id", input.NodeID}, {"user_id", userIDPrimitive}},
+	// 	Filter:  bson.D{{"node_id", input.NodeID}, {"userId", userIDPrimitive}},
 	// })
 	// if err != nil {
 	// 	appG.ResponseError(http.StatusBadRequest, err, nil)

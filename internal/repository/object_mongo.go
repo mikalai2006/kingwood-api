@@ -57,7 +57,7 @@ func (r *ObjectMongo) FindObject(input *domain.ObjectFilter) (domain.Response[do
 	// pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
 	// 	"from": "users",
 	// 	"as":   "usera",
-	// 	// "localField":   "user_id",
+	// 	// "localField":   "userId",
 	// 	// "foreignField": "_id",
 	// 	"let": bson.D{{Key: "userId", Value: "$userId"}},
 	// 	"pipeline": mongo.Pipeline{
@@ -69,10 +69,10 @@ func (r *ObjectMongo) FindObject(input *domain.ObjectFilter) (domain.Response[do
 	// 				"from": tblImage,
 	// 				"as":   "images",
 	// 				// "localField":   "_id",
-	// 				// "foreignField": "service_id",
+	// 				// "foreignField": "serviceId",
 	// 				"let": bson.D{{Key: "serviceId", Value: bson.D{{"$toString", "$_id"}}}},
 	// 				"pipeline": mongo.Pipeline{
-	// 					bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$service_id", "$$serviceId"}}}}},
+	// 					bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$serviceId", "$$serviceId"}}}}},
 	// 				},
 	// 			},
 	// 		}},
@@ -150,7 +150,7 @@ func (r *ObjectMongo) FindObjectWithWorkers(params domain.RequestParams) (domain
 	// pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
 	// 	"from": "users",
 	// 	"as":   "usera",
-	// 	// "localField":   "user_id",
+	// 	// "localField":   "userId",
 	// 	// "foreignField": "_id",
 	// 	"let": bson.D{{Key: "userId", Value: "$userId"}},
 	// 	"pipeline": mongo.Pipeline{
@@ -162,10 +162,10 @@ func (r *ObjectMongo) FindObjectWithWorkers(params domain.RequestParams) (domain
 	// 				"from": tblImage,
 	// 				"as":   "images",
 	// 				// "localField":   "_id",
-	// 				// "foreignField": "service_id",
+	// 				// "foreignField": "serviceId",
 	// 				"let": bson.D{{Key: "serviceId", Value: bson.D{{"$toString", "$_id"}}}},
 	// 				"pipeline": mongo.Pipeline{
-	// 					bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$service_id", "$$serviceId"}}}}},
+	// 					bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$serviceId", "$$serviceId"}}}}},
 	// 				},
 	// 			},
 	// 		}},
@@ -218,7 +218,7 @@ func (r *ObjectMongo) CreateObject(userID string, data *domain.Object) (*domain.
 	}
 
 	// var existObject domain.Object
-	// r.db.Collection(TblObject).FindOne(ctx, bson.M{"node_id": Object.NodeID, "user_id": userIDPrimitive}).Decode(&existObject)
+	// r.db.Collection(TblObject).FindOne(ctx, bson.M{"node_id": Object.NodeID, "userId": userIDPrimitive}).Decode(&existObject)
 
 	// if existObject.NodeID.IsZero() {
 	updatedAt := data.UpdatedAt

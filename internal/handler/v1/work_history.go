@@ -184,7 +184,7 @@ func (h *HandlerV1) CreateOrExistWorkHistory(c *gin.Context, input *domain.WorkH
 
 	// existWorks, err := h.services.Work.FindWork(domain.RequestParams{
 	// 	Options: domain.Options{Limit: 1},
-	// 	Filter:  bson.D{{"node_id", input.NodeID}, {"user_id", userIDPrimitive}},
+	// 	Filter:  bson.D{{"node_id", input.NodeID}, {"userId", userIDPrimitive}},
 	// })
 	// if err != nil {
 	// 	appG.ResponseError(http.StatusBadRequest, err, nil)

@@ -65,7 +65,7 @@ func (r *OrderMongo) FindOrder(input *domain.OrderFilter) (domain.Response[domai
 	// pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
 	// 	"from": "users",
 	// 	"as":   "usera",
-	// 	// "localField":   "user_id",
+	// 	// "localField":   "userId",
 	// 	// "foreignField": "_id",
 	// 	"let": bson.D{{Key: "userId", Value: "$userId"}},
 	// 	"pipeline": mongo.Pipeline{
@@ -77,10 +77,10 @@ func (r *OrderMongo) FindOrder(input *domain.OrderFilter) (domain.Response[domai
 	// 				"from": tblImage,
 	// 				"as":   "images",
 	// 				// "localField":   "_id",
-	// 				// "foreignField": "service_id",
+	// 				// "foreignField": "serviceId",
 	// 				"let": bson.D{{Key: "serviceId", Value: bson.D{{"$toString", "$_id"}}}},
 	// 				"pipeline": mongo.Pipeline{
-	// 					bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$service_id", "$$serviceId"}}}}},
+	// 					bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$serviceId", "$$serviceId"}}}}},
 	// 				},
 	// 			},
 	// 		}},
@@ -146,7 +146,7 @@ func (r *OrderMongo) FindOrder(input *domain.OrderFilter) (domain.Response[domai
 	pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
 		"from": tblObject,
 		"as":   "objecta",
-		// "localField":   "user_id",
+		// "localField":   "userId",
 		// "foreignField": "_id",
 		"let": bson.D{{Key: "objectId", Value: "$objectId"}},
 		"pipeline": mongo.Pipeline{
@@ -270,7 +270,7 @@ func (r *OrderMongo) CreateOrder(userID string, data *domain.Order) (*domain.Ord
 	}
 
 	// var existOrder domain.Order
-	// r.db.Collection(TblOrder).FindOne(ctx, bson.M{"node_id": Order.NodeID, "user_id": userIDPrimitive}).Decode(&existOrder)
+	// r.db.Collection(TblOrder).FindOne(ctx, bson.M{"node_id": Order.NodeID, "userId": userIDPrimitive}).Decode(&existOrder)
 
 	// if existOrder.NodeID.IsZero() {
 	updatedAt := data.UpdatedAt

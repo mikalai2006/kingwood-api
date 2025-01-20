@@ -66,6 +66,7 @@ type AuthInput struct {
 	Strategy string `json:"strategy" bson:"strategy"`
 	TypePay  *int64 `json:"typePay" bson:"typePay" form:"typePay"`
 	Oklad    *int64 `json:"oklad" bson:"oklad" form:"oklad"`
+	Birthday string `json:"birthday" bson:"birthday" form:"birthday"`
 
 	// VkID     string `json:"vkId" bson:"vk_id" form:"vkId"`
 	// AppleID  string `json:"appleId" bson:"apple_id" form:"appleId"`
@@ -111,7 +112,7 @@ type AuthInputMongo struct {
 
 type DataForClaims struct {
 	// Roles  []string `json:"roles" bson:"roles"`
-	UserID string `json:"user_id" bson:"user_id"`
+	UserID string `json:"userId" bson:"userId"`
 	// Md     int      `json:"md" bson:"md"`
 	UID string `json:"uid" bson:"uid"`
 }

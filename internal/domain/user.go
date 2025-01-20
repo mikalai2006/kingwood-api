@@ -18,6 +18,7 @@ type User struct {
 	// Avatar string `json:"avatar" bson:"avatar"`
 	Online   *bool   `json:"online" bson:"online" form:"online"`
 	Hidden   int     `json:"hidden" bson:"hidden" form:"hidden"`
+	Archive  int     `json:"archive" bson:"archive" form:"archive"`
 	Birthday *string `json:"birthday" bson:"birthday" form:"birthday"`
 	// Post   []int  `json:"post" bson:"post"`
 	// Verify   bool   `json:"verify" bson:"verify"`
@@ -55,7 +56,8 @@ type UserInput struct {
 	// Login    string `json:"login" bson:"login" form:"login"`
 	Phone string `json:"phone" bson:"phone" form:"phone"`
 	// Avatar string `json:"avatar" bson:"avatar" form:"avatar"`
-	Hidden int `json:"hidden" bson:"hidden" form:"hidden"`
+	Hidden  int  `json:"hidden" bson:"hidden" form:"hidden"`
+	Archive *int `json:"archive" bson:"archive" form:"archive"`
 	// Post   []int  `json:"post" bson:"post" form:"post"`
 	RoleId   string   `json:"roleId" bson:"roleId" form:"roleId"`
 	PostId   string   `json:"postId" bson:"postId" form:"postId"`
@@ -79,7 +81,8 @@ type UserInputMongo struct {
 	// Login    string `json:"login" bson:"login" form:"login"`
 	Phone string `json:"phone" bson:"phone" form:"phone"`
 	// Avatar string `json:"avatar" bson:"avatar" form:"avatar"`
-	Hidden int `json:"hidden" bson:"hidden" form:"hidden"`
+	Hidden  int `json:"hidden" bson:"hidden" form:"hidden"`
+	Archive int `json:"archive" bson:"archive" form:"archive"`
 	// Post   []int  `json:"post" bson:"post" form:"post"`
 	RoleId   primitive.ObjectID `json:"roleId" bson:"roleId" form:"roleId"`
 	PostId   primitive.ObjectID `json:"postId" bson:"postId" form:"postId"`
@@ -96,10 +99,12 @@ type UserInputMongo struct {
 }
 
 type UserFilter struct {
-	ID     []string            `json:"id,omitempty"`
-	UserId []string            `json:"userId,omitempty"`
-	RoleId []string            `json:"roleId,omitempty"`
-	Sort   []*FilterSortParams `json:"sort,omitempty"`
-	Limit  *int                `json:"$limit,omitempty"`
-	Skip   *int                `json:"$skip,omitempty"`
+	ID      []string            `json:"id,omitempty"`
+	UserId  []string            `json:"userId,omitempty"`
+	RoleId  []string            `json:"roleId,omitempty"`
+	Hidden  *int                `json:"hidden,omitempty"`
+	Archive *int                `json:"archive,omitempty"`
+	Sort    []*FilterSortParams `json:"sort,omitempty"`
+	Limit   *int                `json:"$limit,omitempty"`
+	Skip    *int                `json:"$skip,omitempty"`
 }

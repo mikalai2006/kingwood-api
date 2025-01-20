@@ -44,7 +44,7 @@ func (s *MessageRoomService) DeleteMessageRoom(id string) (domain.MessageRoom, e
 	result, err := s.repo.DeleteMessageRoom(id)
 
 	// Delete dir with images for room.
-	pathOfRemove := fmt.Sprintf("public/%s/%s/%s", result.UserID.Hex(), "message", result.ID.Hex())
+	pathOfRemove := fmt.Sprintf("public/%s/%s", "message", result.ID.Hex())
 	os.RemoveAll(pathOfRemove)
 
 	// isEmpty, err := utils.IsEmptyDir(pathOfRemove)

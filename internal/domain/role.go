@@ -13,6 +13,7 @@ type Role struct {
 	Code      string    `json:"code" bson:"code"`
 	Value     []string  `json:"value" bson:"value"`
 	SortOrder int64     `json:"sortOrder" bson:"sortOrder"`
+	Hidden    int       `json:"hidden" bson:"hidden" form:"hidden"`
 	CreatedAt time.Time `json:"createdAt" bson:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt" bson:"updatedAt"`
 }
@@ -22,7 +23,8 @@ type RoleInput struct {
 	Name      string   `json:"name" bson:"name"`
 	Code      string   `json:"code" bson:"code"`
 	Value     []string `json:"value" bson:"value"`
-	SortOrder int64    `json:"sortOrder" bson:"sortOrder"`
+	Hidden    *int     `json:"hidden" bson:"hidden" form:"hidden"`
+	SortOrder *int64   `json:"sortOrder" bson:"sortOrder"`
 }
 
 type RoleFilter struct {

@@ -139,14 +139,13 @@ func (h *HandlerV1) DeleteUser(c *gin.Context) {
 
 	id := c.Param("id")
 
-	// var input domain.User
-	// if err := c.BindJSON(&input); err != nil {
-	// 	newErrorResponse(c, http.StatusInternalServerError, err.Error())
+	userID, err := middleware.GetUID(c)
+	if err != nil {
+		appG.ResponseError(http.StatusUnauthorized, err, nil)
+		return
+	}
 
-	// 	return
-	// }
-
-	user, err := h.Services.User.DeleteUser(id) // , input
+	user, err := h.Services.User.DeleteUser(id, userID)
 	if err != nil {
 		appG.ResponseError(http.StatusBadRequest, err, nil)
 		return

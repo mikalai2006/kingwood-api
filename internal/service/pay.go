@@ -58,7 +58,7 @@ func (s *PayService) UpdatePay(id string, userID string, data *domain.PayInput) 
 			newProps = prevResult.Props
 		}
 		newItem := make(map[string]interface{})
-		newItem["user_id"] = userID
+		newItem["userId"] = userID
 		newItem["item"] = domain.PayInput{
 			UserID:    prevResult.UserID,
 			WorkerId:  prevResult.WorkerId,

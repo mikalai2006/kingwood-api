@@ -1,12 +1,14 @@
 package v1
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"slices"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 	"github.com/mikalai2006/kingwood-api/internal/domain"
 	"github.com/mikalai2006/kingwood-api/internal/middleware"
 	"github.com/mikalai2006/kingwood-api/internal/utils"
@@ -98,13 +100,23 @@ func (h *HandlerV1) updateRole(c *gin.Context) {
 
 	id := c.Param("id")
 
-	var input domain.RoleInput
-	data, err := utils.BindAndValid(c, &input)
-	if err != nil {
-		appG.ResponseError(http.StatusBadRequest, err, nil)
+	// var input domain.RoleInput
+	// data, err := utils.BindAndValid(c, &input)
+	// if err != nil {
+	// 	appG.ResponseError(http.StatusBadRequest, err, nil)
+	// 	return
+	// }
+	// // fmt.Println(data)
+	var a map[string]json.RawMessage //  map[string]interface{}
+	if er := c.ShouldBindBodyWith(&a, binding.JSON); er != nil {
+		appG.ResponseError(http.StatusBadRequest, er, nil)
 		return
 	}
-	// fmt.Println(data)
+	data, er := utils.BindJSON2[domain.RoleInput](a)
+	if er != nil {
+		appG.ResponseError(http.StatusBadRequest, er, nil)
+		return
+	}
 
 	document, err := h.Services.Role.UpdateRole(id, &data)
 	if err != nil {

@@ -3,22 +3,12 @@ package repository
 import (
 	"reflect"
 
-	"github.com/mikalai2006/kingwood-api/graph/model"
 	"github.com/mikalai2006/kingwood-api/internal/config"
 	"github.com/mikalai2006/kingwood-api/internal/domain"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
-
-type Action interface {
-	FindAction(params domain.RequestParams) (domain.Response[model.Action], error)
-	GetAllAction(params domain.RequestParams) (domain.Response[model.Action], error)
-	CreateAction(userID string, tag *model.ActionInput) (*model.Action, error)
-	UpdateAction(id string, userID string, data *model.ActionInput) (*model.Action, error)
-	DeleteAction(id string) (model.Action, error)
-	GqlGetActions(params domain.RequestParams) ([]*model.Action, error)
-}
 
 type Authorization interface {
 	CreateAuth(auth *domain.AuthInputMongo) (string, error)
@@ -165,7 +155,7 @@ type Role interface {
 	CreateRole(userID string, data *domain.RoleInput) (domain.Role, error)
 	GetRole(id string) (domain.Role, error)
 	FindRole(filter *domain.RoleFilter) (domain.Response[domain.Role], error)
-	UpdateRole(id string, data interface{}) (domain.Role, error)
+	UpdateRole(id string, data *domain.RoleInput) (domain.Role, error)
 	DeleteRole(id string) (domain.Role, error)
 }
 
@@ -180,7 +170,6 @@ type Post interface {
 
 type Repositories struct {
 	AppError
-	Action
 	Post
 	Authorization
 	Lang
@@ -205,7 +194,6 @@ type Repositories struct {
 func NewRepositories(mongodb *mongo.Database, i18n config.I18nConfig) *Repositories {
 	return &Repositories{
 		AppError:      NewAppErrorMongo(mongodb, i18n),
-		Action:        NewActionMongo(mongodb, i18n),
 		Post:          NewPostMongo(mongodb, i18n),
 		Authorization: NewAuthMongo(mongodb),
 		Lang:          NewLangMongo(mongodb, i18n),

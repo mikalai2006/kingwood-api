@@ -37,7 +37,7 @@ func (s *WorkTimeService) CreateWorkTime(userID string, data *domain.WorkTime) (
 		return nil, err
 	}
 	// existReview, err := s.repo.FindReview(domain.RequestParams{
-	// 	Filter:  bson.M{"node_id": review.NodeID, "user_id": userIDPrimitive},
+	// 	Filter:  bson.M{"node_id": review.NodeID, "userId": userIDPrimitive},
 	// 	Options: domain.Options{Limit: 1},
 	// })
 	// if err != nil {
