@@ -88,6 +88,21 @@ func (r *UserMongo) Iam(userID string) (domain.User, error) {
 	}}})
 	pipe = append(pipe, bson.D{{Key: "$set", Value: bson.M{"roleObject": bson.M{"$first": "$rolea"}}}})
 
+	// add populate auth.
+	pipe = append(pipe, bson.D{{
+		Key: "$lookup",
+		Value: bson.M{
+			"from":         TblAuth,
+			"as":           "auths",
+			"localField":   "userId",
+			"foreignField": "_id",
+			// "let": bson.D{{Key: "roleId", Value: bson.D{{"$toString", "$roleId"}}}},
+			// "pipeline": mongo.Pipeline{
+			// 	bson.D{{Key: "$match", Value: bson.M{"$_id": bson.M{"$eq": [2]string{"$roleId", "$$_id"}}}}},
+			// },
+		},
+	}})
+	pipe = append(pipe, bson.D{{Key: "$set", Value: bson.M{"auth": bson.M{"$first": "$auths"}}}})
 	// add populate.
 	// pipe = append(pipe, bson.D{{
 	// 	Key: "$lookup",
