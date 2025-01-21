@@ -34,6 +34,7 @@ func (r *AuthMongo) CreateAuth(user *domain.AuthInputMongo) (string, error) {
 	// 	Strategy: user.Strategy,
 	// 	Password: user.Password,
 	// }
+	fmt.Println(user)
 
 	// if !user.Role.IsZero() {
 	// 	roleID, err := primitive.ObjectIDFromHex(user.Role)
@@ -227,16 +228,19 @@ func (r *AuthMongo) GetByCredentials(auth *domain.AuthInput) (domain.Auth, error
 	// if err := cursor.Err(); err != nil {
 	// 	return user, err
 	// }
+	fmt.Println("user: ", user)
 	if err := r.db.Collection(tblUsers).FindOne(ctx, bson.M{
 		"userId": user.ID,
 	}).Decode(&user.User); err != nil {
 		return user, err
 	}
-	if err := r.db.Collection(TblRole).FindOne(ctx, bson.M{
-		"_id": user.User.RoleId,
-	}).Decode(&user.Role); err != nil {
-		return user, err
-	}
+
+	// add roles.
+	// if err := r.db.Collection(TblRole).FindOne(ctx, bson.M{
+	// 	"_id": user.User.RoleId,
+	// }).Decode(&user.Role); err != nil {
+	// 	return user, err
+	// }
 
 	if err := r.db.Collection(tblUsers).FindOneAndUpdate(ctx, bson.M{
 		"userId": user.ID,
