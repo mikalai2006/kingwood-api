@@ -38,11 +38,16 @@ func (r *RoleMongo) CreateRole(userID string, data *domain.RoleInput) (domain.Ro
 	// }
 	// newId := count + 1
 
+	hidden := 0
+	if data.Hidden != nil {
+		hidden = *data.Hidden
+	}
+
 	newRole := domain.Role{
 		Name:   data.Name,
 		Code:   data.Code,
 		Value:  data.Value,
-		Hidden: *data.Hidden,
+		Hidden: hidden,
 		// UserID:    userIDPrimitive,
 		SortOrder: *data.SortOrder,
 		CreatedAt: time.Now(),
