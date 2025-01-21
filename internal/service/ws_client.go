@@ -18,7 +18,7 @@ const (
 	writeWait = 10 * time.Second
 
 	// Time allowed to read the next pong message from the peer.
-	pongWait = 20 * time.Second
+	pongWait = 10 * time.Second
 
 	// Send pings to peer with this period. Must be less than pongWait.
 	pingPeriod = (pongWait * 9) / 10
@@ -27,11 +27,16 @@ const (
 	maxMessageSize = 1024 //512
 )
 
+var (
+	newline = []byte{'\n'}
+	space   = []byte{' '}
+)
+
 var upgrader = websocket.Upgrader{
-	ReadBufferSize:   1024,
-	WriteBufferSize:  1024,
-	HandshakeTimeout: 240,
-	Subprotocols:     []string{"JSON"},
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+	// HandshakeTimeout: 240,
+	Subprotocols: []string{"JSON"},
 	CheckOrigin: func(r *http.Request) bool {
 		return true
 	},
@@ -61,9 +66,9 @@ func (c *Client) Read() {
 	}()
 
 	fmt.Println("Read: ", c.UserId)
-	c.Conn.SetReadDeadline(time.Now().Add(10 * time.Second))
 	for {
 		var msg domain.MessageSocket
+		c.Conn.SetReadDeadline(time.Now().Add(writeWait))
 		err := c.Conn.ReadJSON(&msg)
 		if err != nil {
 			fmt.Println("Error Read: ", err)
@@ -131,12 +136,24 @@ func (c *Client) Read() {
 			} else {
 				c.Conn.SetReadLimit(maxMessageSize)
 				c.Conn.SetReadDeadline(time.Now().Add(pongWait))
-				c.Conn.SetPongHandler(func(string) error { c.Conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
+				// c.Conn.SetPongHandler(func(string) error { c.Conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
 			}
 
 		}
 
-		c.hub.broadcast <- msg
+		c.Conn.SetPongHandler(func(string) error { c.Conn.SetReadDeadline(time.Now().Add(pongWait)); fmt.Println("Pong"); return nil })
+		for {
+			_, _, err := c.Conn.ReadMessage()
+			if err != nil {
+				if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+					fmt.Printf("error: %v", err)
+				}
+				break
+			}
+			// message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
+			c.hub.broadcast <- msg
+		}
+		// c.hub.broadcast <- msg
 	}
 }
 
@@ -167,6 +184,7 @@ func (c *Client) Write() {
 			}
 		case <-ticker.C:
 			c.Conn.SetWriteDeadline(time.Now().Add(writeWait))
+			fmt.Println("Ping")
 			if err := c.Conn.WriteMessage(websocket.PingMessage, nil); err != nil {
 				return
 			}
