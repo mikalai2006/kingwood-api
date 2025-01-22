@@ -56,7 +56,7 @@ type UserInput struct {
 	// Login    string `json:"login" bson:"login" form:"login"`
 	Phone string `json:"phone" bson:"phone" form:"phone"`
 	// Avatar string `json:"avatar" bson:"avatar" form:"avatar"`
-	Hidden  int  `json:"hidden" bson:"hidden" form:"hidden"`
+	Hidden  *int `json:"hidden" bson:"hidden" form:"hidden"`
 	Archive *int `json:"archive" bson:"archive" form:"archive"`
 	// Post   []int  `json:"post" bson:"post" form:"post"`
 	RoleId   string   `json:"roleId" bson:"roleId" form:"roleId"`

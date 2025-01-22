@@ -589,10 +589,13 @@ func (r *UserMongo) CreateUser(userID string, data *domain.User) (*domain.User, 
 		return nil, err
 	}
 
-	err = r.db.Collection(tblUsers).FindOne(ctx, bson.M{"_id": res.InsertedID}).Decode(&result)
+	// err = r.db.Collection(tblUsers).FindOne(ctx, bson.M{"_id": res.InsertedID}).Decode(&result)
+	insertedID := res.InsertedID.(primitive.ObjectID).Hex()
+	user, err := r.GetUser(insertedID)
 	if err != nil {
 		return nil, err
 	}
+	result = &user
 
 	return result, nil
 }
@@ -668,6 +671,9 @@ func (r *UserMongo) UpdateUser(id string, user *domain.UserInput) (domain.User, 
 	}
 	if user.Archive != nil {
 		newData["archive"] = user.Archive
+	}
+	if user.Hidden != nil {
+		newData["hidden"] = user.Hidden
 	}
 	if user.RoleId != "" {
 		IDPrimitive, err := primitive.ObjectIDFromHex(user.RoleId)
