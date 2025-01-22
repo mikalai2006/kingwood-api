@@ -141,7 +141,11 @@ func (c *Client) Read() {
 
 		}
 
-		c.Conn.SetPongHandler(func(string) error { c.Conn.SetReadDeadline(time.Now().Add(pongWait)); fmt.Println("Pong"); return nil })
+		c.Conn.SetPongHandler(func(string) error {
+			c.Conn.SetReadDeadline(time.Now().Add(pongWait))
+			//fmt.Println("Pong");
+			return nil
+		})
 		for {
 			_, _, err := c.Conn.ReadMessage()
 			if err != nil {
@@ -184,7 +188,7 @@ func (c *Client) Write() {
 			}
 		case <-ticker.C:
 			c.Conn.SetWriteDeadline(time.Now().Add(writeWait))
-			fmt.Println("Ping")
+			// fmt.Println("Ping")
 			if err := c.Conn.WriteMessage(websocket.PingMessage, nil); err != nil {
 				return
 			}
