@@ -123,7 +123,8 @@ type Verification struct {
 }
 
 type AuthPublicData struct {
-	Login string `json:"login" bson:"login"`
+	Login     string `json:"login" bson:"login"`
+	PushToken string `json:"pushToken" bson:"pushToken"`
 }
 
 type ResetPassword struct {
