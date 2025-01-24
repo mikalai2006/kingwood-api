@@ -117,12 +117,16 @@ func (s *OrderService) UpdateOrder(id string, userID string, data *domain.OrderI
 		// fmt.Println("dataUpdate result: ", *result.MalyarComplete, *result.StolyarComplete, *result.MontajComplete)
 		if (result.MalyarComplete != nil && *result.MalyarComplete == statusCompleted) &&
 			(result.StolyarComplete != nil && *result.StolyarComplete == statusCompleted) &&
-			(result.MontajComplete != nil && *result.MontajComplete == statusCompleted) {
+			(result.MontajComplete != nil && *result.MontajComplete == statusCompleted) &&
+			(result.ShlifComplete != nil && *result.ShlifComplete == statusCompleted) {
 			val := int64(100)
 			dataUpdate.Status = &val
 		} else {
-			val := int64(1)
-			dataUpdate.Status = &val
+			statusOrder := int64(1)
+			if len(result.Tasks) == 0 {
+				statusOrder = 0
+			}
+			dataUpdate.Status = &statusOrder
 		}
 
 		result, err = s.repo.UpdateOrder(id, userID, &dataUpdate)

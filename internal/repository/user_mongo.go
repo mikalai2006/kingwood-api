@@ -508,6 +508,54 @@ func (r *UserMongo) FindUser(input *domain.UserFilter) (domain.Response[domain.U
 	}})
 	pipe = append(pipe, bson.D{{Key: "$set", Value: bson.M{"auth": bson.M{"$first": "$auths"}}}})
 
+	// tasks.
+	pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
+		"from": tblTaskWorker,
+		"as":   "taskWorkers",
+		"let":  bson.D{{Key: "id", Value: "$_id"}},
+		"pipeline": mongo.Pipeline{
+			bson.D{{Key: "$match", Value: bson.M{
+				"$expr": bson.M{"$eq": [2]string{"$workerId", "$$id"}},
+			}}},
+
+			// object.
+			bson.D{{Key: "$lookup", Value: bson.M{
+				"from": tblObject,
+				"as":   "objecta",
+				"let":  bson.D{{Key: "objectId", Value: "$objectId"}},
+				"pipeline": mongo.Pipeline{
+					bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$_id", "$$objectId"}}}}},
+					bson.D{{"$limit", 1}},
+				},
+			}}},
+			bson.D{{Key: "$set", Value: bson.M{"object": bson.M{"$first": "$objecta"}}}},
+
+			// order.
+			bson.D{{Key: "$lookup", Value: bson.M{
+				"from": TblOrder,
+				"as":   "ordera",
+				"let":  bson.D{{Key: "orderId", Value: "$orderId"}},
+				"pipeline": mongo.Pipeline{
+					bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$_id", "$$orderId"}}}}},
+					bson.D{{"$limit", 1}},
+				},
+			}}},
+			bson.D{{Key: "$set", Value: bson.M{"order": bson.M{"$first": "$ordera"}}}},
+
+			// task.
+			bson.D{{Key: "$lookup", Value: bson.M{
+				"from": tblTask,
+				"as":   "taska",
+				"let":  bson.D{{Key: "taskId", Value: "$taskId"}},
+				"pipeline": mongo.Pipeline{
+					bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$_id", "$$taskId"}}}}},
+					bson.D{{"$limit", 1}},
+				},
+			}}},
+			bson.D{{Key: "$set", Value: bson.M{"task": bson.M{"$first": "$taska"}}}},
+		},
+	}}})
+
 	skip := 0
 	limit := 10
 	if input.Skip != nil {

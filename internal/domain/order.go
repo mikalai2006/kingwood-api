@@ -21,6 +21,7 @@ type Order struct {
 	Priority        *int64             `json:"priority" bson:"priority" form:"priority"`
 	StolyarComplete *int64             `json:"stolyarComplete" bson:"stolyarComplete" form:"stolyarComplete"`
 	MalyarComplete  *int64             `json:"malyarComplete" bson:"malyarComplete" form:"malyarComplete"`
+	ShlifComplete   *int64             `json:"shlifComplete" bson:"shlifComplete" form:"shlifComplete"`
 	GoComplete      *int64             `json:"goComplete" bson:"goComplete" form:"goComplete"`
 	DateOtgruzka    time.Time          `json:"dateOtgruzka" bson:"dateOtgruzka" form:"dateOtgruzka"`
 	MontajComplete  *int64             `json:"montajComplete" bson:"montajComplete" form:"montajComplete"`
@@ -30,6 +31,7 @@ type Order struct {
 
 	// User User `json:"user" bson:"user"`
 	Object Object `json:"object" bson:"object"`
+	Tasks  []Task `json:"tasks" bson:"tasks" form:"tasks"`
 
 	Year      int       `json:"year" bson:"year"`
 	CreatedAt time.Time `json:"createdAt" bson:"createdAt"`
@@ -51,6 +53,7 @@ type OrderInput struct {
 	Priority        *int64             `json:"priority" bson:"priority" form:"priority"`
 	StolyarComplete *int64             `json:"stolyarComplete" bson:"stolyarComplete" form:"stolyarComplete"`
 	MalyarComplete  *int64             `json:"malyarComplete" bson:"malyarComplete" form:"malyarComplete"`
+	ShlifComplete   *int64             `json:"shlifComplete" bson:"shlifComplete" form:"shlifComplete"`
 	GoComplete      *int64             `json:"goComplete" bson:"goComplete" form:"goComplete"`
 	DateOtgruzka    time.Time          `json:"dateOtgruzka" bson:"dateOtgruzka" form:"dateOtgruzka"`
 	MontajComplete  *int64             `json:"montajComplete" bson:"montajComplete" form:"montajComplete"`
@@ -82,6 +85,7 @@ type OrderFilter struct {
 	StolyarComplete *int64     `json:"stolyarComplete"`
 	MalyarComplete  *int64     `json:"malyarComplete"`
 	GoComplete      *int64     `json:"goComplete"`
+	ShlifComplete   *int64     `json:"shlifComplete"`
 	MontajComplete  *int64     `json:"montajComplete"`
 	Year            *int       `json:"year"`
 	From            *time.Time `json:"from,omitempty"`

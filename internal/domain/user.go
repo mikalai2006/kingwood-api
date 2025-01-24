@@ -30,11 +30,12 @@ type User struct {
 	// Bal    int      `json:"bal" bson:"bal"`
 	// Role   Role     `json:"role" bson:"role"`
 
-	RoleId   primitive.ObjectID `json:"roleId" bson:"roleId" form:"roleId" primitive:"true"`
-	PostId   primitive.ObjectID `json:"postId" bson:"postId" form:"postId"`
-	TypeWork []string           `json:"typeWork" bson:"typeWork"`
-	TypePay  *int64             `json:"typePay" bson:"typePay"`
-	Oklad    *int64             `json:"oklad" bson:"oklad"`
+	RoleId      primitive.ObjectID `json:"roleId" bson:"roleId" form:"roleId" primitive:"true"`
+	PostId      primitive.ObjectID `json:"postId" bson:"postId" form:"postId"`
+	TypeWork    []string           `json:"typeWork" bson:"typeWork"`
+	TypePay     *int64             `json:"typePay" bson:"typePay"`
+	Oklad       *int64             `json:"oklad" bson:"oklad"`
+	TaskWorkers []TaskWorker       `json:"taskWorkers" bson:"taskWorkers" form:"taskWorkers"`
 	// Workes     *int64             `json:"workes" bson:"workes"`
 
 	PostObject Post    `json:"postObject" bson:"postObject"`

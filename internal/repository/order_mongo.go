@@ -140,9 +140,14 @@ func (r *OrderMongo) FindOrder(input *domain.OrderFilter) (domain.Response[domai
 	if input.MalyarComplete != nil {
 		q = append(q, bson.E{"malyarComplete", input.MalyarComplete})
 	}
+	if input.ShlifComplete != nil {
+		q = append(q, bson.E{"shlifComplete", input.ShlifComplete})
+	}
 
 	pipe := mongo.Pipeline{}
 	pipe = append(pipe, bson.D{{"$match", q}})
+
+	// object.
 	pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
 		"from": tblObject,
 		"as":   "objecta",
@@ -155,6 +160,50 @@ func (r *OrderMongo) FindOrder(input *domain.OrderFilter) (domain.Response[domai
 		},
 	}}})
 	pipe = append(pipe, bson.D{{Key: "$set", Value: bson.M{"object": bson.M{"$first": "$objecta"}}}})
+
+	// tasks.
+	pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
+		"from": tblTask,
+		"as":   "tasks",
+		// "localField":   "userId",
+		// "foreignField": "_id",
+		"let": bson.D{{Key: "id", Value: "$_id"}},
+		"pipeline": mongo.Pipeline{
+			bson.D{{Key: "$match", Value: bson.M{
+				"$expr": bson.M{"$eq": [2]string{"$orderId", "$$id"}},
+			}}},
+			// workers.
+			bson.D{{Key: "$lookup", Value: bson.M{
+				"from":         tblTaskWorker,
+				"as":           "workers",
+				"localField":   "_id",
+				"foreignField": "taskId",
+				"pipeline": mongo.Pipeline{
+					bson.D{{Key: "$lookup", Value: bson.M{
+						"from": tblUsers,
+						"as":   "usera",
+						"let":  bson.D{{Key: "workerId", Value: "$workerId"}},
+						"pipeline": mongo.Pipeline{
+							bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$_id", "$$workerId"}}}}},
+							bson.D{{"$limit", 1}},
+							bson.D{{
+								Key: "$lookup",
+								Value: bson.M{
+									"from": tblImage,
+									"as":   "images",
+									"let":  bson.D{{Key: "serviceId", Value: bson.D{{"$toString", "$_id"}}}},
+									"pipeline": mongo.Pipeline{
+										bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$serviceId", "$$serviceId"}}}}},
+									},
+								},
+							}},
+						},
+					}}},
+					bson.D{{Key: "$set", Value: bson.M{"worker": bson.M{"$first": "$usera"}}}},
+				},
+			}}},
+		},
+	}}})
 
 	if input.Sort != nil && len(input.Sort) > 0 {
 		sortParam := bson.D{}
@@ -298,6 +347,7 @@ func (r *OrderMongo) CreateOrder(userID string, data *domain.Order) (*domain.Ord
 		Group:           data.Group,
 		StolyarComplete: &defaultStatus,
 		MalyarComplete:  &defaultStatus,
+		ShlifComplete:   &defaultStatus,
 		GoComplete:      &defaultStatus,
 		MontajComplete:  &defaultStatus,
 		Year:            time.Now().Year(),
@@ -382,6 +432,9 @@ func (r *OrderMongo) UpdateOrder(id string, userID string, data *domain.OrderInp
 	}
 	if data.MalyarComplete != nil {
 		newData["malyarComplete"] = data.MalyarComplete
+	}
+	if data.ShlifComplete != nil {
+		newData["shlifComplete"] = data.ShlifComplete
 	}
 	if data.GoComplete != nil {
 		newData["goComplete"] = data.GoComplete
