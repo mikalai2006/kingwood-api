@@ -282,6 +282,14 @@ func (r *WorkHistoryMongo) CreateWorkHistory(userID string, data *domain.WorkHis
 	// if er := cursor.All(ctx, &allTaskByOrder); er != nil {
 	// 	return result, er
 	// }
+	date := time.Now()
+	if !data.Date.IsZero() {
+		date = data.Date
+	}
+	defaultTotal := int64(0)
+	if data.Total != nil {
+		defaultTotal = *data.Total
+	}
 
 	newTask := domain.WorkHistoryInput{
 		OrderId:     data.OrderId,
@@ -291,10 +299,12 @@ func (r *WorkHistoryMongo) CreateWorkHistory(userID string, data *domain.WorkHis
 		OperationId: data.OperationId,
 		UserID:      userIDPrimitive,
 		Status:      &data.Status,
+		Date:        date,
 		From:        data.From,
 		To:          data.To,
 		WorkTimeId:  data.WorkTimeId,
 		Oklad:       data.Oklad,
+		Total:       &defaultTotal,
 
 		CreatedAt: updatedAt,
 		UpdatedAt: updatedAt,
@@ -354,6 +364,9 @@ func (r *WorkHistoryMongo) UpdateWorkHistory(id string, userID string, data *dom
 	}
 	if !data.To.IsZero() {
 		newData["to"] = data.To
+	}
+	if data.Total != nil {
+		newData["total"] = data.Total
 	}
 	newData["updatedAt"] = time.Now()
 

@@ -17,9 +17,11 @@ type WorkHistory struct {
 	WorkerId    primitive.ObjectID `json:"workerId" bson:"workerId" primitive:"true"`
 	OperationId primitive.ObjectID `json:"operationId" bson:"operationId" primitive:"true"`
 	Status      int                `json:"status" bson:"status"`
+	Date        time.Time          `json:"date" bson:"date"`
 	From        time.Time          `json:"from" bson:"from"`
 	To          time.Time          `json:"to" bson:"to"`
 	Oklad       *int64             `json:"oklad" bson:"oklad"`
+	Total       *int64             `json:"total" bson:"total"`
 
 	// Task       Task       `json:"task" bson:"task"`
 	// TaskStatus TaskStatus `json:"taskStatus" bson:"taskStatus"`
@@ -42,9 +44,11 @@ type WorkHistoryInput struct {
 	WorkerId    primitive.ObjectID `json:"workerId" bson:"workerId" primitive:"true"`
 	OperationId primitive.ObjectID `json:"operationId" bson:"operationId" primitive:"true"`
 	Status      *int               `json:"status" bson:"status"`
+	Date        time.Time          `json:"date" bson:"date"`
 	From        time.Time          `json:"from" bson:"from"`
 	To          time.Time          `json:"to" bson:"to"`
 	Oklad       *int64             `json:"oklad" bson:"oklad"`
+	Total       *int64             `json:"total" bson:"total"`
 
 	CreatedAt time.Time `json:"createdAt" bson:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt" bson:"updatedAt"`

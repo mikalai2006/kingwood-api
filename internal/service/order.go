@@ -109,28 +109,33 @@ func (s *OrderService) CreateOrder(userID string, data *domain.Order) (*domain.O
 func (s *OrderService) UpdateOrder(id string, userID string, data *domain.OrderInput) (*domain.Order, error) {
 	result, err := s.repo.UpdateOrder(id, userID, data)
 
-	if data.StolyarComplete != nil || data.MalyarComplete != nil || data.MontajComplete != nil {
-		statusCompleted := int64(1)
+	// allOrderTasks, err := s.Services.Task.FindTaskPopulate(domain.TaskFilter{OrderId: []string{id}})
+	// if err != nil {
+	// 	return result, err
+	// }
 
-		dataUpdate := domain.OrderInput{}
-		// fmt.Println("dataUpdate: ", data.MalyarComplete, data.StolyarComplete, data.MontajComplete)
-		// fmt.Println("dataUpdate result: ", *result.MalyarComplete, *result.StolyarComplete, *result.MontajComplete)
-		if (result.MalyarComplete != nil && *result.MalyarComplete == statusCompleted) &&
-			(result.StolyarComplete != nil && *result.StolyarComplete == statusCompleted) &&
-			(result.MontajComplete != nil && *result.MontajComplete == statusCompleted) &&
-			(result.ShlifComplete != nil && *result.ShlifComplete == statusCompleted) {
-			val := int64(100)
-			dataUpdate.Status = &val
-		} else {
-			statusOrder := int64(1)
-			if len(result.Tasks) == 0 {
-				statusOrder = 0
-			}
-			dataUpdate.Status = &statusOrder
-		}
+	// if data.StolyarComplete != nil || data.MalyarComplete != nil || data.MontajComplete != nil {
+	// 	statusCompleted := int64(1)
 
-		result, err = s.repo.UpdateOrder(id, userID, &dataUpdate)
-	}
+	// 	dataUpdate := domain.OrderInput{}
+	// 	// fmt.Println("dataUpdate: ", data.MalyarComplete, data.StolyarComplete, data.MontajComplete)
+	// 	// fmt.Println("dataUpdate result: ", *result.MalyarComplete, *result.StolyarComplete, *result.MontajComplete)
+	// 	if (result.MalyarComplete != nil && *result.MalyarComplete == statusCompleted) &&
+	// 		(result.StolyarComplete != nil && *result.StolyarComplete == statusCompleted) &&
+	// 		(result.MontajComplete != nil && *result.MontajComplete == statusCompleted) &&
+	// 		(result.ShlifComplete != nil && *result.ShlifComplete == statusCompleted) {
+	// 		val := int64(100)
+	// 		dataUpdate.Status = &val
+	// 	} else {
+	// 		statusOrder := int64(1)
+	// 		if len(result.Tasks) == 0 {
+	// 			statusOrder = 0
+	// 		}
+	// 		dataUpdate.Status = &statusOrder
+	// 	}
+
+	// 	result, err = s.repo.UpdateOrder(id, userID, &dataUpdate)
+	// }
 
 	s.Hub.HandleMessage(domain.MessageSocket{Type: "message", Method: "PATCH", Sender: userID, Recipient: "", Content: result, ID: "room1", Service: "order"})
 

@@ -193,6 +193,7 @@ func (r *WorkTimeMongo) FindWorkTimePopulate(input domain.WorkTimeFilter) (domai
 		// "foreignField": "_id",
 		"let": bson.D{
 			{Key: "workerId", Value: "$workerId"},
+			{Key: "id", Value: "$_id"},
 			{Key: "from", Value: "$from"},
 			{Key: "to", Value: "$to"},
 		},
@@ -201,9 +202,10 @@ func (r *WorkTimeMongo) FindWorkTimePopulate(input domain.WorkTimeFilter) (domai
 				{"$match", bson.D{
 					{"$expr", bson.D{
 						{"$and", bson.A{
+							bson.D{{"$eq", bson.A{"$workTimeId", "$$id"}}},
 							bson.D{{"$eq", bson.A{"$workerId", "$$workerId"}}},
-							bson.D{{"$lte", bson.A{"$to", "$$to"}}},
-							bson.D{{"$gte", bson.A{"$from", "$$from"}}},
+							// bson.D{{"$lte", bson.A{"$to", "$$to"}}},
+							// bson.D{{"$gte", bson.A{"$from", "$$from"}}},
 						}},
 					}},
 				}},

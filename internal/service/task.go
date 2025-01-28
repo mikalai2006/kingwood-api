@@ -300,6 +300,7 @@ func (s *TaskService) CheckStatusOrder(userID string, result *domain.Task) (*dom
 
 	// var montajComplete int64
 	// montajComplete = 1
+	allTasksStatus := []string{}
 
 	for i := range tasksForOrder.Data {
 		fmt.Println("range ", i, ":", tasksForOrder.Data[i].Status, tasksForOrder.Data[i].Operation.Group)
@@ -338,12 +339,16 @@ func (s *TaskService) CheckStatusOrder(userID string, result *domain.Task) (*dom
 			}
 			// montajComplete.Status = 0
 		}
+
+		if !utils.Contains(allTasksStatus, tasksForOrder.Data[i].Status) {
+			allTasksStatus = append(allTasksStatus, tasksForOrder.Data[i].Status)
+		}
 	}
 
 	if stolyarComplete.CountAll == stolyarComplete.CountFinish && stolyarComplete.CountAll > 0 {
 		stolyarComplete.Status = 1
 	}
-	if (malyarComplete.CountAll == malyarComplete.CountFinish && malyarComplete.CountAll > 0) || malyarComplete.CountAll == 0 {
+	if malyarComplete.CountAll == malyarComplete.CountFinish && malyarComplete.CountAll > 0 { // || malyarComplete.CountAll == 0
 		malyarComplete.Status = 1
 	}
 	if goComplete.CountAll == goComplete.CountFinish && goComplete.CountAll > 0 {
@@ -352,15 +357,15 @@ func (s *TaskService) CheckStatusOrder(userID string, result *domain.Task) (*dom
 	if montajComplete.CountFinish > 0 && montajComplete.CountAll > 0 { //montajComplete.CountAll == montajComplete.CountFinish
 		montajComplete.Status = 1
 	}
-	if (shlifComplete.CountAll == shlifComplete.CountFinish && shlifComplete.CountAll > 0) || shlifComplete.CountAll == 0 {
+	if shlifComplete.CountAll == shlifComplete.CountFinish && shlifComplete.CountAll > 0 { // || shlifComplete.CountAll == 0
 		shlifComplete.Status = 1
 	}
-	// если нет задания упаковки.
-	if goComplete.CountAll == 0 {
-		if stolyarComplete.Status == 1 && (malyarComplete.Status == 1 || malyarComplete.CountAll == 0) && (shlifComplete.Status == 1 || shlifComplete.CountAll == 0) {
-			goComplete.Status = 1
-		}
-	}
+	// // если нет задания упаковки.
+	// if goComplete.CountAll == 0 {
+	// 	if stolyarComplete.Status == 1 && (malyarComplete.Status == 1 || malyarComplete.CountAll == 0) && (shlifComplete.Status == 1 || shlifComplete.CountAll == 0) {
+	// 		goComplete.Status = 1
+	// 	}
+	// }
 
 	// fmt.Println(stolyarComplete, malyarComplete, montajComplete)
 
@@ -378,7 +383,20 @@ func (s *TaskService) CheckStatusOrder(userID string, result *domain.Task) (*dom
 
 	dataUpdateOrder.ShlifComplete = &shlifComplete.Status
 
-	// fmt.Println("update taskWorker dataUpdateOrder: ", *dataUpdateOrder.StolyarComplete, *dataUpdateOrder.MalyarComplete)
+	// если у всех заданий статус - finish, помечаем заказ как выполненный
+	if len(allTasksStatus) == 1 {
+		if allTasksStatus[0] == "finish" {
+			status := int64(100)
+			dataUpdateOrder.Status = &status
+		}
+	} else if len(allTasksStatus) == 0 {
+		status := int64(0)
+		dataUpdateOrder.Status = &status
+	} else {
+		status := int64(1)
+		dataUpdateOrder.Status = &status
+	}
+	fmt.Println("update taskWorker dataUpdateOrder: ", *dataUpdateOrder.Status, allTasksStatus, len(allTasksStatus))
 
 	_, err = s.orderService.UpdateOrder(result.OrderId.Hex(), userID, dataUpdateOrder)
 	if err != nil {
