@@ -94,7 +94,7 @@ func (s *OrderService) CreateOrder(userID string, data *domain.Order) (*domain.O
 		_, err = s.Services.Notify.CreateNotify(userID, &domain.NotifyInput{
 			UserTo:  users[i].ID.Hex(),
 			Title:   domain.NewOrderTitle,
-			Message: fmt.Sprintf(domain.NewOrder, result.Name, result.Object.Name),
+			Message: fmt.Sprintf(domain.NewOrder, result.Number, result.Name, result.Object.Name),
 		})
 	}
 

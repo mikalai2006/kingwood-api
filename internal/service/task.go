@@ -67,7 +67,7 @@ func (s *TaskService) CreateTask(userID string, data *domain.Task) (*domain.Task
 	}
 
 	// add taskWorker for all users by work on the object.
-	allOperation, err := s.orderService.operationService.FindOperation(domain.RequestParams{Filter: bson.D{}})
+	allOperation, err := s.Services.Operation.FindOperation(domain.RequestParams{Filter: bson.D{}})
 	if err != nil {
 		return result, err
 	}
@@ -360,12 +360,12 @@ func (s *TaskService) CheckStatusOrder(userID string, result *domain.Task) (*dom
 	if shlifComplete.CountAll == shlifComplete.CountFinish && shlifComplete.CountAll > 0 { // || shlifComplete.CountAll == 0
 		shlifComplete.Status = 1
 	}
-	// // если нет задания упаковки.
-	// if goComplete.CountAll == 0 {
-	// 	if stolyarComplete.Status == 1 && (malyarComplete.Status == 1 || malyarComplete.CountAll == 0) && (shlifComplete.Status == 1 || shlifComplete.CountAll == 0) {
-	// 		goComplete.Status = 1
-	// 	}
-	// }
+	// если нет задания упаковки.
+	if goComplete.CountAll == 0 {
+		if stolyarComplete.Status == 1 && (malyarComplete.Status == 1 || malyarComplete.CountAll == 0) && (shlifComplete.Status == 1 || shlifComplete.CountAll == 0) {
+			goComplete.Status = 1
+		}
+	}
 
 	// fmt.Println(stolyarComplete, malyarComplete, montajComplete)
 
@@ -383,20 +383,23 @@ func (s *TaskService) CheckStatusOrder(userID string, result *domain.Task) (*dom
 
 	dataUpdateOrder.ShlifComplete = &shlifComplete.Status
 
+	if len(allTasksStatus) > 0 {
+		// если есть задания, меняем статус заказа на 1
+		status := int64(1)
+		dataUpdateOrder.Status = &status
+	} else if len(allTasksStatus) == 0 {
+		// если нет заданий, меняем статус заказа на 0
+		status := int64(0)
+		dataUpdateOrder.Status = &status
+	}
 	// если у всех заданий статус - finish, помечаем заказ как выполненный
 	if len(allTasksStatus) == 1 {
 		if allTasksStatus[0] == "finish" {
 			status := int64(100)
 			dataUpdateOrder.Status = &status
 		}
-	} else if len(allTasksStatus) == 0 {
-		status := int64(0)
-		dataUpdateOrder.Status = &status
-	} else {
-		status := int64(1)
-		dataUpdateOrder.Status = &status
 	}
-	fmt.Println("update taskWorker dataUpdateOrder: ", *dataUpdateOrder.Status, allTasksStatus, len(allTasksStatus))
+	fmt.Println("update taskWorker dataUpdateOrder: ", dataUpdateOrder.Status, allTasksStatus, len(allTasksStatus))
 
 	_, err = s.orderService.UpdateOrder(result.OrderId.Hex(), userID, dataUpdateOrder)
 	if err != nil {

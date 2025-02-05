@@ -51,7 +51,7 @@ func (h *HandlerV1) Init(api *gin.RouterGroup) {
 			h.registerAppError(authenticated)
 			h.RegisterImage(authenticated)
 			h.registerMessage(authenticated)
-			h.registerMessageRoom(authenticated)
+			h.registerMessageStatus(authenticated)
 			h.registerOrder(authenticated)
 			h.registerObject(authenticated)
 			h.registerPay(authenticated)

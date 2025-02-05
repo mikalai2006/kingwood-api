@@ -105,7 +105,7 @@ func (r *OrderMongo) FindOrder(input *domain.OrderFilter) (domain.Response[domai
 	if input.ID != nil && len(input.ID) > 0 {
 		ids := []primitive.ObjectID{}
 		for key, _ := range input.ID {
-			idObjectPrimitive, err := primitive.ObjectIDFromHex(*input.ID[key])
+			idObjectPrimitive, err := primitive.ObjectIDFromHex(input.ID[key])
 			if err != nil {
 				return response, err
 			}
@@ -137,11 +137,17 @@ func (r *OrderMongo) FindOrder(input *domain.OrderFilter) (domain.Response[domai
 	if input.StolyarComplete != nil {
 		q = append(q, bson.E{"stolyarComplete", input.StolyarComplete})
 	}
+	if input.ShlifComplete != nil {
+		q = append(q, bson.E{"shlifComplete", input.ShlifComplete})
+	}
 	if input.MalyarComplete != nil {
 		q = append(q, bson.E{"malyarComplete", input.MalyarComplete})
 	}
-	if input.ShlifComplete != nil {
-		q = append(q, bson.E{"shlifComplete", input.ShlifComplete})
+	if input.GoComplete != nil {
+		q = append(q, bson.E{"goComplete", input.GoComplete})
+	}
+	if input.MontajComplete != nil {
+		q = append(q, bson.E{"montajComplete", input.MontajComplete})
 	}
 
 	pipe := mongo.Pipeline{}
@@ -362,7 +368,7 @@ func (r *OrderMongo) CreateOrder(userID string, data *domain.Order) (*domain.Ord
 	}
 
 	insertedID := res.InsertedID.(primitive.ObjectID).Hex()
-	insertedItem, err := r.FindOrder(&domain.OrderFilter{ID: []*string{&insertedID}})
+	insertedItem, err := r.FindOrder(&domain.OrderFilter{ID: []string{insertedID}})
 	// r.db.Collection(TblOrder).FindOne(ctx, bson.M{"_id": res.InsertedID}).Decode(&result)
 	if err != nil {
 		return nil, err
@@ -488,7 +494,7 @@ func (r *OrderMongo) UpdateOrder(id string, userID string, data *domain.OrderInp
 	// 	}
 	// }
 
-	orders, err := r.FindOrder(&domain.OrderFilter{ID: []*string{&id}})
+	orders, err := r.FindOrder(&domain.OrderFilter{ID: []string{id}})
 	// collection.FindOne(ctx, filter).Decode(&result)
 	if err != nil {
 		return result, err

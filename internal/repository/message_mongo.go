@@ -50,12 +50,16 @@ func (r *MessageMongo) FindMessage(params *domain.MessageFilter) (domain.Respons
 		// }
 		q = append(q, bson.E{"_id", params.ID})
 	}
-	if params.RoomID != nil && len(params.RoomID) > 0 {
-		// userProductIDPrimitive, err := primitive.ObjectIDFromHex(*params.UserProductID)
-		// if err != nil {
-		// 	return response, err
-		// }
-		q = append(q, bson.E{"roomId", bson.D{{"$in", params.RoomID}}})
+	if params.OrderID != nil && len(params.OrderID) > 0 {
+		ids := []primitive.ObjectID{}
+		for i := range params.OrderID {
+			idPrimitive, err := primitive.ObjectIDFromHex(params.OrderID[i])
+			if err != nil {
+				return response, err
+			}
+			ids = append(ids, idPrimitive)
+		}
+		q = append(q, bson.E{"orderId", bson.D{{"$in", ids}}})
 	}
 
 	// // Filter by products id.
@@ -153,7 +157,7 @@ func (r *MessageMongo) CreateMessage(userID string, input *domain.MessageInput) 
 	if err != nil {
 		return nil, err
 	}
-	roomIDPrimitive, err := primitive.ObjectIDFromHex(input.RoomID)
+	orderIDPrimitive, err := primitive.ObjectIDFromHex(input.OrderID)
 	if err != nil {
 		return nil, err
 	}
@@ -169,11 +173,11 @@ func (r *MessageMongo) CreateMessage(userID string, input *domain.MessageInput) 
 	newMessage := domain.MessageInputMongo{
 		UserID: userIDPrimitive,
 		// ProductID: Message.ProductID,
-		Status:    1,
+		// Status:    1,
 		Message:   input.Message,
 		Props:     input.Props,
 		Images:    input.Images,
-		RoomID:    roomIDPrimitive,
+		OrderID:   orderIDPrimitive,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
@@ -231,9 +235,9 @@ func (r *MessageMongo) UpdateMessage(id string, userID string, data *domain.Mess
 	if data.Message != "" {
 		newData["message"] = data.Message
 	}
-	if data.Status != 0 {
-		newData["status"] = data.Status
-	}
+	// if data.Status != 0 {
+	// 	newData["status"] = data.Status
+	// }
 	if data.Props != nil {
 		newData["props"] = data.Props
 	}

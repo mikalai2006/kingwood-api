@@ -1,18 +1,19 @@
 package service
 
 import (
+	"os"
+
 	"github.com/mikalai2006/kingwood-api/internal/domain"
 	"github.com/mikalai2006/kingwood-api/internal/repository"
 )
 
 type MessageService struct {
-	repo               repository.Message
-	Hub                *Hub
-	messageRoomService *MessageRoomService
+	repo repository.Message
+	Hub  *Hub
 }
 
-func NewMessageService(repo repository.Message, Hub *Hub, messageRoomService *MessageRoomService) *MessageService {
-	return &MessageService{repo: repo, Hub: Hub, messageRoomService: messageRoomService}
+func NewMessageService(repo repository.Message, Hub *Hub) *MessageService {
+	return &MessageService{repo: repo, Hub: Hub}
 }
 
 func (s *MessageService) FindMessage(params *domain.MessageFilter) (domain.Response[domain.Message], error) {
@@ -41,7 +42,15 @@ func (s *MessageService) UpdateMessage(id string, userID string, data *domain.Me
 }
 
 func (s *MessageService) DeleteMessage(id string) (domain.Message, error) {
-	return s.repo.DeleteMessage(id)
+	result, err := s.repo.DeleteMessage(id)
+
+	// Delete images for message.
+	for i := range result.Images {
+		pathOfRemove := result.Images[i]
+		os.Remove(pathOfRemove)
+	}
+
+	return result, err
 }
 
 func (s *MessageService) GetGroupForUser(userID string) ([]domain.MessageGroupForUser, error) {

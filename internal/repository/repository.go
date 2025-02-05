@@ -29,11 +29,11 @@ type Message interface {
 	DeleteMessage(id string) (domain.Message, error)
 	GetGroupForUser(userID string) ([]domain.MessageGroupForUser, error)
 }
-type MessageRoom interface {
-	CreateMessageRoom(userID string, message *domain.MessageRoom) (*domain.MessageRoom, error)
-	FindMessageRoom(params *domain.MessageRoomFilter) (domain.Response[domain.MessageRoom], error)
-	UpdateMessageRoom(id string, userID string, data *domain.MessageRoom) (*domain.MessageRoom, error)
-	DeleteMessageRoom(id string) (domain.MessageRoom, error)
+type MessageStatus interface {
+	CreateMessageStatus(userID string, message *domain.MessageStatus) (*domain.MessageStatus, error)
+	FindMessageStatus(params *domain.MessageStatusFilter) (domain.Response[domain.MessageStatus], error)
+	UpdateMessageStatus(id string, userID string, data *domain.MessageStatus) (*domain.MessageStatus, error)
+	DeleteMessageStatus(id string) (domain.MessageStatus, error)
 	GetGroupForUser(userID string) ([]domain.MessageGroupForUser, error)
 }
 
@@ -178,7 +178,7 @@ type Repositories struct {
 	Order
 	User
 	Message
-	MessageRoom
+	MessageStatus
 	Task
 	TaskStatus
 	TaskWorker
@@ -202,7 +202,7 @@ func NewRepositories(mongodb *mongo.Database, i18n config.I18nConfig) *Repositor
 		Order:         NewOrderMongo(mongodb, i18n),
 		User:          NewUserMongo(mongodb, i18n),
 		Message:       NewMessageMongo(mongodb, i18n),
-		MessageRoom:   NewMessageRoomMongo(mongodb, i18n),
+		MessageStatus: NewMessageStatusMongo(mongodb, i18n),
 		Task:          NewTaskMongo(mongodb, i18n),
 		TaskWorker:    NewTaskWorkerMongo(mongodb, i18n),
 		TaskStatus:    NewTaskStatusMongo(mongodb, i18n),

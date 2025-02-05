@@ -77,15 +77,15 @@ type OrderInput struct {
 // }
 
 type OrderFilter struct {
-	ID              []*string  `json:"id,omitempty"`
+	ID              []string   `json:"id,omitempty"`
 	Name            *string    `json:"name,omitempty"`
-	Group           []*string  `json:"group,omitempty"`
+	Group           []string   `json:"group,omitempty"`
 	Status          *int64     `json:"status"`
 	ObjectId        []string   `json:"objectId" bson:"objectId" form:"objectId"`
 	StolyarComplete *int64     `json:"stolyarComplete"`
+	ShlifComplete   *int64     `json:"shlifComplete"`
 	MalyarComplete  *int64     `json:"malyarComplete"`
 	GoComplete      *int64     `json:"goComplete"`
-	ShlifComplete   *int64     `json:"shlifComplete"`
 	MontajComplete  *int64     `json:"montajComplete"`
 	Year            *int       `json:"year"`
 	From            *time.Time `json:"from,omitempty"`

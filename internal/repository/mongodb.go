@@ -21,7 +21,7 @@ const (
 	TblAuth          = "auths"
 	TblOrder         = "order"
 	TblMessage       = "message"
-	TblMessageRoom   = "messageRoom"
+	TblMessageStatus = "messageStatus"
 	TblMessageImage  = "messageImage"
 	TblQuestion      = "question"
 	TblTicket        = "ticket"

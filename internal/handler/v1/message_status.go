@@ -10,15 +10,15 @@ import (
 	"github.com/mikalai2006/kingwood-api/pkg/app"
 )
 
-func (h *HandlerV1) registerMessageRoom(router *gin.RouterGroup) {
-	messageRoom := router.Group("/message_room")
-	messageRoom.POST("", h.CreateMessageRoom)
-	messageRoom.POST("/find", h.FindMessageRoom)
-	messageRoom.PATCH("/:id", h.UpdateMessageRoom)
-	messageRoom.DELETE("/:id", h.DeleteMessageRoom)
+func (h *HandlerV1) registerMessageStatus(router *gin.RouterGroup) {
+	MessageStatus := router.Group("/message_status")
+	MessageStatus.POST("", h.CreateMessageStatus)
+	MessageStatus.POST("/find", h.FindMessageStatus)
+	MessageStatus.PATCH("/:id", h.UpdateMessageStatus)
+	MessageStatus.DELETE("/:id", h.DeleteMessageStatus)
 }
 
-func (h *HandlerV1) CreateMessageRoom(c *gin.Context) {
+func (h *HandlerV1) CreateMessageStatus(c *gin.Context) {
 	appG := app.Gin{C: c}
 	// userID, err := middleware.GetUID(c)
 	// if err != nil {
@@ -27,7 +27,7 @@ func (h *HandlerV1) CreateMessageRoom(c *gin.Context) {
 	// 	return
 	// }
 
-	var input *domain.MessageRoom
+	var input *domain.MessageStatus
 	if er := c.BindJSON(&input); er != nil {
 		appG.ResponseError(http.StatusBadRequest, er, nil)
 		return
@@ -38,7 +38,7 @@ func (h *HandlerV1) CreateMessageRoom(c *gin.Context) {
 	// 	appG.ResponseError(http.StatusBadRequest, err, nil)
 	// 	return
 	// }
-	node, err := h.CreateOrExistMessageRoom(c, input)
+	node, err := h.CreateOrExistMessageStatus(c, input)
 	if err != nil {
 		appG.ResponseError(http.StatusBadRequest, err, nil)
 		return
@@ -60,7 +60,7 @@ func (h *HandlerV1) CreateMessageRoom(c *gin.Context) {
 // @Failure 500 {object} domain.ErrorResponse
 // @Failure default {object} domain.ErrorResponse
 // @Router /api/node_audit [get].
-func (h *HandlerV1) FindMessageRoom(c *gin.Context) {
+func (h *HandlerV1) FindMessageStatus(c *gin.Context) {
 	appG := app.Gin{C: c}
 
 	// authData, err := middleware.GetAuthFromCtx(c)
@@ -71,13 +71,13 @@ func (h *HandlerV1) FindMessageRoom(c *gin.Context) {
 	// 	appG.ResponseError(http.StatusBadRequest, err, nil)
 	// 	return
 	// }
-	var input *domain.MessageRoomFilter
+	var input *domain.MessageStatusFilter
 	if er := c.BindJSON(&input); er != nil {
 		appG.ResponseError(http.StatusBadRequest, er, nil)
 		return
 	}
 	// fmt.Println(params)
-	Nodes, err := h.Services.MessageRoom.FindMessageRoom(input)
+	Nodes, err := h.Services.MessageStatus.FindMessageStatus(input)
 	if err != nil {
 		appG.ResponseError(http.StatusBadRequest, err, nil)
 		return
@@ -86,7 +86,7 @@ func (h *HandlerV1) FindMessageRoom(c *gin.Context) {
 	c.JSON(http.StatusOK, Nodes)
 }
 
-func (h *HandlerV1) UpdateMessageRoom(c *gin.Context) {
+func (h *HandlerV1) UpdateMessageStatus(c *gin.Context) {
 	appG := app.Gin{C: c}
 	userID, err := middleware.GetUID(c)
 	if err != nil {
@@ -113,13 +113,13 @@ func (h *HandlerV1) UpdateMessageRoom(c *gin.Context) {
 	// 	return
 	// }
 	// fmt.Println(data)
-	var input *domain.MessageRoom
+	var input *domain.MessageStatus
 	if er := c.BindJSON(&input); er != nil {
 		appG.ResponseError(http.StatusBadRequest, er, nil)
 		return
 	}
 
-	document, err := h.Services.MessageRoom.UpdateMessageRoom(id, userID, input)
+	document, err := h.Services.MessageStatus.UpdateMessageStatus(id, userID, input)
 	if err != nil {
 		appG.ResponseError(http.StatusInternalServerError, err, nil)
 		return
@@ -128,7 +128,7 @@ func (h *HandlerV1) UpdateMessageRoom(c *gin.Context) {
 	c.JSON(http.StatusOK, document)
 }
 
-func (h *HandlerV1) DeleteMessageRoom(c *gin.Context) {
+func (h *HandlerV1) DeleteMessageStatus(c *gin.Context) {
 	appG := app.Gin{C: c}
 
 	id := c.Param("id")
@@ -149,7 +149,7 @@ func (h *HandlerV1) DeleteMessageRoom(c *gin.Context) {
 	// 	return
 	// }
 
-	node, err := h.Services.MessageRoom.DeleteMessageRoom(id) // , input
+	node, err := h.Services.MessageStatus.DeleteMessageStatus(id) // , input
 	if err != nil {
 		// c.AbortWithError(http.StatusBadRequest, err)
 		appG.ResponseError(http.StatusBadRequest, err, nil)
@@ -159,7 +159,7 @@ func (h *HandlerV1) DeleteMessageRoom(c *gin.Context) {
 	c.JSON(http.StatusOK, node)
 }
 
-func (h *HandlerV1) CreateOrExistMessageRoom(c *gin.Context, input *domain.MessageRoom) (*domain.MessageRoom, error) {
+func (h *HandlerV1) CreateOrExistMessageStatus(c *gin.Context, input *domain.MessageStatus) (*domain.MessageStatus, error) {
 	appG := app.Gin{C: c}
 	userID, err := middleware.GetUID(c)
 	if err != nil {
@@ -178,7 +178,7 @@ func (h *HandlerV1) CreateOrExistMessageRoom(c *gin.Context, input *domain.Messa
 	// 	return nil, err
 	// }
 
-	var result *domain.MessageRoom
+	var result *domain.MessageStatus
 
 	// check exist product.
 	// domain.RequestParams{
@@ -190,7 +190,7 @@ func (h *HandlerV1) CreateOrExistMessageRoom(c *gin.Context, input *domain.Messa
 	// 	},
 	// }
 	orderID := input.OrderID.Hex()
-	existNode, err := h.Services.Order.FindOrder(&domain.OrderFilter{ID: []*string{&orderID}})
+	existNode, err := h.Services.Order.FindOrder(&domain.OrderFilter{ID: []string{orderID}})
 	if err != nil {
 		appG.ResponseError(http.StatusBadRequest, err, nil)
 		return nil, err
@@ -230,7 +230,7 @@ func (h *HandlerV1) CreateOrExistMessageRoom(c *gin.Context, input *domain.Messa
 	// } else {
 	// }
 	// create message.
-	result, err = h.Services.MessageRoom.CreateMessageRoom(userID, input)
+	result, err = h.Services.MessageStatus.CreateMessageStatus(userID, input)
 	if err != nil {
 		appG.ResponseError(http.StatusBadRequest, err, nil)
 		return result, err

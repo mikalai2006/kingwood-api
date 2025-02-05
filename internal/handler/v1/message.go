@@ -218,18 +218,10 @@ func (h *HandlerV1) CreateOrExistMessage(c *gin.Context, input *domain.MessageIn
 
 	var result *domain.Message
 
-	// check exist product.
-	// domain.RequestParams{
-	// 	Filter: bson.D{
-	// 		{"_id", input.ProductID},
-	// 	},
-	// 	Options: domain.Options{
-	// 		Limit: 1,
-	// 	},
-	// }
-	roomID, _ := primitive.ObjectIDFromHex(input.RoomID)
-	fmt.Println(roomID, input)
-	existRoom, err := h.Services.MessageRoom.FindMessageRoom(&domain.MessageRoomFilter{ID: &roomID})
+	// check exist order.
+	orderID, _ := primitive.ObjectIDFromHex(input.OrderID)
+	fmt.Println(orderID, input)
+	existRoom, err := h.Services.Order.FindOrder(&domain.OrderFilter{ID: []string{orderID.Hex()}})
 	if err != nil {
 		appG.ResponseError(http.StatusBadRequest, err, nil)
 		return nil, err
@@ -272,7 +264,7 @@ func (h *HandlerV1) CreateOrExistMessage(c *gin.Context, input *domain.MessageIn
 	// upload images.
 	var imageInput = &domain.MessageImage{}
 	imageInput.Service = "message"
-	imageInput.ServiceID = input.RoomID
+	imageInput.ServiceID = input.OrderID
 	imageInput.UserID = userID
 
 	paths, err := utils.UploadResizeMultipleFileForMessage(c, imageInput, "images", &h.imageConfig)

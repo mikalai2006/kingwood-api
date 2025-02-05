@@ -32,11 +32,11 @@ type Message interface {
 	GetGroupForUser(userID string) ([]domain.MessageGroupForUser, error)
 }
 
-type MessageRoom interface {
-	CreateMessageRoom(userID string, message *domain.MessageRoom) (*domain.MessageRoom, error)
-	FindMessageRoom(params *domain.MessageRoomFilter) (domain.Response[domain.MessageRoom], error)
-	UpdateMessageRoom(id string, userID string, data *domain.MessageRoom) (*domain.MessageRoom, error)
-	DeleteMessageRoom(id string) (domain.MessageRoom, error)
+type MessageStatus interface {
+	CreateMessageStatus(userID string, message *domain.MessageStatus) (*domain.MessageStatus, error)
+	FindMessageStatus(params *domain.MessageStatusFilter) (domain.Response[domain.MessageStatus], error)
+	UpdateMessageStatus(id string, userID string, data *domain.MessageStatus) (*domain.MessageStatus, error)
+	DeleteMessageStatus(id string) (domain.MessageStatus, error)
 	// GetGroupForUser(userID string) ([]domain.MessageGroupForUser, error)
 }
 
@@ -179,7 +179,7 @@ type Services struct {
 	Order
 	User
 	Message
-	MessageRoom
+	MessageStatus
 	Task
 	TaskWorker
 	TaskStatus
@@ -223,8 +223,8 @@ func NewServices(cfgService *ConfigServices) *Services {
 	Lang := NewLangService(cfgService.Repositories, cfgService.I18n)
 	Role := NewRoleService(cfgService.Repositories, cfgService.I18n)
 	Image := NewImageService(cfgService.Repositories.Image, cfgService.ImageService)
-	MessageRoom := NewMessageRoomService(cfgService.Repositories.MessageRoom, cfgService.Hub)
-	Message := NewMessageService(cfgService.Repositories.Message, cfgService.Hub, MessageRoom)
+	MessageStatus := NewMessageStatusService(cfgService.Repositories.MessageStatus, cfgService.Hub)
+	Message := NewMessageService(cfgService.Repositories.Message, cfgService.Hub)
 	Operation := NewOperationService(cfgService.Repositories.Operation, User)
 	Order := NewOrderService(cfgService.Repositories.Order, User, cfgService.Hub, Operation)
 	WorkTime := NewWorkTimeService(cfgService.Repositories.WorkTime, cfgService.Hub, User, TaskStatus)
@@ -242,7 +242,7 @@ func NewServices(cfgService *ConfigServices) *Services {
 		Lang:          Lang,
 		Image:         Image,
 		Message:       Message,
-		MessageRoom:   MessageRoom,
+		MessageStatus: MessageStatus,
 		Order:         Order,
 		Task:          Task,
 		TaskWorker:    TaskWorker,

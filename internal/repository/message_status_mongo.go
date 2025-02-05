@@ -11,21 +11,21 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-type MessageRoomMongo struct {
+type MessageStatusMongo struct {
 	db   *mongo.Database
 	i18n config.I18nConfig
 }
 
-func NewMessageRoomMongo(db *mongo.Database, i18n config.I18nConfig) *MessageRoomMongo {
-	return &MessageRoomMongo{db: db, i18n: i18n}
+func NewMessageStatusMongo(db *mongo.Database, i18n config.I18nConfig) *MessageStatusMongo {
+	return &MessageStatusMongo{db: db, i18n: i18n}
 }
 
-func (r *MessageRoomMongo) FindMessageRoom(params *domain.MessageRoomFilter) (domain.Response[domain.MessageRoom], error) {
+func (r *MessageStatusMongo) FindMessageStatus(params *domain.MessageStatusFilter) (domain.Response[domain.MessageStatus], error) {
 	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
 	defer cancel()
 
-	var results []domain.MessageRoom
-	var response domain.Response[domain.MessageRoom]
+	var results []domain.MessageStatus
+	var response domain.Response[domain.MessageStatus]
 	// filter, opts, err := CreateFilterAndOptions(params)
 	// if err != nil {
 	// 	return domain.Response[model.Node]{}, err
@@ -108,7 +108,7 @@ func (r *MessageRoomMongo) FindMessageRoom(params *domain.MessageRoomFilter) (do
 	pipe = append(pipe, bson.D{{"$limit", skip + limit}})
 	pipe = append(pipe, bson.D{{"$skip", skip}})
 
-	cursor, err := r.db.Collection(TblMessageRoom).Aggregate(ctx, pipe) // Find(ctx, params.Filter, opts)
+	cursor, err := r.db.Collection(TblMessageStatus).Aggregate(ctx, pipe) // Find(ctx, params.Filter, opts)
 	// cursor, err := r.db.Collection(TblNode).Find(ctx, filter, opts)
 	if err != nil {
 		return response, err
@@ -119,7 +119,7 @@ func (r *MessageRoomMongo) FindMessageRoom(params *domain.MessageRoomFilter) (do
 		return response, er
 	}
 
-	resultSlice := make([]domain.MessageRoom, len(results))
+	resultSlice := make([]domain.MessageStatus, len(results))
 	// for i, d := range results {
 	// 	resultSlice[i] = d
 	// }
@@ -131,7 +131,7 @@ func (r *MessageRoomMongo) FindMessageRoom(params *domain.MessageRoomFilter) (do
 	// 	return response, err
 	// }
 
-	response = domain.Response[domain.MessageRoom]{
+	response = domain.Response[domain.MessageStatus]{
 		Total: count,
 		Skip:  skip,
 		Limit: limit,
@@ -140,10 +140,10 @@ func (r *MessageRoomMongo) FindMessageRoom(params *domain.MessageRoomFilter) (do
 	return response, nil
 }
 
-func (r *MessageRoomMongo) CreateMessageRoom(userID string, data *domain.MessageRoom) (*domain.MessageRoom, error) {
-	var result *domain.MessageRoom
+func (r *MessageStatusMongo) CreateMessageStatus(userID string, data *domain.MessageStatus) (*domain.MessageStatus, error) {
+	var result *domain.MessageStatus
 
-	collection := r.db.Collection(TblMessageRoom)
+	collection := r.db.Collection(TblMessageStatus)
 
 	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
 	defer cancel()
@@ -160,7 +160,7 @@ func (r *MessageRoomMongo) CreateMessageRoom(userID string, data *domain.Message
 
 	statusDefault := 1
 
-	newMessageRoom := domain.MessageRoomMongo{
+	newMessageStatus := domain.MessageStatusMongo{
 		UserID:    userIDPrimitive,
 		OrderID:   data.OrderID,
 		Status:    &statusDefault,
@@ -169,12 +169,12 @@ func (r *MessageRoomMongo) CreateMessageRoom(userID string, data *domain.Message
 		UpdatedAt: time.Now(),
 	}
 
-	res, err := collection.InsertOne(ctx, newMessageRoom)
+	res, err := collection.InsertOne(ctx, newMessageStatus)
 	if err != nil {
 		return nil, err
 	}
 
-	err = r.db.Collection(TblMessageRoom).FindOne(ctx, bson.M{"_id": res.InsertedID}).Decode(&result)
+	err = r.db.Collection(TblMessageStatus).FindOne(ctx, bson.M{"_id": res.InsertedID}).Decode(&result)
 	if err != nil {
 		return nil, err
 	}
@@ -182,12 +182,12 @@ func (r *MessageRoomMongo) CreateMessageRoom(userID string, data *domain.Message
 	return result, nil
 }
 
-func (r *MessageRoomMongo) UpdateMessageRoom(id string, userID string, data *domain.MessageRoom) (*domain.MessageRoom, error) {
-	var result *domain.MessageRoom
+func (r *MessageStatusMongo) UpdateMessageStatus(id string, userID string, data *domain.MessageStatus) (*domain.MessageStatus, error) {
+	var result *domain.MessageStatus
 	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
 	defer cancel()
 
-	collection := r.db.Collection(TblMessageRoom)
+	collection := r.db.Collection(TblMessageStatus)
 
 	idPrimitive, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
@@ -259,7 +259,7 @@ func (r *MessageRoomMongo) UpdateMessageRoom(id string, userID string, data *dom
 	// if err != nil {
 	// 	return result, err
 	// }
-	resultResponse, err := r.FindMessageRoom(&domain.MessageRoomFilter{ID: &idPrimitive})
+	resultResponse, err := r.FindMessageStatus(&domain.MessageStatusFilter{ID: &idPrimitive})
 	if err != nil {
 		return result, err
 	}
@@ -271,12 +271,12 @@ func (r *MessageRoomMongo) UpdateMessageRoom(id string, userID string, data *dom
 	return result, nil
 }
 
-func (r *MessageRoomMongo) DeleteMessageRoom(id string) (domain.MessageRoom, error) {
+func (r *MessageStatusMongo) DeleteMessageStatus(id string) (domain.MessageStatus, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
 	defer cancel()
 
-	var result = domain.MessageRoom{}
-	collection := r.db.Collection(TblMessageRoom)
+	var result = domain.MessageStatus{}
+	collection := r.db.Collection(TblMessageStatus)
 	collectionMessage := r.db.Collection(TblMessage)
 
 	idPrimitive, err := primitive.ObjectIDFromHex(id)
@@ -311,7 +311,7 @@ func (r *MessageRoomMongo) DeleteMessageRoom(id string) (domain.MessageRoom, err
 	return result, nil
 }
 
-func (r *MessageRoomMongo) GetGroupForUser(userID string) ([]domain.MessageGroupForUser, error) {
+func (r *MessageStatusMongo) GetGroupForUser(userID string) ([]domain.MessageGroupForUser, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
 	defer cancel()
 

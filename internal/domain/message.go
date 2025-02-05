@@ -10,7 +10,7 @@ type Message struct {
 	ID     primitive.ObjectID `json:"id" bson:"_id,omitempty"`
 	UserID primitive.ObjectID `json:"userId" bson:"userId"`
 	// ProductID primitive.ObjectID     `json:"productId" bson:"productId"`
-	RoomID  primitive.ObjectID     `json:"roomId" bson:"roomId"`
+	OrderID primitive.ObjectID     `json:"orderId" bson:"orderId"`
 	Status  int                    `json:"status" bson:"status"`
 	Message string                 `json:"message" bson:"message"`
 	Props   map[string]interface{} `json:"props" bson:"props"`
@@ -27,8 +27,8 @@ type MessageInputMongo struct {
 	ID     primitive.ObjectID `json:"id" bson:"_id,omitempty"`
 	UserID primitive.ObjectID `json:"userId" bson:"userId"`
 	// ProductID primitive.ObjectID     `json:"productId" bson:"productId"`
-	RoomID  primitive.ObjectID     `json:"roomId" bson:"roomId"`
-	Status  int                    `json:"status" bson:"status"`
+	OrderID primitive.ObjectID `json:"orderId" bson:"orderId"`
+	// Status  int                    `json:"status" bson:"status"`
 	Message string                 `json:"message" bson:"message"`
 	Props   map[string]interface{} `json:"props" bson:"props"`
 
@@ -51,8 +51,8 @@ type MessageInput struct {
 	// ID     primitive.ObjectID `json:"id" bson:"_id,omitempty"`
 	UserID string `json:"userId" bson:"userId"`
 	// ProductID primitive.ObjectID     `json:"productId" bson:"productId"`
-	RoomID  string                 `json:"roomId" bson:"roomId" form:"roomId" primitive:"true"`
-	Status  int                    `json:"status" bson:"status" form:"status"`
+	OrderID string `json:"orderId" bson:"orderId" form:"orderId" primitive:"true"`
+	// Status  int                    `json:"status" bson:"status" form:"status"`
 	Message string                 `json:"message" bson:"message" form:"message"`
 	Props   map[string]interface{} `json:"props" bson:"props" form:"props"`
 
@@ -66,10 +66,10 @@ type MessageFilter struct {
 	ID     *primitive.ObjectID `json:"id,omitempty"`
 	UserID *primitive.ObjectID `json:"userId,omitempty"`
 	// ProductID *primitive.ObjectID        `json:"productId,omitempty"`
-	RoomID []*primitive.ObjectID `json:"roomId" bson:"roomId"`
-	Sort   []*FilterSortParams   `json:"sort,omitempty"`
-	Limit  *int                  `json:"limit,omitempty"`
-	Skip   *int                  `json:"skip,omitempty"`
+	OrderID []string            `json:"orderId" bson:"orderId"`
+	Sort    []*FilterSortParams `json:"sort,omitempty"`
+	Limit   *int                `json:"limit,omitempty"`
+	Skip    *int                `json:"skip,omitempty"`
 }
 
 type MessageGroupForUser struct {
