@@ -115,13 +115,13 @@ func (h *HandlerV1) FindMessage(c *gin.Context) {
 		return
 	}
 	// fmt.Println(params)
-	Nodes, err := h.Services.Message.FindMessage(input)
+	result, err := h.Services.Message.FindMessage(input)
 	if err != nil {
 		appG.ResponseError(http.StatusBadRequest, err, nil)
 		return
 	}
 
-	c.JSON(http.StatusOK, Nodes)
+	c.JSON(http.StatusOK, result)
 }
 
 func (h *HandlerV1) UpdateMessage(c *gin.Context) {

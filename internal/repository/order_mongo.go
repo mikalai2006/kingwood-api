@@ -338,6 +338,13 @@ func (r *OrderMongo) CreateOrder(userID string, data *domain.Order) (*domain.Ord
 		return nil, err
 	}
 
+	// запрос на последний номер заказа
+
+	year := time.Now().Year()
+	if data.Year != nil {
+		year = *data.Year
+	}
+
 	defaultStatus := int64(0)
 	newOrder := domain.OrderInput{
 		UserID:          userIDPrimitive,
@@ -356,7 +363,7 @@ func (r *OrderMongo) CreateOrder(userID string, data *domain.Order) (*domain.Ord
 		ShlifComplete:   &defaultStatus,
 		GoComplete:      &defaultStatus,
 		MontajComplete:  &defaultStatus,
-		Year:            time.Now().Year(),
+		Year:            year,
 
 		CreatedAt: updatedAt,
 		UpdatedAt: updatedAt,

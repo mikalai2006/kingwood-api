@@ -33,7 +33,7 @@ type Order struct {
 	Object Object `json:"object" bson:"object"`
 	Tasks  []Task `json:"tasks" bson:"tasks" form:"tasks"`
 
-	Year      int       `json:"year" bson:"year"`
+	Year      *int      `json:"year" bson:"year"`
 	CreatedAt time.Time `json:"createdAt" bson:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt" bson:"updatedAt"`
 }

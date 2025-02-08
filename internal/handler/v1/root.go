@@ -45,6 +45,7 @@ func (h *HandlerV1) Init(api *gin.RouterGroup) {
 		h.registerWs(v1)
 		h.registerOperation(v1)
 		h.registerTaskStatus(v1)
+		// h.registerUpdates(v1)
 
 		authenticated := v1.Group("", h.SetUserFromRequest)
 		{

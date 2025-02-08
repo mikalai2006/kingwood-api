@@ -63,13 +63,13 @@ type MessageInput struct {
 }
 
 type MessageFilter struct {
-	ID     *primitive.ObjectID `json:"id,omitempty"`
-	UserID *primitive.ObjectID `json:"userId,omitempty"`
+	ID     string `json:"id,omitempty"`
+	UserID string `json:"userId,omitempty"`
 	// ProductID *primitive.ObjectID        `json:"productId,omitempty"`
 	OrderID []string            `json:"orderId" bson:"orderId"`
-	Sort    []*FilterSortParams `json:"sort,omitempty"`
-	Limit   *int                `json:"limit,omitempty"`
-	Skip    *int                `json:"skip,omitempty"`
+	Sort    []*FilterSortParams `json:"$sort,omitempty"`
+	Limit   *int                `json:"$limit,omitempty"`
+	Skip    *int                `json:"$skip,omitempty"`
 }
 
 type MessageGroupForUser struct {
