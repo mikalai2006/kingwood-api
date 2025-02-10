@@ -177,15 +177,15 @@ func (h *HandlerV1) DeleteMessage(c *gin.Context) {
 	}
 
 	// implementation roles for user.
-	roles, err := middleware.GetRoles(c)
-	if err != nil {
-		appG.ResponseError(http.StatusUnauthorized, err, nil)
-		return
-	}
-	if !utils.Contains(roles, "admin") {
-		appG.ResponseError(http.StatusUnauthorized, errors.New("admin zone"), nil)
-		return
-	}
+	// roles, err := middleware.GetRoles(c)
+	// if err != nil {
+	// 	appG.ResponseError(http.StatusUnauthorized, err, nil)
+	// 	return
+	// }
+	// if !utils.Contains(roles, "admin") {
+	// 	appG.ResponseError(http.StatusUnauthorized, errors.New("admin zone"), nil)
+	// 	return
+	// }
 
 	node, err := h.Services.Message.DeleteMessage(id) // , input
 	if err != nil {
@@ -227,7 +227,7 @@ func (h *HandlerV1) CreateOrExistMessage(c *gin.Context, input *domain.MessageIn
 		return nil, err
 	}
 	if len(existRoom.Data) == 0 {
-		appG.ResponseError(http.StatusBadRequest, errors.New("not found room for message"), nil)
+		appG.ResponseError(http.StatusBadRequest, errors.New("not found order for message"), nil)
 		return result, nil
 	}
 
@@ -272,7 +272,7 @@ func (h *HandlerV1) CreateOrExistMessage(c *gin.Context, input *domain.MessageIn
 		appG.ResponseError(http.StatusInternalServerError, err, nil)
 	}
 
-	resultImages := []string{}
+	resultImages := []domain.MessageImage{}
 	for i := range paths {
 		imageInput.Path = paths[i].Path
 		imageInput.Ext = paths[i].Ext
@@ -283,7 +283,8 @@ func (h *HandlerV1) CreateOrExistMessage(c *gin.Context, input *domain.MessageIn
 		// 	return result, err
 		// }
 		// imageInput.URL =
-		resultImages = append(resultImages, fmt.Sprintf("%s/%s/%s/%s%s", imageInput.UserID, imageInput.Service, imageInput.ServiceID, imageInput.Path, imageInput.Ext))
+		// resultImages = append(resultImages, fmt.Sprintf("%s/%s/%s%s", imageInput.Service, imageInput.ServiceID, imageInput.Path, imageInput.Ext))
+		resultImages = append(resultImages, *imageInput)
 	}
 
 	input.Images = resultImages

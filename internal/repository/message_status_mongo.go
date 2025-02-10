@@ -56,8 +56,8 @@ func (r *MessageStatusMongo) FindMessageStatus(params *domain.MessageStatusFilte
 	}
 
 	// Filter by order id.
-	if params.OrderID != nil && !params.OrderID.IsZero() {
-		q = append(q, bson.E{"orderId", params.OrderID})
+	if params.MessageID != nil && !params.MessageID.IsZero() {
+		q = append(q, bson.E{"messageId", params.MessageID})
 	}
 
 	// q = append(q, bson.E{"status", bson.M{"$gte": 0}})
@@ -162,9 +162,8 @@ func (r *MessageStatusMongo) CreateMessageStatus(userID string, data *domain.Mes
 
 	newMessageStatus := domain.MessageStatusMongo{
 		UserID:    userIDPrimitive,
-		OrderID:   data.OrderID,
+		MessageID: data.MessageID,
 		Status:    &statusDefault,
-		Props:     data.Props,
 		CreatedAt: createdAt,
 		UpdatedAt: time.Now(),
 	}
@@ -232,23 +231,6 @@ func (r *MessageStatusMongo) UpdateMessageStatus(id string, userID string, data 
 		}
 	}
 
-	if data.Props != nil {
-		newData["props"] = data.Props
-	}
-
-	// if data.Props != nil {
-	// 	//newProps := make(map[string]interface{})
-	// 	newProps := data.Props
-	// 	if val, ok := data.Props["status"]; ok {
-	// 		if val == -1.0 {
-	// 			newDel := make(map[string]interface{})
-	// 			newDel["userId"] = userID
-	// 			newDel["del_at"] = time.Now()
-	// 			newProps["del"] = newDel
-	// 		}
-	// 	}
-	// 	newData["props"] = newProps
-	// }
 	newData["updatedAt"] = time.Now()
 	_, err = collection.UpdateOne(ctx, filter, bson.M{"$set": newData})
 	if err != nil {
@@ -311,94 +293,94 @@ func (r *MessageStatusMongo) DeleteMessageStatus(id string) (domain.MessageStatu
 	return result, nil
 }
 
-func (r *MessageStatusMongo) GetGroupForUser(userID string) ([]domain.MessageGroupForUser, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
-	defer cancel()
+// func (r *MessageStatusMongo) GetGroupForUser(userID string) ([]domain.MessageGroupForUser, error) {
+// 	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
+// 	defer cancel()
 
-	var results []domain.MessageGroupForUser
+// 	var results []domain.MessageGroupForUser
 
-	q := bson.D{}
+// 	q := bson.D{}
 
-	if userID != "" {
-		userIDPrimitive, err := primitive.ObjectIDFromHex(userID)
-		if err != nil {
-			return results, err
-		}
-		queryArr := []bson.M{}
-		queryArr = append(queryArr, bson.M{"userId": userIDPrimitive})
-		queryArr = append(queryArr, bson.M{"userProductId": userIDPrimitive})
-		q = append(q, bson.E{"$or", queryArr})
-		// q = append(q, bson.E{"status", 1})
-	}
+// 	if userID != "" {
+// 		userIDPrimitive, err := primitive.ObjectIDFromHex(userID)
+// 		if err != nil {
+// 			return results, err
+// 		}
+// 		queryArr := []bson.M{}
+// 		queryArr = append(queryArr, bson.M{"userId": userIDPrimitive})
+// 		queryArr = append(queryArr, bson.M{"userProductId": userIDPrimitive})
+// 		q = append(q, bson.E{"$or", queryArr})
+// 		// q = append(q, bson.E{"status", 1})
+// 	}
 
-	pipe := mongo.Pipeline{}
-	pipe = append(pipe, bson.D{{"$match", q}})
-	pipe = append(pipe,
-		bson.D{
-			{"$group", bson.D{
-				// {"_id", "$productId"},
-				{"_id", bson.D{
-					{"productId", "$productId"},
-					{"userId", "$userId"},
-				}},
-				{"productId", bson.D{{"$first", "$productId"}}},
-				{"userId", bson.D{{"$first", "$userId"}}},
-				// {"average_price", bson.D{{"$avg", "$price"}}},
-				{"count", bson.D{{"$sum", 1}}},
-			}}})
-	pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
-		"from": "product",
-		"as":   "products",
-		"let":  bson.D{{Key: "productId", Value: "$productId"}},
-		"pipeline": mongo.Pipeline{
-			bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$_id", "$$productId"}}}}},
-			bson.D{{
-				Key: "$lookup",
-				Value: bson.M{
-					"from": "image",
-					"as":   "images",
-					"let":  bson.D{{Key: "serviceId", Value: bson.D{{"$toString", "$_id"}}}},
-					"pipeline": mongo.Pipeline{
-						bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$serviceId", "$$serviceId"}}}}},
-					},
-				},
-			}},
+// 	pipe := mongo.Pipeline{}
+// 	pipe = append(pipe, bson.D{{"$match", q}})
+// 	pipe = append(pipe,
+// 		bson.D{
+// 			{"$group", bson.D{
+// 				// {"_id", "$productId"},
+// 				{"_id", bson.D{
+// 					{"productId", "$productId"},
+// 					{"userId", "$userId"},
+// 				}},
+// 				{"productId", bson.D{{"$first", "$productId"}}},
+// 				{"userId", bson.D{{"$first", "$userId"}}},
+// 				// {"average_price", bson.D{{"$avg", "$price"}}},
+// 				{"count", bson.D{{"$sum", 1}}},
+// 			}}})
+// 	pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
+// 		"from": "product",
+// 		"as":   "products",
+// 		"let":  bson.D{{Key: "productId", Value: "$productId"}},
+// 		"pipeline": mongo.Pipeline{
+// 			bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$_id", "$$productId"}}}}},
+// 			bson.D{{
+// 				Key: "$lookup",
+// 				Value: bson.M{
+// 					"from": "image",
+// 					"as":   "images",
+// 					"let":  bson.D{{Key: "serviceId", Value: bson.D{{"$toString", "$_id"}}}},
+// 					"pipeline": mongo.Pipeline{
+// 						bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$serviceId", "$$serviceId"}}}}},
+// 					},
+// 				},
+// 			}},
 
-			bson.D{{Key: "$lookup", Value: bson.M{
-				"from": "users",
-				"as":   "userb",
-				"let":  bson.D{{Key: "userId", Value: "$userId"}},
-				"pipeline": mongo.Pipeline{
-					bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$_id", "$$userId"}}}}},
-					bson.D{{"$limit", 1}},
-					bson.D{{
-						Key: "$lookup",
-						Value: bson.M{
-							"from": "image",
-							"as":   "images",
-							"let":  bson.D{{Key: "serviceId", Value: bson.D{{"$toString", "$_id"}}}},
-							"pipeline": mongo.Pipeline{
-								bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$serviceId", "$$serviceId"}}}}},
-							},
-						},
-					}},
-				},
-			}}},
-			bson.D{{Key: "$set", Value: bson.M{"user": bson.M{"$first": "$userb"}}}},
-		},
-	}}})
-	// pipe = append(pipe, bson.D{{"$unwind", "$product"}})
-	pipe = append(pipe, bson.D{{Key: "$set", Value: bson.M{"product": bson.M{"$first": "$products"}}}})
+// 			bson.D{{Key: "$lookup", Value: bson.M{
+// 				"from": "users",
+// 				"as":   "userb",
+// 				"let":  bson.D{{Key: "userId", Value: "$userId"}},
+// 				"pipeline": mongo.Pipeline{
+// 					bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$_id", "$$userId"}}}}},
+// 					bson.D{{"$limit", 1}},
+// 					bson.D{{
+// 						Key: "$lookup",
+// 						Value: bson.M{
+// 							"from": "image",
+// 							"as":   "images",
+// 							"let":  bson.D{{Key: "serviceId", Value: bson.D{{"$toString", "$_id"}}}},
+// 							"pipeline": mongo.Pipeline{
+// 								bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$serviceId", "$$serviceId"}}}}},
+// 							},
+// 						},
+// 					}},
+// 				},
+// 			}}},
+// 			bson.D{{Key: "$set", Value: bson.M{"user": bson.M{"$first": "$userb"}}}},
+// 		},
+// 	}}})
+// 	// pipe = append(pipe, bson.D{{"$unwind", "$product"}})
+// 	pipe = append(pipe, bson.D{{Key: "$set", Value: bson.M{"product": bson.M{"$first": "$products"}}}})
 
-	cursorGroup, err := r.db.Collection(TblMessage).Aggregate(ctx, pipe) // Find(ctx, params.Filter, opts)
-	if err != nil {
-		return results, err
-	}
-	defer cursorGroup.Close(ctx)
+// 	cursorGroup, err := r.db.Collection(TblMessage).Aggregate(ctx, pipe) // Find(ctx, params.Filter, opts)
+// 	if err != nil {
+// 		return results, err
+// 	}
+// 	defer cursorGroup.Close(ctx)
 
-	if er := cursorGroup.All(ctx, &results); er != nil {
-		return results, er
-	}
+// 	if er := cursorGroup.All(ctx, &results); er != nil {
+// 		return results, er
+// 	}
 
-	return results, nil
-}
+// 	return results, nil
+// }

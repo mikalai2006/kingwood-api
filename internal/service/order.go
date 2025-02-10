@@ -154,7 +154,7 @@ func (s *OrderService) DeleteOrder(id string, userID string) (*domain.Order, err
 		_, err = s.Services.Image.DeleteImage(allImages.Data[i].ID.Hex())
 	}
 	// delete taskWorkers.
-	allTaskWorkers, err := s.Services.TaskWorker.FindTaskWorkerPopulate(&domain.TaskWorkerFilter{OrderId: []*string{&id}})
+	allTaskWorkers, err := s.Services.TaskWorker.FindTaskWorkerPopulate(&domain.TaskWorkerFilter{OrderId: []string{id}})
 	if err != nil {
 		return result, err
 	}

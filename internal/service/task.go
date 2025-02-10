@@ -83,8 +83,8 @@ func (s *TaskService) CreateTask(userID string, data *domain.Task) (*domain.Task
 		operationId := result.OperationId.Hex()
 		date := time.Now().Local()
 		allTaskWorkerForObject, err := s.Services.TaskWorker.FindTaskWorkerPopulate(&domain.TaskWorkerFilter{
-			ObjectId:    []*string{&objectId},
-			OperationId: []*string{&operationId},
+			ObjectId:    []string{objectId},
+			OperationId: []string{operationId},
 			Date:        &date,
 		})
 		if err != nil {

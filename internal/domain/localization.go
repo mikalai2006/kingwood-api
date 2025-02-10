@@ -2,6 +2,8 @@ package domain
 
 var (
 	PushTitle             = "Уведомление"
+	NewMessageTitle       = "Новое сообщение"
+	NewMessage            = "Добавлено сообщение для заказа: №%d - %s (объект %s)"
 	NewOrderTitle         = "Новое изделие"
 	NewOrder              = "Добавлено изделие: №%d - %s (объект %s)"
 	CreateTaskWorkerTitle = "Новое задание"

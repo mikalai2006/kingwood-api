@@ -189,18 +189,18 @@ func (h *HandlerV1) CreateOrExistMessageStatus(c *gin.Context, input *domain.Mes
 	// 		Limit: 1,
 	// 	},
 	// }
-	orderID := input.OrderID.Hex()
-	existNode, err := h.Services.Order.FindOrder(&domain.OrderFilter{ID: []string{orderID}})
+	messageID := input.MessageID.Hex()
+	existMessage, err := h.Services.Message.FindMessage(&domain.MessageFilter{ID: messageID})
 	if err != nil {
 		appG.ResponseError(http.StatusBadRequest, err, nil)
 		return nil, err
 	}
-	if len(existNode.Data) == 0 {
+	if len(existMessage.Data) == 0 {
 		//appG.ResponseError(http.StatusBadRequest, errors.New("not found node"), nil)
 		return result, nil
 	}
 
-	input.OrderID = existNode.Data[0].ID
+	input.MessageID = existMessage.Data[0].ID
 
 	// // check exist message
 	// existMessage, err := h.services.Message.FindMessage(domain.RequestParams{

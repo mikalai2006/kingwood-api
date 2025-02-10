@@ -15,7 +15,8 @@ type Message struct {
 	Message string                 `json:"message" bson:"message"`
 	Props   map[string]interface{} `json:"props" bson:"props"`
 
-	Images []string `json:"images" bson:"images"`
+	Images   []MessageImage  `json:"images" bson:"images"`
+	Statuses []MessageStatus `json:"statuses" bson:"statuses"`
 	// User User `json:"user,omitempty" bson:"user,omitempty"`
 	// Images []MessageImage `json:"images" bson:"images,omitempty"`
 
@@ -32,7 +33,8 @@ type MessageInputMongo struct {
 	Message string                 `json:"message" bson:"message"`
 	Props   map[string]interface{} `json:"props" bson:"props"`
 
-	Images []string `json:"images" bson:"images"`
+	Images   []MessageImage  `json:"images" bson:"images"`
+	Statuses []MessageStatus `json:"statuses" bson:"statuses"`
 
 	CreatedAt time.Time `json:"createdAt" bson:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt" bson:"updatedAt"`
@@ -56,7 +58,7 @@ type MessageInput struct {
 	Message string                 `json:"message" bson:"message" form:"message"`
 	Props   map[string]interface{} `json:"props" bson:"props" form:"props"`
 
-	Images []string `json:"images" bson:"images"`
+	Images []MessageImage `json:"images" bson:"images"`
 
 	// CreatedAt time.Time `json:"createdAt" bson:"createdAt"`
 	// UpdatedAt time.Time `json:"updatedAt" bson:"updatedAt"`

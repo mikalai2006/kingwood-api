@@ -87,16 +87,16 @@ func (s *ImageService) DeleteImage(id string) (domain.Image, error) {
 		// 	return result, err
 		// }
 
-		// // remove srcset.
-		// for i := range s.imageConfig.Sizes {
-		// 	dataImg := s.imageConfig.Sizes[i]
-		// 	pathRemove = fmt.Sprintf("%s/%v-%s%s", pathOfRemove, dataImg.Size, imageForRemove.Path, imageForRemove.Ext) // ".webp"
-		// 	// fmt.Println("pathRemove2=", pathRemove)
-		// 	os.Remove(pathRemove)
-		// 	// if err != nil {
-		// 	// 	return result, err
-		// 	// }
-		// }
+		// remove srcset.
+		for i := range s.imageConfig.Sizes {
+			dataImg := s.imageConfig.Sizes[i]
+			pathRemove = fmt.Sprintf("%s/%v-%s%s", pathOfRemove, dataImg.Prefix, imageForRemove.Path, imageForRemove.Ext) // ".webp"
+			// fmt.Println("pathRemove2=", pathRemove)
+			os.Remove(pathRemove)
+			// if err != nil {
+			// 	return result, err
+			// }
+		}
 
 		isEmpty, err := utils.IsEmptyDir(pathOfRemove)
 		if err != nil {

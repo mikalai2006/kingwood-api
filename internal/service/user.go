@@ -42,7 +42,7 @@ func (s *UserService) DeleteUser(id string, userID string) (domain.User, error) 
 	}
 
 	// delete taskWorkers.
-	allTaskWorkers, err := s.Services.TaskWorker.FindTaskWorkerPopulate(&domain.TaskWorkerFilter{WorkerId: []*string{&id}})
+	allTaskWorkers, err := s.Services.TaskWorker.FindTaskWorkerPopulate(&domain.TaskWorkerFilter{WorkerId: []string{id}})
 	if err != nil {
 		return result, err
 	}

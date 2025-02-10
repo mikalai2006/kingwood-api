@@ -65,26 +65,26 @@ func UploadResizeMultipleFile(c *gin.Context, info *domain.ImageInput, nameField
 			Ext:  fileExt,
 		})
 		objImages.Images = append(objImages.Images, VMode{
-			Quality: 70,
+			Quality: 100,
 			Name:    filenameOriginal,
 			Ext:     fileExt,
 			Resize:  true,
-			Size:    1200,
+			Size:    2000,
 		})
 
-		// // add adaptive.
-		// for i := range imageConfig.Sizes {
-		// 	dataSize := imageConfig.Sizes[i]
-		// 	filenameLg := fmt.Sprintf("%v-%v-%v", dataSize.Size, strings.ReplaceAll(strings.ToLower(originalFileName), " ", "-"), now.Unix())
+		// add adaptive.
+		for i := range imageConfig.Sizes {
+			dataSize := imageConfig.Sizes[i]
+			filenameLg := fmt.Sprintf("%v-%v-%v", dataSize.Prefix, strings.ReplaceAll(strings.ToLower(originalFileName), " ", "-"), now.Unix())
 
-		// 	objImages.Images = append(objImages.Images, VMode{
-		// 		Quality: dataSize.Quality,
-		// 		Name:    filenameLg,
-		// 		Resize:  true,
-		// 		Size:    dataSize.Size,
-		// 		Ext:     fileExt,
-		// 	})
-		// }
+			objImages.Images = append(objImages.Images, VMode{
+				Quality: dataSize.Quality,
+				Name:    filenameLg,
+				Resize:  true,
+				Size:    dataSize.Size,
+				Ext:     fileExt,
+			})
+		}
 
 		// add xs.
 		// filenameXs := "xs-" + strings.ReplaceAll(strings.ToLower(originalFileName), " ", "-") + "-" + fmt.Sprintf("%v", now.Unix())
@@ -113,7 +113,7 @@ func UploadResizeMultipleFile(c *gin.Context, info *domain.ImageInput, nameField
 			// imageForSave, err := imaging.Open(imageForSave, imaging.AutoOrientation(true))
 
 			if dataImg.Resize == true {
-				imageForSave = imaging.Fill(imageForSave, 600, 600, imaging.Center, imaging.Lanczos)
+				imageForSave = imaging.Resize(imageForSave, dataImg.Size, 0, imaging.Lanczos) //Fill(imageForSave, 600, 600, imaging.Center, imaging.Lanczos)
 				//Resize(imageForSave, dataImg.Size, 0, imaging.Lanczos)
 			}
 
@@ -238,12 +238,25 @@ func UploadResizeMultipleFileForMessage(c *gin.Context, info *domain.MessageImag
 			Ext:  fileExt,
 		})
 		objImages.Images = append(objImages.Images, VMode{
-			Quality: 70,
+			Quality: 100,
 			Name:    filenameOriginal,
 			Ext:     fileExt,
 			Resize:  true,
-			Size:    1200,
+			Size:    2000,
 		})
+		// add adaptive.
+		for i := range imageConfig.Sizes {
+			dataSize := imageConfig.Sizes[i]
+			filenameLg := fmt.Sprintf("%v-%v-%v", dataSize.Prefix, strings.ReplaceAll(strings.ToLower(originalFileName), " ", "-"), now.Unix())
+
+			objImages.Images = append(objImages.Images, VMode{
+				Quality: dataSize.Quality,
+				Name:    filenameLg,
+				Resize:  true,
+				Size:    dataSize.Size,
+				Ext:     fileExt,
+			})
+		}
 
 		imaging.AutoOrientation(true)
 
@@ -263,7 +276,7 @@ func UploadResizeMultipleFileForMessage(c *gin.Context, info *domain.MessageImag
 			// imageForSave, err := imaging.Open(imageForSave, imaging.AutoOrientation(true))
 
 			if dataImg.Resize == true {
-				imageForSave = imaging.Fill(imageForSave, 600, 600, imaging.Center, imaging.Lanczos)
+				imageForSave = imaging.Resize(imageForSave, dataImg.Size, 0, imaging.Lanczos) //Fill(imageForSave, 600, 600, imaging.Center, imaging.Lanczos)
 				//Resize(imageForSave, dataImg.Size, 0, imaging.Lanczos)
 			}
 

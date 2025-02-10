@@ -70,12 +70,12 @@ type TaskWorkerInputData struct {
 }
 
 type TaskWorkerFilter struct {
-	ID          []*string           `json:"id,omitempty"`
-	ObjectId    []*string           `json:"objectId,omitempty"`
-	OrderId     []*string           `json:"orderId,omitempty"`
-	TaskId      []*string           `json:"taskId,omitempty"`
-	WorkerId    []*string           `json:"workerId,omitempty"`
-	OperationId []*string           `json:"operationId,omitempty"`
+	ID          []string            `json:"id,omitempty"`
+	ObjectId    []string            `json:"objectId,omitempty"`
+	OrderId     []string            `json:"orderId,omitempty"`
+	TaskId      []string            `json:"taskId,omitempty"`
+	WorkerId    []string            `json:"workerId,omitempty"`
+	OperationId []string            `json:"operationId,omitempty"`
 	From        *time.Time          `json:"from,omitempty"`
 	To          *time.Time          `json:"to,omitempty"`
 	Date        *time.Time          `json:"date,omitempty"`

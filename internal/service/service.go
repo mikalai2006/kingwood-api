@@ -224,7 +224,7 @@ func NewServices(cfgService *ConfigServices) *Services {
 	Role := NewRoleService(cfgService.Repositories, cfgService.I18n)
 	Image := NewImageService(cfgService.Repositories.Image, cfgService.ImageService)
 	MessageStatus := NewMessageStatusService(cfgService.Repositories.MessageStatus, cfgService.Hub)
-	Message := NewMessageService(cfgService.Repositories.Message, cfgService.Hub)
+	Message := NewMessageService(cfgService.Repositories.Message, cfgService.Hub, cfgService.ImageService)
 	Operation := NewOperationService(cfgService.Repositories.Operation, User)
 	Order := NewOrderService(cfgService.Repositories.Order, User, cfgService.Hub, Operation)
 	WorkTime := NewWorkTimeService(cfgService.Repositories.WorkTime, cfgService.Hub, User, TaskStatus)
@@ -262,6 +262,8 @@ func NewServices(cfgService *ConfigServices) *Services {
 	Notify.Services = services
 	Pay.Services = services
 	User.Services = services
+	MessageStatus.Services = services
+	Message.Services = services
 
 	return services
 }

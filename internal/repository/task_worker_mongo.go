@@ -81,7 +81,7 @@ func (r *TaskWorkerMongo) FindTaskWorkerPopulate(input *domain.TaskWorkerFilter)
 	if input.ID != nil && len(input.ID) > 0 {
 		ids := []primitive.ObjectID{}
 		for i, _ := range input.ID {
-			iDPrimitive, err := primitive.ObjectIDFromHex(*input.ID[i])
+			iDPrimitive, err := primitive.ObjectIDFromHex(input.ID[i])
 			if err != nil {
 				return response, err
 			}
@@ -94,7 +94,7 @@ func (r *TaskWorkerMongo) FindTaskWorkerPopulate(input *domain.TaskWorkerFilter)
 	if input.ObjectId != nil && len(input.ObjectId) > 0 {
 		objectIds := []primitive.ObjectID{}
 		for i, _ := range input.ObjectId {
-			objectIDPrimitive, err := primitive.ObjectIDFromHex(*input.ObjectId[i])
+			objectIDPrimitive, err := primitive.ObjectIDFromHex(input.ObjectId[i])
 			if err != nil {
 				return response, err
 			}
@@ -107,7 +107,7 @@ func (r *TaskWorkerMongo) FindTaskWorkerPopulate(input *domain.TaskWorkerFilter)
 	if input.OperationId != nil && len(input.OperationId) > 0 {
 		ids := []primitive.ObjectID{}
 		for i, _ := range input.OperationId {
-			iDPrimitive, err := primitive.ObjectIDFromHex(*input.OperationId[i])
+			iDPrimitive, err := primitive.ObjectIDFromHex(input.OperationId[i])
 			if err != nil {
 				return response, err
 			}
@@ -120,7 +120,7 @@ func (r *TaskWorkerMongo) FindTaskWorkerPopulate(input *domain.TaskWorkerFilter)
 	if input.WorkerId != nil && len(input.WorkerId) > 0 {
 		workerIds := []primitive.ObjectID{}
 		for i, _ := range input.WorkerId {
-			workerIDPrimitive, err := primitive.ObjectIDFromHex(*input.WorkerId[i])
+			workerIDPrimitive, err := primitive.ObjectIDFromHex(input.WorkerId[i])
 			if err != nil {
 				return response, err
 			}
@@ -133,7 +133,7 @@ func (r *TaskWorkerMongo) FindTaskWorkerPopulate(input *domain.TaskWorkerFilter)
 	if input.OrderId != nil && len(input.OrderId) > 0 {
 		orderIds := []primitive.ObjectID{}
 		for i, _ := range input.OrderId {
-			orderIDPrimitive, err := primitive.ObjectIDFromHex(*input.OrderId[i])
+			orderIDPrimitive, err := primitive.ObjectIDFromHex(input.OrderId[i])
 			if err != nil {
 				return response, err
 			}
@@ -146,7 +146,7 @@ func (r *TaskWorkerMongo) FindTaskWorkerPopulate(input *domain.TaskWorkerFilter)
 	if input.TaskId != nil && len(input.TaskId) > 0 {
 		taskIds := []primitive.ObjectID{}
 		for i, _ := range input.TaskId {
-			taskIDPrimitive, err := primitive.ObjectIDFromHex(*input.TaskId[i])
+			taskIDPrimitive, err := primitive.ObjectIDFromHex(input.TaskId[i])
 			if err != nil {
 				return response, err
 			}
@@ -484,7 +484,7 @@ func (r *TaskWorkerMongo) CreateTaskWorker(userID string, data *domain.TaskWorke
 	// idCreatedItem := res.InsertedID.(primitive.ObjectID).Hex();
 	// err = r.db.Collection(tblTaskWorker).FindOne(ctx, bson.M{"_id": res.InsertedID}).Decode(&result)
 	insertedId := res.InsertedID.(primitive.ObjectID).Hex()
-	taskWorkers, err := r.FindTaskWorkerPopulate(&domain.TaskWorkerFilter{ID: []*string{&insertedId}})
+	taskWorkers, err := r.FindTaskWorkerPopulate(&domain.TaskWorkerFilter{ID: []string{insertedId}})
 	if err != nil {
 		return nil, err
 	}
@@ -566,7 +566,7 @@ func (r *TaskWorkerMongo) UpdateTaskWorker(id string, userID string, data *domai
 		return result, err
 	}
 
-	taskWorkers, err := r.FindTaskWorkerPopulate(&domain.TaskWorkerFilter{ID: []*string{&id}})
+	taskWorkers, err := r.FindTaskWorkerPopulate(&domain.TaskWorkerFilter{ID: []string{id}})
 	// taskWorkers, err := r.FindTaskWorkerPopulate(domain.RequestParams{Filter: bson.D{{"_id", idPrimitive}}})
 	// collection.FindOne(ctx, filter).Decode(&result)
 	if err != nil {
@@ -597,7 +597,7 @@ func (r *TaskWorkerMongo) DeleteTaskWorker(id string) (*domain.TaskWorker, error
 	filter := bson.M{"_id": idPrimitive}
 
 	// err = collection.FindOne(ctx, filter).Decode(&result)
-	taskWorkers, err := r.FindTaskWorkerPopulate(&domain.TaskWorkerFilter{ID: []*string{&id}})
+	taskWorkers, err := r.FindTaskWorkerPopulate(&domain.TaskWorkerFilter{ID: []string{id}})
 	if err != nil {
 		return result, err
 	}

@@ -34,7 +34,7 @@ type MessageStatus interface {
 	FindMessageStatus(params *domain.MessageStatusFilter) (domain.Response[domain.MessageStatus], error)
 	UpdateMessageStatus(id string, userID string, data *domain.MessageStatus) (*domain.MessageStatus, error)
 	DeleteMessageStatus(id string) (domain.MessageStatus, error)
-	GetGroupForUser(userID string) ([]domain.MessageGroupForUser, error)
+	// GetGroupForUser(userID string) ([]domain.MessageGroupForUser, error)
 }
 
 type Notify interface {

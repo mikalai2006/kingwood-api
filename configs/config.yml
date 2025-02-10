@@ -18,9 +18,9 @@ images:
     # - size: 30
     #   prefix: "thumb"
     #   quality: 40
-    # - size: 320
-    #   prefix: "xs"
-    #   quality: 70
+    - size: 320
+      prefix: "xs"
+      quality: 70
     # - size: 768
     #   prefix: "md"
     #   quality: 50

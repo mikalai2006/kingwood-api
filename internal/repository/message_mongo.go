@@ -89,27 +89,15 @@ func (r *MessageMongo) FindMessage(params *domain.MessageFilter) (domain.Respons
 	// 	// fmt.Println("sortParam: ", len(input.Sort), sortParam, pipe)
 	// }
 
-	// pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
-	// 	"from": "users",
-	// 	"as":   "usera",
-	// 	"let":  bson.D{{Key: "userId", Value: "$userId"}},
-	// 	"pipeline": mongo.Pipeline{
-	// 		bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$_id", "$$userId"}}}}},
-	// 		bson.D{{"$limit", 1}},
-	// 		bson.D{{
-	// 			Key: "$lookup",
-	// 			Value: bson.M{
-	// 				"from": tblImage,
-	// 				"as":   "images",
-	// 				"let":  bson.D{{Key: "serviceId", Value: bson.D{{"$toString", "$_id"}}}},
-	// 				"pipeline": mongo.Pipeline{
-	// 					bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$serviceId", "$$serviceId"}}}}},
-	// 				},
-	// 			},
-	// 		}},
-	// 	},
-	// }}})
-	// pipe = append(pipe, bson.D{{Key: "$set", Value: bson.M{"user": bson.M{"$first": "$usera"}}}})
+	pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
+		"from": TblMessageStatus,
+		"as":   "statuses",
+		"let":  bson.D{{Key: "messageId", Value: "$_id"}},
+		"pipeline": mongo.Pipeline{
+			bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$messageId", "$$messageId"}}}}},
+			bson.D{{"$limit", 100}},
+		},
+	}}})
 
 	if params.Sort != nil && len(params.Sort) > 0 {
 		sortParam := bson.D{}
@@ -225,7 +213,7 @@ func (r *MessageMongo) CreateMessage(userID string, input *domain.MessageInput) 
 	// 	createdAt = time.Now()
 	// }
 	if len(input.Images) == 0 {
-		input.Images = make([]string, 0)
+		input.Images = make([]domain.MessageImage, 0)
 	}
 
 	newMessage := domain.MessageInputMongo{
@@ -245,10 +233,14 @@ func (r *MessageMongo) CreateMessage(userID string, input *domain.MessageInput) 
 		return nil, err
 	}
 
-	err = r.db.Collection(TblMessage).FindOne(ctx, bson.M{"_id": res.InsertedID}).Decode(&result)
+	// err = r.db.Collection(TblMessage).FindOne(ctx, bson.M{"_id": res.InsertedID}).Decode(&result)
+	insertedID := res.InsertedID.(primitive.ObjectID).Hex()
+	insertedMessage, err := r.FindMessage(&domain.MessageFilter{ID: insertedID})
 	if err != nil {
 		return nil, err
 	}
+
+	result = &insertedMessage.Data[0]
 
 	return result, nil
 }

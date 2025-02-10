@@ -207,7 +207,7 @@ func (s *TaskWorkerService) UpdateTaskWorker(id string, userID string, data *dom
 			objectId := result.ObjectId.Hex()
 			operationId := result.OperationId.Hex()
 			workerId := result.WorkerId.Hex()
-			allTaskWorkerForObject, err := s.Services.TaskWorker.FindTaskWorkerPopulate(&domain.TaskWorkerFilter{ObjectId: []*string{&objectId}, WorkerId: []*string{&workerId}, OperationId: []*string{&operationId}})
+			allTaskWorkerForObject, err := s.Services.TaskWorker.FindTaskWorkerPopulate(&domain.TaskWorkerFilter{ObjectId: []string{objectId}, WorkerId: []string{workerId}, OperationId: []string{operationId}})
 			if err != nil {
 				return result, err
 			}
@@ -319,7 +319,7 @@ func (s *TaskWorkerService) CheckStatusTask(userID string, result *domain.TaskWo
 	// get all taskWorkers.
 	fmt.Println("taskId: ", result.TaskId, result.Task.Operation.Group)
 	taskId := result.TaskId.Hex()
-	taskWorkers, err := s.FindTaskWorkerPopulate(&domain.TaskWorkerFilter{TaskId: []*string{&taskId}})
+	taskWorkers, err := s.FindTaskWorkerPopulate(&domain.TaskWorkerFilter{TaskId: []string{taskId}})
 	var taskWorkersStatus []string
 
 	// var stolyarComplete int64
