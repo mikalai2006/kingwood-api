@@ -20,6 +20,7 @@ type WorkTime struct {
 	Oklad    *int64             `json:"oklad" bson:"oklad"`
 	Total    *int64             `json:"total" bson:"total"`
 
+	Props map[string]interface{} `json:"props" bson:"props" form:"props"`
 	// Task       Task       `json:"task" bson:"task"`
 	// TaskStatus TaskStatus `json:"taskStatus" bson:"taskStatus"`
 	// Order      Order      `json:"order" bson:"order"`
@@ -39,6 +40,8 @@ type WorkTimeInput struct {
 	Status   *int               `json:"status" bson:"status"`
 	Oklad    *int64             `json:"oklad" bson:"oklad"`
 	Total    *int64             `json:"total" bson:"total"`
+
+	Props map[string]interface{} `json:"props" bson:"props" form:"props"`
 
 	Date time.Time `json:"date" bson:"date"`
 	From time.Time `json:"from" bson:"from"`

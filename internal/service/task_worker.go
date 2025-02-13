@@ -296,6 +296,20 @@ func (s *TaskWorkerService) DeleteTaskWorker(id string, userID string, checkStat
 
 	s.Hub.HandleMessage(domain.MessageSocket{Type: "message", Method: "DELETE", Sender: "userID", Recipient: "", Content: result, ID: "room1", Service: "taskWorker"})
 
+	// Закрываем work_history если он есть для удаляемого исполнителя
+	statusHistory := 0
+	existOpenWorkHistory, err := s.Services.WorkHistory.FindWorkHistoryPopulate(domain.WorkHistoryFilter{WorkerId: []string{result.WorkerId.Hex()}, TaskId: []string{result.TaskId.Hex()}, Status: &statusHistory})
+	if err != nil {
+		return result, err
+	}
+	if len(existOpenWorkHistory.Data) > 0 {
+		statusPatch := 1
+		s.Services.WorkHistory.UpdateWorkHistory(existOpenWorkHistory.Data[0].ID.Hex(), userID, &domain.WorkHistoryInput{
+			Status: &statusPatch,
+			To:     time.Now(),
+		})
+	}
+
 	// add notify.
 	_, err = s.Services.Notify.CreateNotify(userID, &domain.NotifyInput{
 		UserTo:  result.WorkerId.Hex(),
@@ -450,6 +464,18 @@ func (s *TaskWorkerService) CheckStatusTask(userID string, result *domain.TaskWo
 				return result, err
 			}
 
+		}
+	} else {
+		statuses, err := s.Services.TaskStatus.FindTaskStatus(domain.RequestParams{Filter: bson.D{{"status", "wait"}}})
+		if err != nil {
+			return result, err
+		}
+		if len(statuses.Data) > 0 {
+			status := int64(0)
+			_, err := s.taskService.UpdateTask(result.TaskId.Hex(), userID, &domain.TaskInput{StatusId: statuses.Data[0].ID, Status: statuses.Data[0].Status, Active: &status})
+			if err != nil {
+				return result, err
+			}
 		}
 	}
 

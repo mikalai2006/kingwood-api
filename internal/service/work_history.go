@@ -134,14 +134,19 @@ func (s *WorkHistoryService) UpdateWorkHistory(id string, userID string, data *d
 		totalNext := int64(math.Ceil(totalMinutesNext * (float64(*result.Oklad) / 60)))
 		// fmt.Println("totalMinutesNext:", totalMinutesNext, " totalNext:", totalNext, " oldTo:", oldTo)
 		result, err = s.repo.CreateWorkHistory(userID, &domain.WorkHistory{
-			UserID:   result.UserID,
-			WorkerId: result.WorkerId,
-			Status:   result.Status,
-			Date:     fromNew,
-			From:     fromNew,
-			To:       oldTo,
-			Oklad:    result.Oklad,
-			Total:    &totalNext,
+			UserID:      result.UserID,
+			WorkerId:    result.WorkerId,
+			ObjectId:    result.ObjectId,
+			OrderId:     result.OrderId,
+			TaskId:      result.TaskId,
+			OperationId: result.OperationId,
+			Status:      result.Status,
+			WorkTimeId:  result.WorkTimeId,
+			Date:        fromNew,
+			From:        fromNew,
+			To:          oldTo,
+			Oklad:       result.Oklad,
+			Total:       &totalNext,
 		})
 		if err != nil {
 			return nil, err
@@ -153,6 +158,12 @@ func (s *WorkHistoryService) UpdateWorkHistory(id string, userID string, data *d
 
 func (s *WorkHistoryService) DeleteWorkHistory(id string) (*domain.WorkHistory, error) {
 	result, err := s.repo.DeleteWorkHistory(id)
+
+	return result, err
+}
+
+func (s *WorkHistoryService) GetStatByOrder(input domain.WorkHistoryFilter) ([]domain.WorkHistoryStatByOrder, error) {
+	result, err := s.repo.GetStatByOrder(input)
 
 	return result, err
 }

@@ -72,6 +72,41 @@ func (s *WorkTimeService) CreateWorkTime(userID string, data *domain.WorkTime) (
 }
 
 func (s *WorkTimeService) UpdateWorkTime(id string, userID string, data *domain.WorkTimeInput) (*domain.WorkTime, error) {
+	// получаем данные из базы.
+	existWorkTime, err := s.repo.FindWorkTimePopulate(domain.WorkTimeFilter{ID: []string{id}})
+	if err != nil {
+		return nil, err
+	}
+
+	if len(existWorkTime.Data) > 0 {
+		// если данные для патча отличаются от данных из базы
+		if existWorkTime.Data[0].From != data.From || existWorkTime.Data[0].To != data.To {
+			// заносим старые данные в пропс.
+			newProps := map[string]interface{}{}
+			if existWorkTime.Data[0].Props != nil {
+				newProps = existWorkTime.Data[0].Props
+			}
+			newItem := make(map[string]interface{})
+			newItem["userId"] = userID
+			newItem["item"] = domain.WorkTimeInput{
+				UserID:    existWorkTime.Data[0].UserID,
+				WorkerId:  existWorkTime.Data[0].WorkerId,
+				To:        existWorkTime.Data[0].To,
+				From:      existWorkTime.Data[0].From,
+				Oklad:     existWorkTime.Data[0].Oklad,
+				Date:      existWorkTime.Data[0].Date,
+				Total:     existWorkTime.Data[0].Total,
+				CreatedAt: existWorkTime.Data[0].CreatedAt,
+				UpdatedAt: existWorkTime.Data[0].UpdatedAt,
+			}
+			newItem["time"] = time.Now()
+			newProps[time.Now().String()] = newItem
+
+			// дополняем пропс.
+			data.Props = newProps
+		}
+	}
+
 	result, err := s.repo.UpdateWorkTime(id, userID, data)
 	if err != nil {
 		return result, err

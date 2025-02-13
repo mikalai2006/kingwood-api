@@ -83,6 +83,7 @@ type WorkHistory interface {
 	FindWorkHistoryPopulate(input domain.WorkHistoryFilter) (domain.Response[domain.WorkHistory], error)
 	UpdateWorkHistory(id string, userID string, data *domain.WorkHistoryInput) (*domain.WorkHistory, error)
 	DeleteWorkHistory(id string) (*domain.WorkHistory, error)
+	GetStatByOrder(input domain.WorkHistoryFilter) ([]domain.WorkHistoryStatByOrder, error)
 }
 
 type TaskWorker interface {

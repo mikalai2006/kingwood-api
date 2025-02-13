@@ -19,6 +19,7 @@ func (h *HandlerV1) registerWorkHistory(router *gin.RouterGroup) {
 	route.POST("/find", h.FindWorkHistory)
 	route.PATCH("/:id", h.SetUserFromRequest, h.UpdateWorkHistory)
 	route.POST("/list", h.CreateWorkHistoryList)
+	route.POST("/statByOrder", h.GetStatByOrder)
 }
 
 func (h *HandlerV1) CreateWorkHistory(c *gin.Context) {
@@ -202,4 +203,22 @@ func (h *HandlerV1) CreateOrExistWorkHistory(c *gin.Context, input *domain.WorkH
 		return result, err
 	}
 	return result, nil
+}
+
+func (h *HandlerV1) GetStatByOrder(c *gin.Context) {
+	appG := app.Gin{C: c}
+
+	var input *domain.WorkHistoryFilter
+	if er := c.BindJSON(&input); er != nil {
+		appG.ResponseError(http.StatusBadRequest, er, nil)
+		return
+	}
+
+	works, err := h.Services.WorkHistory.GetStatByOrder(*input)
+	if err != nil {
+		appG.ResponseError(http.StatusBadRequest, err, nil)
+		return
+	}
+
+	c.JSON(http.StatusOK, works)
 }

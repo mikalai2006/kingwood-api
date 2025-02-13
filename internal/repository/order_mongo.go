@@ -113,8 +113,8 @@ func (r *OrderMongo) FindOrder(input *domain.OrderFilter) (domain.Response[domai
 		}
 		q = append(q, bson.E{"_id", bson.D{{"$in", ids}}})
 	}
-	if input.Name != nil && *input.Name != "" {
-		strName := primitive.Regex{Pattern: fmt.Sprintf("%v", *input.Name), Options: "i"}
+	if input.Name != "" {
+		strName := primitive.Regex{Pattern: fmt.Sprintf("%v", input.Name), Options: "i"}
 		q = append(q, bson.E{"name", bson.D{{"$regex", strName}}})
 	}
 	if input.Group != nil && len(input.Group) > 0 {
@@ -122,6 +122,9 @@ func (r *OrderMongo) FindOrder(input *domain.OrderFilter) (domain.Response[domai
 	}
 	if input.Status != nil {
 		q = append(q, bson.E{"status", input.Status})
+	}
+	if input.Number != nil {
+		q = append(q, bson.E{"number", input.Number})
 	}
 	if input.ObjectId != nil {
 		objectIds := []primitive.ObjectID{}
@@ -214,7 +217,7 @@ func (r *OrderMongo) FindOrder(input *domain.OrderFilter) (domain.Response[domai
 	if input.Sort != nil && len(input.Sort) > 0 {
 		sortParam := bson.D{}
 		for i := range input.Sort {
-			sortParam = append(sortParam, bson.E{*input.Sort[i].Key, *input.Sort[i].Value})
+			sortParam = append(sortParam, bson.E{input.Sort[i].Key, input.Sort[i].Value})
 		}
 		pipe = append(pipe, bson.D{{"$sort", sortParam}})
 		// fmt.Println("sortParam: ", len(input.Sort), sortParam, pipe)
@@ -234,7 +237,7 @@ func (r *OrderMongo) FindOrder(input *domain.OrderFilter) (domain.Response[domai
 	if input.Sort != nil {
 		sortParam := bson.D{}
 		for i := range input.Sort {
-			sortParam = append(sortParam, bson.E{*input.Sort[i].Key, *input.Sort[i].Value})
+			sortParam = append(sortParam, bson.E{input.Sort[i].Key, input.Sort[i].Value})
 		}
 		dataOptions = append(dataOptions, bson.D{{"$sort", sortParam}})
 	}
@@ -333,12 +336,10 @@ func (r *OrderMongo) CreateOrder(userID string, data *domain.Order) (*domain.Ord
 		updatedAt = time.Now()
 	}
 
-	itemCount, err := collection.CountDocuments(ctx, bson.M{"year": time.Now().Year()})
-	if err != nil {
-		return nil, err
-	}
-
-	// запрос на последний номер заказа
+	// itemCount, err := collection.CountDocuments(ctx, bson.M{"year": time.Now().Year()})
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	year := time.Now().Year()
 	if data.Year != nil {
@@ -351,7 +352,7 @@ func (r *OrderMongo) CreateOrder(userID string, data *domain.Order) (*domain.Ord
 		Name:            data.Name,
 		Description:     data.Description,
 		ObjectId:        data.ObjectId,
-		Number:          itemCount + 1,
+		Number:          int64(data.Number), //itemCount + 1,
 		ConstructorId:   data.ConstructorId,
 		Priority:        data.Priority,
 		Term:            data.Term,

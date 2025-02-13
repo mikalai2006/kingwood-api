@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/mikalai2006/kingwood-api/internal/domain"
 )
@@ -83,7 +84,7 @@ func (h *Hub) RemoveClient(client *Client) {
 	if _, ok := h.clients[client.RoomId]; ok {
 		status := false
 		user, err :=
-			client.Services.User.UpdateUser(client.UserId, &domain.UserInput{Online: &status})
+			client.Services.User.UpdateUser(client.UserId, &domain.UserInput{Online: &status, LastTime: time.Now()})
 		if err == nil {
 			h.HandleMessage(domain.MessageSocket{Type: "message", Sender: client.UserId, Recipient: "", Content: user, ID: "room1", Service: "user"})
 		}

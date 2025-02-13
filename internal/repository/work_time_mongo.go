@@ -62,6 +62,19 @@ func (r *WorkTimeMongo) FindWorkTime(input domain.WorkTimeFilter) (domain.Respon
 
 		q = append(q, bson.E{"workerId", bson.D{{"$in", workerIds}}})
 	}
+	if input.ID != nil && len(input.ID) > 0 {
+		ids := []primitive.ObjectID{}
+		for i, _ := range input.ID {
+			idPrimitive, err := primitive.ObjectIDFromHex(input.ID[i])
+			if err != nil {
+				return response, err
+			}
+
+			ids = append(ids, idPrimitive)
+		}
+
+		q = append(q, bson.E{"_id", bson.D{{"$in", ids}}})
+	}
 	// if input.Group != nil && len(input.Group) > 0 {
 	// 	q = append(q, bson.E{"group", bson.M{"$elemMatch": bson.D{{"$in", input.Group}}}})
 	// }
@@ -87,7 +100,7 @@ func (r *WorkTimeMongo) FindWorkTime(input domain.WorkTimeFilter) (domain.Respon
 	if input.Sort != nil && len(input.Sort) > 0 {
 		sortParam := bson.D{}
 		for i := range input.Sort {
-			sortParam = append(sortParam, bson.E{*input.Sort[i].Key, *input.Sort[i].Value})
+			sortParam = append(sortParam, bson.E{input.Sort[i].Key, input.Sort[i].Value})
 		}
 		pipe = append(pipe, bson.D{{"$sort", sortParam}})
 		// fmt.Println("sortParam: ", len(input.Sort), sortParam, pipe)
@@ -181,6 +194,19 @@ func (r *WorkTimeMongo) FindWorkTimePopulate(input domain.WorkTimeFilter) (domai
 
 		q = append(q, bson.E{"workerId", bson.D{{"$in", workerIds}}})
 	}
+	if input.ID != nil && len(input.ID) > 0 {
+		ids := []primitive.ObjectID{}
+		for i, _ := range input.ID {
+			idPrimitive, err := primitive.ObjectIDFromHex(input.ID[i])
+			if err != nil {
+				return response, err
+			}
+
+			ids = append(ids, idPrimitive)
+		}
+
+		q = append(q, bson.E{"_id", bson.D{{"$in", ids}}})
+	}
 
 	pipe := mongo.Pipeline{}
 	pipe = append(pipe, bson.D{{"$match", q}})
@@ -228,7 +254,7 @@ func (r *WorkTimeMongo) FindWorkTimePopulate(input domain.WorkTimeFilter) (domai
 	if input.Sort != nil && len(input.Sort) > 0 {
 		sortParam := bson.D{}
 		for i := range input.Sort {
-			sortParam = append(sortParam, bson.E{*input.Sort[i].Key, *input.Sort[i].Value})
+			sortParam = append(sortParam, bson.E{input.Sort[i].Key, input.Sort[i].Value})
 		}
 		pipe = append(pipe, bson.D{{"$sort", sortParam}})
 		// fmt.Println("sortParam: ", len(input.Sort), sortParam, pipe)
@@ -370,14 +396,17 @@ func (r *WorkTimeMongo) UpdateWorkTime(id string, userID string, data *domain.Wo
 	if data.Status != nil {
 		newData["status"] = &data.Status
 	}
-	if !data.From.IsZero() {
-		newData["from"] = data.From
-	}
 	if data.Total != nil {
 		newData["total"] = data.Total
 	}
+	if !data.From.IsZero() {
+		newData["from"] = data.From
+	}
 	if !data.To.IsZero() {
 		newData["to"] = data.To
+	}
+	if len(data.Props) > 0 {
+		newData["props"] = data.Props
 	}
 	newData["updatedAt"] = time.Now()
 
@@ -386,9 +415,14 @@ func (r *WorkTimeMongo) UpdateWorkTime(id string, userID string, data *domain.Wo
 		return result, err
 	}
 
-	err = collection.FindOne(ctx, filter).Decode(&result)
+	// err = collection.FindOne(ctx, filter).Decode(&result)
+	lim := 1
+	workTimes, err := r.FindWorkTimePopulate(domain.WorkTimeFilter{ID: []string{id}, Limit: &lim})
 	if err != nil {
 		return result, err
+	}
+	if len(workTimes.Data) > 0 {
+		result = &workTimes.Data[0]
 	}
 
 	return result, nil

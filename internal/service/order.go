@@ -59,6 +59,26 @@ func (s *OrderService) CreateOrder(userID string, data *domain.Order) (*domain.O
 	// 	}
 	// }
 
+	// запрос на последний номер заказа
+	if data.Number == 0 {
+		lastOrders, err := s.FindOrder(&domain.OrderFilter{Year: data.Year, Sort: []*domain.FilterSortParams{{Key: "number", Value: -1}}})
+		if err != nil {
+			return nil, err
+		}
+		if len(lastOrders.Data) > 0 {
+			data.Number = lastOrders.Data[0].Number + 1
+		}
+	} else {
+		// // если в данных есть number, проверяем на существование такого номера
+		// existOrders, err := s.FindOrder(&domain.OrderFilter{Year: data.Year, Number: &data.Number})
+		// if err != nil {
+		// 	return nil, err
+		// }
+		// if len(existOrders.Data) > 0 {
+		// 	return nil, domain.ErrExistNumberOrder
+		// }
+	}
+
 	result, err = s.repo.CreateOrder(userID, data)
 	if err != nil {
 		return nil, err

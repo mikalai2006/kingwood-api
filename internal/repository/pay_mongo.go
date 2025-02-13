@@ -137,7 +137,7 @@ func (r *PayMongo) FindPay(input *domain.PayFilter) (domain.Response[domain.Pay]
 	if input.Sort != nil && len(input.Sort) > 0 {
 		sortParam := bson.D{}
 		for i := range input.Sort {
-			sortParam = append(sortParam, bson.E{*input.Sort[i].Key, *input.Sort[i].Value})
+			sortParam = append(sortParam, bson.E{input.Sort[i].Key, input.Sort[i].Value})
 		}
 		pipe = append(pipe, bson.D{{"$sort", sortParam}})
 		// fmt.Println("sortParam: ", len(input.Sort), sortParam, pipe)

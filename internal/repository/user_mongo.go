@@ -806,6 +806,9 @@ func (r *UserMongo) UpdateUser(id string, user *domain.UserInput) (domain.User, 
 	// 	newData["typeWork"] = []string{}
 	// }
 
+	if !user.LastTime.IsZero() {
+		newData["lastTime"] = user.LastTime
+	}
 	if user.Online != nil {
 		newData["online"] = user.Online
 	}

@@ -129,7 +129,7 @@ func (c *Client) Read() {
 
 			status := true
 			_, err =
-				c.Services.User.UpdateUser(c.UserId, &domain.UserInput{Online: &status})
+				c.Services.User.UpdateUser(c.UserId, &domain.UserInput{Online: &status, LastTime: time.Now()})
 			if err != nil {
 				// c.hub.HandleMessage(domain.Message{Type: "message", Sender: c.UserId, Recipient: "user2", Content: user, ID: "room1", Service: "user"})
 				c.hub.RemoveClient(c)

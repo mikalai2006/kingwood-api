@@ -238,19 +238,21 @@ func (h *HandlerV1) CreateOrExistOrder(c *gin.Context, input *domain.Order) (*do
 	// 	return result, err
 	// }
 
-	// existOrders, err := h.services.Order.FindOrder(domain.RequestParams{
-	// 	Options: domain.Options{Limit: 1},
-	// 	Filter:  bson.D{{"node_id", input.NodeID}, {"userId", userIDPrimitive}},
-	// })
-	// if err != nil {
-	// 	appG.ResponseError(http.StatusBadRequest, err, nil)
-	// 	return result, err
-	// }
-	// if len(existOrders.Data) > 0 {
-	// 	fmt.Println("existOrders =")
-	// 	// appG.ResponseError(http.StatusBadRequest, model.ErrNodedataVoteExistValue, nil)
-	// 	return &existOrders.Data[0], nil
-	// }
+	// если в данных есть number, проверяем на существование такого номера
+	if input.Number != 0 {
+		lim := 1
+		existOrders, err := h.Services.Order.FindOrder(&domain.OrderFilter{Year: input.Year, Number: &input.Number, Limit: &lim})
+		if err != nil {
+			appG.ResponseError(http.StatusBadRequest, err, nil)
+			return result, err
+		}
+		if len(existOrders.Data) > 0 {
+			// fmt.Println("existOrders =")
+			// appG.ResponseError(http.StatusBadRequest, domain.ErrExistNumberOrder, nil)
+			return result, domain.ErrExistNumberOrder
+			// return &existOrders.Data[0], nil
+		}
+	}
 
 	result, err = h.Services.Order.CreateOrder(userID, input)
 	if err != nil {

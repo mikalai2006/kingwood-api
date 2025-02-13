@@ -81,6 +81,7 @@ type WorkHistory interface {
 	CreateWorkHistory(userID string, Order *domain.WorkHistory) (*domain.WorkHistory, error)
 	UpdateWorkHistory(id string, userID string, data *domain.WorkHistoryInput) (*domain.WorkHistory, error)
 	DeleteWorkHistory(id string) (*domain.WorkHistory, error)
+	GetStatByOrder(input domain.WorkHistoryFilter) ([]domain.WorkHistoryStatByOrder, error)
 }
 
 type Object interface {

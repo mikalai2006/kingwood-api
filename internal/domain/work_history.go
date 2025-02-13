@@ -60,8 +60,24 @@ type WorkHistoryFilter struct {
 	// OrderId    []string            `json:"orderId,omitempty"`
 	WorkerId []string            `json:"workerId,omitempty"`
 	TaskId   []string            `json:"taskId,omitempty"`
+	OrderId  []string            `json:"orderId,omitempty"`
 	Status   *int                `json:"status,omitempty"`
 	Sort     []*FilterSortParams `json:"sort,omitempty"`
 	Limit    *int                `json:"$limit,omitempty"`
 	Skip     *int                `json:"$skip,omitempty"`
+}
+
+type WorkHistoryStatByOrderOperation struct {
+	OperationId primitive.ObjectID `json:"operationId" bson:"operationId"`
+	Count       int64              `json:"count" bson:"count"`
+	Total       int64              `json:"total" bson:"total"`
+	// Operation Operation          `json:"operation" bson:"operation"`
+}
+
+type WorkHistoryStatByOrder struct {
+	ID         primitive.ObjectID                `json:"workerId" bson:"_id"`
+	Count      int64                             `json:"count" bson:"count"`
+	Total      int64                             `json:"total" bson:"total"`
+	Worker     User                              `json:"worker" bson:"worker"`
+	Operations []WorkHistoryStatByOrderOperation `json:"operations" bson:"operations"`
 }

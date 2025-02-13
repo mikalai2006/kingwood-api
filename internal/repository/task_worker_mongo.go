@@ -300,7 +300,7 @@ func (r *TaskWorkerMongo) FindTaskWorkerPopulate(input *domain.TaskWorkerFilter)
 	if input.Sort != nil && len(input.Sort) > 0 {
 		sortParam := bson.D{}
 		for i := range input.Sort {
-			sortParam = append(sortParam, bson.E{*input.Sort[i].Key, *input.Sort[i].Value})
+			sortParam = append(sortParam, bson.E{input.Sort[i].Key, input.Sort[i].Value})
 		}
 		pipe = append(pipe, bson.D{{"$sort", sortParam}})
 		// fmt.Println("sortParam: ", len(input.Sort), sortParam, pipe)
@@ -453,7 +453,7 @@ func (r *TaskWorkerMongo) CreateTaskWorker(userID string, data *domain.TaskWorke
 	if data.From != nil && !data.From.IsZero() {
 		from = *data.From
 	}
-	to := time.Now().AddDate(0, 3, 0)
+	to := time.Now().AddDate(0, 12, 0)
 	if data.To != nil && !data.From.IsZero() {
 		to = *data.To
 	}

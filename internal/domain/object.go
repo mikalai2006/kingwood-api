@@ -36,8 +36,8 @@ type ObjectFilter struct {
 }
 
 type FilterSortParams struct {
-	Key   *string `json:"key,omitempty"`
-	Value *int    `json:"value,omitempty"`
+	Key   string `json:"key,omitempty"`
+	Value int    `json:"value,omitempty"`
 }
 
 type ObjectInputData struct {

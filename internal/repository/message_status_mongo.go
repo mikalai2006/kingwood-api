@@ -68,7 +68,7 @@ func (r *MessageStatusMongo) FindMessageStatus(params *domain.MessageStatusFilte
 	if params.Sort != nil && len(params.Sort) > 0 {
 		sortParam := bson.D{}
 		for i := range params.Sort {
-			sortParam = append(sortParam, bson.E{*params.Sort[i].Key, *params.Sort[i].Value})
+			sortParam = append(sortParam, bson.E{params.Sort[i].Key, params.Sort[i].Value})
 		}
 		pipe = append(pipe, bson.D{{"$sort", sortParam}})
 		// fmt.Println("sortParam: ", len(input.Sort), sortParam, pipe)

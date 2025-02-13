@@ -102,7 +102,7 @@ func (r *MessageMongo) FindMessage(params *domain.MessageFilter) (domain.Respons
 	if params.Sort != nil && len(params.Sort) > 0 {
 		sortParam := bson.D{}
 		for i := range params.Sort {
-			sortParam = append(sortParam, bson.E{*params.Sort[i].Key, *params.Sort[i].Value})
+			sortParam = append(sortParam, bson.E{params.Sort[i].Key, params.Sort[i].Value})
 		}
 		pipe = append(pipe, bson.D{{"$sort", sortParam}})
 		// fmt.Println("sortParam: ", len(input.Sort), sortParam, pipe)
@@ -122,7 +122,7 @@ func (r *MessageMongo) FindMessage(params *domain.MessageFilter) (domain.Respons
 	if params.Sort != nil {
 		sortParam := bson.D{}
 		for i := range params.Sort {
-			sortParam = append(sortParam, bson.E{*params.Sort[i].Key, *params.Sort[i].Value})
+			sortParam = append(sortParam, bson.E{params.Sort[i].Key, params.Sort[i].Value})
 		}
 		dataOptions = append(dataOptions, bson.D{{"$sort", sortParam}})
 	}
