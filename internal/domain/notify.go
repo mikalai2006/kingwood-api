@@ -7,13 +7,15 @@ import (
 )
 
 type Notify struct {
-	ID      primitive.ObjectID     `json:"id" bson:"_id,omitempty"`
-	UserID  primitive.ObjectID     `json:"userId" bson:"userId"`
-	UserTo  primitive.ObjectID     `json:"userTo" bson:"userTo"`
-	Status  int                    `json:"status" bson:"status"`
-	Title   string                 `json:"title" bson:"title"`
-	Message string                 `json:"message" bson:"message"`
-	Props   map[string]interface{} `json:"props" bson:"props"`
+	ID         primitive.ObjectID     `json:"id" bson:"_id,omitempty"`
+	UserID     primitive.ObjectID     `json:"userId" bson:"userId"`
+	UserTo     primitive.ObjectID     `json:"userTo" bson:"userTo"`
+	Status     int                    `json:"status" bson:"status"`
+	Title      string                 `json:"title" bson:"title"`
+	Message    string                 `json:"message" bson:"message"`
+	Link       string                 `json:"link" bson:"link"`
+	LinkOption map[string]interface{} `json:"linkOption" bson:"linkOption"`
+	Props      map[string]interface{} `json:"props" bson:"props"`
 
 	Images    []string `json:"images" bson:"images"`
 	User      User     `json:"user" bson:"user"`
@@ -25,13 +27,15 @@ type Notify struct {
 }
 
 type NotifyInputMongo struct {
-	ID      primitive.ObjectID     `json:"id" bson:"_id,omitempty"`
-	UserID  primitive.ObjectID     `json:"userId" bson:"userId"`
-	UserTo  primitive.ObjectID     `json:"userTo" bson:"userTo"`
-	Status  int                    `json:"status" bson:"status"`
-	Title   string                 `json:"title" bson:"title"`
-	Message string                 `json:"message" bson:"message"`
-	Props   map[string]interface{} `json:"props" bson:"props"`
+	ID         primitive.ObjectID     `json:"id" bson:"_id,omitempty"`
+	UserID     primitive.ObjectID     `json:"userId" bson:"userId"`
+	UserTo     primitive.ObjectID     `json:"userTo" bson:"userTo"`
+	Status     int                    `json:"status" bson:"status"`
+	Title      string                 `json:"title" bson:"title"`
+	Message    string                 `json:"message" bson:"message"`
+	Link       string                 `json:"link" bson:"link"`
+	LinkOption map[string]interface{} `json:"linkOption" bson:"linkOption"`
+	Props      map[string]interface{} `json:"props" bson:"props"`
 
 	Images []string `json:"images" bson:"images"`
 
@@ -50,12 +54,14 @@ type NotifyImage struct {
 }
 
 type NotifyInput struct {
-	UserID  string                 `json:"userId" bson:"userId" primitive:"true"`
-	UserTo  string                 `json:"userTo" bson:"userTo" form:"userTo" primitive:"true"`
-	Status  *int                   `json:"status" bson:"status" form:"status"`
-	Title   string                 `json:"title" bson:"title" form:"title"`
-	Message string                 `json:"message" bson:"message" form:"message"`
-	Props   map[string]interface{} `json:"props" bson:"props" form:"props"`
+	UserID     string                 `json:"userId" bson:"userId" primitive:"true"`
+	UserTo     string                 `json:"userTo" bson:"userTo" form:"userTo" primitive:"true"`
+	Status     *int                   `json:"status" bson:"status" form:"status"`
+	Title      string                 `json:"title" bson:"title" form:"title"`
+	Message    string                 `json:"message" bson:"message" form:"message"`
+	Link       string                 `json:"link" bson:"link" form:"link"`
+	LinkOption map[string]interface{} `json:"linkOption" bson:"linkOption" form:"linkOption"`
+	Props      map[string]interface{} `json:"props" bson:"props" form:"props"`
 
 	Images []string `json:"images" bson:"images"`
 }

@@ -81,9 +81,11 @@ func (s *TaskWorkerService) CreateTaskWorker(userID string, data *domain.TaskWor
 
 	// add notify.
 	_, err = s.Services.Notify.CreateNotify(userID, &domain.NotifyInput{
-		UserTo:  result.WorkerId.Hex(),
-		Title:   domain.CreateTaskWorkerTitle,
-		Message: fmt.Sprintf(domain.CreateTaskWorker, result.Task.Name, result.Order.Number, result.Order.Name, result.Object.Name),
+		UserTo:     result.WorkerId.Hex(),
+		Title:      domain.CreateTaskWorkerTitle,
+		Message:    fmt.Sprintf(domain.CreateTaskWorker, result.Task.Name, result.Order.Number, result.Order.Name, result.Object.Name),
+		Link:       "/(tabs)/order",
+		LinkOption: map[string]interface{}{"orderId": result.OrderId.Hex(), "objectId": result.ObjectId.Hex()},
 	})
 
 	// add taskWorker for all task on the object for inserted worker (montaj).
@@ -179,9 +181,11 @@ func (s *TaskWorkerService) UpdateTaskWorker(id string, userID string, data *dom
 	// add notify.
 	if result.Worker.ID.Hex() != userID {
 		_, err = s.Services.Notify.CreateNotify(userID, &domain.NotifyInput{
-			UserTo:  result.WorkerId.Hex(),
-			Title:   domain.PatchTaskWorkerTitle,
-			Message: fmt.Sprintf(domain.PatchTaskWorker, result.Task.Name, result.Order.Number, result.Order.Name, result.Object.Name),
+			UserTo:     result.WorkerId.Hex(),
+			Title:      domain.PatchTaskWorkerTitle,
+			Message:    fmt.Sprintf(domain.PatchTaskWorker, result.Task.Name, result.Order.Number, result.Order.Name, result.Object.Name),
+			Link:       "/(tabs)/order",
+			LinkOption: map[string]interface{}{"orderId": result.OrderId.Hex(), "objectId": result.ObjectId.Hex()},
 		})
 	}
 

@@ -153,6 +153,8 @@ func (s *WorkTimeService) UpdateWorkTime(id string, userID string, data *domain.
 					result.From.Format("02.01.2006 15:04:05"),
 					result.To.Format("02.01.2006 15:04:05"),
 				),
+				// Link:       "/(tabs)/finance",
+				// LinkOption: map[string]interface{}{},
 			})
 		}
 		// отправка уведомления сотруднику, для кого меняются данные
@@ -167,6 +169,8 @@ func (s *WorkTimeService) UpdateWorkTime(id string, userID string, data *domain.
 				result.From.Format("02.01.2006 15:04:05"),
 				result.To.Format("02.01.2006 15:04:05"),
 			),
+			// Link:       "/(tabs)/finance",
+			// LinkOption: map[string]interface{}{},
 		})
 
 	}

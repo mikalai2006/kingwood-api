@@ -278,13 +278,15 @@ func (r *NotifyMongo) CreateNotify(userID string, data *domain.NotifyInput) (*do
 		return nil, err
 	}
 	newNotify := domain.NotifyInputMongo{
-		UserID:  userIDPrimitive,
-		UserTo:  userToPrimitive,
-		Status:  0,
-		Title:   data.Title,
-		Message: data.Message,
-		Props:   data.Props,
-		Images:  data.Images,
+		UserID:     userIDPrimitive,
+		UserTo:     userToPrimitive,
+		Status:     0,
+		Title:      data.Title,
+		Message:    data.Message,
+		Props:      data.Props,
+		Images:     data.Images,
+		Link:       data.Link,
+		LinkOption: data.LinkOption,
 
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
