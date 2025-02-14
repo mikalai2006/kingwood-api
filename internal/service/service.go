@@ -265,6 +265,7 @@ func NewServices(cfgService *ConfigServices) *Services {
 	User.Services = services
 	MessageStatus.Services = services
 	Message.Services = services
+	WorkTime.Services = services
 
 	return services
 }

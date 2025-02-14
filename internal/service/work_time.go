@@ -15,6 +15,7 @@ type WorkTimeService struct {
 	Hub         *Hub
 	userService *UserService
 	taskStatus  *TaskStatusService
+	Services    *Services
 }
 
 func NewWorkTimeService(repo repository.WorkTime, hub *Hub, userService *UserService, TaskStatus *TaskStatusService) *WorkTimeService {
@@ -78,9 +79,14 @@ func (s *WorkTimeService) UpdateWorkTime(id string, userID string, data *domain.
 		return nil, err
 	}
 
+	// статус изменения времени.
+	isTimeWorkChange := false
+
 	if len(existWorkTime.Data) > 0 {
 		// если данные для патча отличаются от данных из базы
 		if existWorkTime.Data[0].From != data.From || existWorkTime.Data[0].To != data.To {
+			isTimeWorkChange = true
+
 			// заносим старые данные в пропс.
 			newProps := map[string]interface{}{}
 			if existWorkTime.Data[0].Props != nil {
@@ -110,6 +116,59 @@ func (s *WorkTimeService) UpdateWorkTime(id string, userID string, data *domain.
 	result, err := s.repo.UpdateWorkTime(id, userID, data)
 	if err != nil {
 		return result, err
+	}
+
+	if isTimeWorkChange {
+		// находим пользователей для создания уведомлений.
+		roles, err := s.Services.Role.FindRole(&domain.RoleFilter{Code: []string{"admin", "boss"}})
+		if err != nil {
+			return nil, err
+		}
+		ids := []string{}
+		var users []domain.User
+
+		if len(roles.Data) > 0 {
+			for i := range roles.Data {
+				ids = append(ids, roles.Data[i].ID.Hex())
+			}
+
+			_users, err := s.Services.User.FindUser(&domain.UserFilter{RoleId: ids})
+			if err != nil {
+				return nil, err
+			}
+
+			users = _users.Data
+		}
+
+		for i := range users {
+			// отправка уведомления администраторам и нач. цеху
+			_, err = s.Services.Notify.CreateNotify(userID, &domain.NotifyInput{
+				UserTo: users[i].ID.Hex(),
+				Title:  domain.PatchWorkTimeTitle,
+				Message: fmt.Sprintf(
+					domain.PatchWorkTime,
+					existWorkTime.Data[0].Date.Format("02.01.2006"),
+					existWorkTime.Data[0].From.Format("02.01.2006 15:04:05"),
+					existWorkTime.Data[0].To.Format("02.01.2006 15:04:05"),
+					result.From.Format("02.01.2006 15:04:05"),
+					result.To.Format("02.01.2006 15:04:05"),
+				),
+			})
+		}
+		// отправка уведомления сотруднику, для кого меняются данные
+		_, err = s.Services.Notify.CreateNotify(userID, &domain.NotifyInput{
+			UserTo: existWorkTime.Data[0].WorkerId.Hex(),
+			Title:  domain.PatchWorkTimeTitle,
+			Message: fmt.Sprintf(
+				domain.PatchWorkTime,
+				existWorkTime.Data[0].Date.Format("02.01.2006"),
+				existWorkTime.Data[0].From.Format("02.01.2006 15:04:05"),
+				existWorkTime.Data[0].To.Format("02.01.2006 15:04:05"),
+				result.From.Format("02.01.2006 15:04:05"),
+				result.To.Format("02.01.2006 15:04:05"),
+			),
+		})
+
 	}
 
 	// update total.

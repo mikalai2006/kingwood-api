@@ -416,8 +416,7 @@ func (r *WorkTimeMongo) UpdateWorkTime(id string, userID string, data *domain.Wo
 	}
 
 	// err = collection.FindOne(ctx, filter).Decode(&result)
-	lim := 1
-	workTimes, err := r.FindWorkTimePopulate(domain.WorkTimeFilter{ID: []string{id}, Limit: &lim})
+	workTimes, err := r.FindWorkTimePopulate(domain.WorkTimeFilter{ID: []string{id}})
 	if err != nil {
 		return result, err
 	}
