@@ -81,10 +81,9 @@ func (s *WorkTimeService) UpdateWorkTime(id string, userID string, data *domain.
 
 	// статус изменения времени.
 	isTimeWorkChange := false
-
 	if len(existWorkTime.Data) > 0 {
 		// если данные для патча отличаются от данных из базы
-		if existWorkTime.Data[0].From != data.From || existWorkTime.Data[0].To != data.To && !existWorkTime.Data[0].To.IsZero() {
+		if (existWorkTime.Data[0].From != data.From || existWorkTime.Data[0].To != data.To) && existWorkTime.Data[0].To.Year() != 1 {
 			isTimeWorkChange = true
 
 			// заносим старые данные в пропс.
