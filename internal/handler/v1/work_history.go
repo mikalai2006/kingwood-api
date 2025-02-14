@@ -20,6 +20,7 @@ func (h *HandlerV1) registerWorkHistory(router *gin.RouterGroup) {
 	route.PATCH("/:id", h.SetUserFromRequest, h.UpdateWorkHistory)
 	route.POST("/list", h.CreateWorkHistoryList)
 	route.POST("/statByOrder", h.GetStatByOrder)
+	route.DELETE("/:id", h.DeleteWorkHistory)
 }
 
 func (h *HandlerV1) CreateWorkHistory(c *gin.Context) {
@@ -165,6 +166,30 @@ func (h *HandlerV1) UpdateWorkHistory(c *gin.Context) {
 
 func (h *HandlerV1) DeleteWorkHistory(c *gin.Context) {
 
+	appG := app.Gin{C: c}
+
+	id := c.Param("id")
+	if id == "" {
+		// c.AbortWithError(http.StatusBadRequest, errors.New("for remove need id"))
+		appG.ResponseError(http.StatusBadRequest, errors.New("for remove need id"), nil)
+		return
+	}
+
+	_, err := middleware.GetUID(c)
+	if err != nil {
+		// c.AbortWithError(http.StatusUnauthorized, err)
+		appG.ResponseError(http.StatusUnauthorized, err, gin.H{"hello": "world"})
+		return
+	}
+
+	user, err := h.Services.WorkHistory.DeleteWorkHistory(id) // , input
+	if err != nil {
+		// c.AbortWithError(http.StatusBadRequest, err)
+		appG.ResponseError(http.StatusBadRequest, err, nil)
+		return
+	}
+
+	c.JSON(http.StatusOK, user)
 }
 
 func (h *HandlerV1) CreateOrExistWorkHistory(c *gin.Context, input *domain.WorkHistory) (*domain.WorkHistory, error) {

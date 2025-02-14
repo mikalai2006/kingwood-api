@@ -268,7 +268,7 @@ func (s *TaskWorkerService) UpdateTaskWorker(id string, userID string, data *dom
 		s.Services.WorkHistory.CreateWorkHistory(userID, &newWorkHistory)
 	} else {
 		// close wortHistory to.
-		existOpenWorkHistory, err := s.Services.WorkHistory.FindWorkHistoryPopulate(domain.WorkHistoryFilter{WorkerId: []string{result.WorkerId.Hex()}, TaskId: []string{result.TaskId.Hex()}, Status: &status})
+		existOpenWorkHistory, err := s.Services.WorkHistory.FindWorkHistoryPopulate(domain.WorkHistoryFilter{WorkerId: []string{result.WorkerId.Hex()}, TaskId: []string{result.TaskId.Hex()}, Status: &status, Sort: []*domain.FilterSortParams{{Key: "createdAt", Value: -1}}})
 		if err != nil {
 			return result, err
 		}
