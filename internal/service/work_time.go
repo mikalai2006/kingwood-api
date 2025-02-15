@@ -251,5 +251,14 @@ func (s *WorkTimeService) UpdateWorkTime(id string, userID string, data *domain.
 func (s *WorkTimeService) DeleteWorkTime(id string) (*domain.WorkTime, error) {
 	result, err := s.repo.DeleteWorkTime(id)
 
+	workHistorys, err := s.Services.WorkHistory.FindWorkHistory(domain.WorkHistoryFilter{WorkTimeId: []string{id}})
+	if err != nil {
+		return result, err
+	}
+
+	for i := range workHistorys.Data {
+		_, _ = s.Services.WorkHistory.DeleteWorkHistory(workHistorys.Data[i].ID.Hex())
+	}
+
 	return result, err
 }
