@@ -20,6 +20,7 @@ func (h *HandlerV1) registerWorkTime(router *gin.RouterGroup) {
 	route.POST("/populate", h.FindWorkTimePopulate)
 	route.PATCH("/:id", h.SetUserFromRequest, h.UpdateWorkTime)
 	route.POST("/list", h.CreateWorkTimeList)
+	route.DELETE("/:id", h.DeleteWorkTime)
 }
 
 func (h *HandlerV1) CreateWorkTime(c *gin.Context) {
@@ -183,6 +184,30 @@ func (h *HandlerV1) UpdateWorkTime(c *gin.Context) {
 
 func (h *HandlerV1) DeleteWorkTime(c *gin.Context) {
 
+	appG := app.Gin{C: c}
+
+	id := c.Param("id")
+	if id == "" {
+		// c.AbortWithError(http.StatusBadRequest, errors.New("for remove need id"))
+		appG.ResponseError(http.StatusBadRequest, errors.New("for remove need id"), nil)
+		return
+	}
+
+	_, err := middleware.GetUID(c)
+	if err != nil {
+		// c.AbortWithError(http.StatusUnauthorized, err)
+		appG.ResponseError(http.StatusUnauthorized, err, gin.H{"hello": "world"})
+		return
+	}
+
+	user, err := h.Services.WorkTime.DeleteWorkTime(id) // , input
+	if err != nil {
+		// c.AbortWithError(http.StatusBadRequest, err)
+		appG.ResponseError(http.StatusBadRequest, err, nil)
+		return
+	}
+
+	c.JSON(http.StatusOK, user)
 }
 
 func (h *HandlerV1) CreateOrExistWorkTime(c *gin.Context, input *domain.WorkTime) (*domain.WorkTime, error) {
