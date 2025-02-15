@@ -228,8 +228,8 @@ func (r *WorkTimeMongo) FindWorkTimePopulate(input domain.WorkTimeFilter) (domai
 				{"$match", bson.D{
 					{"$expr", bson.D{
 						{"$and", bson.A{
-							bson.D{{"$eq", bson.A{"$workTimeId", "$$id"}}},
-							bson.D{{"$eq", bson.A{"$workerId", "$$workerId"}}},
+							bson.D{{"$eq", bson.M{"$eq": [2]string{"$workTimeId", "$$id"}}}},
+							bson.D{{"$eq", bson.M{"$eq": [2]string{"$workerId", "$$workerId"}}}},
 							// bson.D{{"$lte", bson.A{"$to", "$$to"}}},
 							// bson.D{{"$gte", bson.A{"$from", "$$from"}}},
 						}},

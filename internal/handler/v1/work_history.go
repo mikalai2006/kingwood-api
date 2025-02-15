@@ -17,6 +17,7 @@ func (h *HandlerV1) registerWorkHistory(router *gin.RouterGroup) {
 	route := router.Group("/work_history")
 	route.POST("", h.CreateWorkHistory)
 	route.POST("/find", h.FindWorkHistory)
+	route.POST("/populate", h.FindWorkHistoryPopulate)
 	route.PATCH("/:id", h.SetUserFromRequest, h.UpdateWorkHistory)
 	route.POST("/list", h.CreateWorkHistoryList)
 	route.POST("/statByOrder", h.GetStatByOrder)
@@ -114,6 +115,24 @@ func (h *HandlerV1) FindWorkHistory(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, Works)
+}
+
+func (h *HandlerV1) FindWorkHistoryPopulate(c *gin.Context) {
+	appG := app.Gin{C: c}
+
+	var input *domain.WorkHistoryFilter
+	if er := c.BindJSON(&input); er != nil {
+		appG.ResponseError(http.StatusBadRequest, er, nil)
+		return
+	}
+
+	Tasks, err := h.Services.WorkHistory.FindWorkHistoryPopulate(*input)
+	if err != nil {
+		appG.ResponseError(http.StatusBadRequest, err, nil)
+		return
+	}
+
+	c.JSON(http.StatusOK, Tasks)
 }
 
 func (h *HandlerV1) UpdateWorkHistory(c *gin.Context) {
