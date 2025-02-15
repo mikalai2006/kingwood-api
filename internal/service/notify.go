@@ -69,6 +69,15 @@ func (s *NotifyService) CreateNotify(userID string, data *domain.NotifyInput) (*
 }
 
 func (s *NotifyService) UpdateNotify(id string, userID string, data *domain.NotifyInput) (*domain.Notify, error) {
+	existNotify, err := s.repo.FindNotifyPopulate(&domain.NotifyFilter{ID: []*string{&id}})
+	if err != nil {
+		return nil, err
+	}
+
+	if len(existNotify.Data) > 0 && existNotify.Data[0].Status == 1 {
+		return &existNotify.Data[0], err
+	}
+
 	result, err := s.repo.UpdateNotify(id, userID, data)
 	if err != nil {
 		return result, err
