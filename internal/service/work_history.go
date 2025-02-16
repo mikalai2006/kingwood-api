@@ -1,7 +1,6 @@
 package service
 
 import (
-	"fmt"
 	"math"
 	"time"
 
@@ -98,10 +97,10 @@ func (s *WorkHistoryService) UpdateWorkHistory(id string, userID string, data *d
 	to1 := time.Date(result.To.Year(), result.To.Month(), result.To.Day(), result.To.Hour(), result.To.Minute(), result.To.Second(), 0, eastOfUTC)
 	from1 := time.Date(result.From.Year(), result.From.Month(), result.From.Day(), result.From.Hour(), result.From.Minute(), result.From.Second(), 0, eastOfUTC)
 
-	fmt.Println("======================PATCH WORK HISTORY====================")
-	fmt.Println("from: ", from1, "====>", from1.UTC())
-	fmt.Println("to: ", to1, "====>", to1.UTC())
-	fmt.Println("========================================================")
+	// fmt.Println("======================PATCH WORK HISTORY====================")
+	// fmt.Println("from: ", from1, "====>", from1.UTC())
+	// fmt.Println("to: ", to1, "====>", to1.UTC())
+	// fmt.Println("========================================================")
 
 	// fmt.Println("result.From: ", to1, to1.UTC(), from1, from1.UTC())
 	if from1.UTC().Day() != to1.UTC().Day() {

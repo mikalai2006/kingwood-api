@@ -60,6 +60,23 @@ func (s *WorkTimeService) CreateWorkTime(userID string, data *domain.WorkTime) (
 	// 	}
 	// }
 
+	// update total.
+	total := int64(0)
+	if !data.From.IsZero() && !data.To.IsZero() {
+		totalMinutes := data.To.Sub(data.From).Minutes()
+		total = int64(math.Ceil(totalMinutes * (float64(*data.Oklad) / 60)))
+
+		// totalMinutes := data.To.Sub(data.From).Minutes()
+		// total = int64(math.Floor(totalMinutes) * (float64(*data.Oklad) / float64(60)))
+		// fmt.Println("minute: ", (float64(*data.Oklad) / float64(60)))
+		// fmt.Println("totalMinutes: ", totalMinutes)
+		// fmt.Println("math ceil totalMinutes: ", math.Floor(totalMinutes))
+	}
+
+	if total > 0 {
+		data.Total = &total
+	}
+
 	result, err = s.repo.CreateWorkTime(userID, data)
 	if err != nil {
 		return nil, err
@@ -195,10 +212,10 @@ func (s *WorkTimeService) UpdateWorkTime(id string, userID string, data *domain.
 	to1 := time.Date(result.To.Year(), result.To.Month(), result.To.Day(), result.To.Hour(), result.To.Minute(), result.To.Second(), 0, eastOfUTC)
 	from1 := time.Date(result.From.Year(), result.From.Month(), result.From.Day(), result.From.Hour(), result.From.Minute(), result.From.Second(), 0, eastOfUTC)
 
-	fmt.Println("======================PATCH TIME WORK====================")
-	fmt.Println("from: ", from1, "====>", from1.UTC())
-	fmt.Println("to: ", to1, "====>", to1.UTC())
-	fmt.Println("========================================================")
+	// fmt.Println("======================PATCH TIME WORK====================")
+	// fmt.Println("from: ", from1, "====>", from1.UTC())
+	// fmt.Println("to: ", to1, "====>", to1.UTC())
+	// fmt.Println("========================================================")
 
 	// fmt.Println("result.From: ", to1, to1.UTC(), from1, from1.UTC())
 	if from1.UTC().Day() != to1.UTC().Day() {

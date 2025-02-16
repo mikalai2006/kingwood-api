@@ -361,9 +361,14 @@ func (r *WorkTimeMongo) CreateWorkTime(userID string, data *domain.WorkTime) (*d
 		return nil, err
 	}
 
-	err = r.db.Collection(tblWorkTime).FindOne(ctx, bson.M{"_id": res.InsertedID}).Decode(&result)
+	idInserted := res.InsertedID.(primitive.ObjectID)
+	insertedWorkTimes, err := r.FindWorkTimePopulate(domain.WorkTimeFilter{ID: []string{idInserted.Hex()}})
+	// err = r.db.Collection(tblWorkTime).FindOne(ctx, bson.M{"_id": res.InsertedID}).Decode(&result)
 	if err != nil {
 		return nil, err
+	}
+	if len(insertedWorkTimes.Data) > 0 {
+		result = &insertedWorkTimes.Data[0]
 	}
 
 	return result, nil
