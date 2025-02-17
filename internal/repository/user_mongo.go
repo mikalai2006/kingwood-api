@@ -508,6 +508,32 @@ func (r *UserMongo) FindUser(input *domain.UserFilter) (domain.Response[domain.U
 	}})
 	pipe = append(pipe, bson.D{{Key: "$set", Value: bson.M{"auth": bson.M{"$first": "$auths"}}}})
 
+	// workTimes.
+	pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
+		"from": tblWorkTime,
+		"as":   "workTimes",
+		"let":  bson.D{{Key: "id", Value: "$_id"}},
+		"pipeline": mongo.Pipeline{
+			bson.D{
+				{
+					Key: "$match",
+					Value: bson.M{
+						"$expr": bson.D{
+							{"$and", bson.A{
+								bson.M{"$eq": bson.A{"$status", 0}},
+								bson.M{"$eq": [2]string{"$workerId", "$$id"}},
+								// bson.D{{"$lte", bson.A{"$to", "$$to"}}},
+								// bson.D{{"$gte", bson.A{"$from", "$$from"}}},
+							}},
+						}},
+					// Value: bson.M{
+					// 	"$expr": bson.M{"$eq": [2]string{"$workerId", "$$id"}},
+					// },
+				},
+			},
+		},
+	}}})
+
 	// tasks.
 	pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
 		"from": tblTaskWorker,
@@ -647,6 +673,13 @@ func (r *UserMongo) FindUser(input *domain.UserFilter) (domain.Response[domain.U
 
 	resultSlice := make([]domain.User, len(results))
 	copy(resultSlice, results)
+
+	// устанавливаем работает ли пользователь.
+	for i := range resultSlice {
+		if len(resultSlice[i].WorkTimes) > 0 {
+			resultSlice[i].IsWork = 1
+		}
+	}
 
 	count, err := r.db.Collection(tblUsers).CountDocuments(ctx, bson.M{})
 	if err != nil {

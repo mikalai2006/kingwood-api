@@ -3,6 +3,7 @@ package service
 import (
 	"fmt"
 	"math"
+	"strings"
 	"time"
 
 	"github.com/mikalai2006/kingwood-api/internal/domain"
@@ -135,6 +136,16 @@ func (s *WorkTimeService) UpdateWorkTime(id string, userID string, data *domain.
 	}
 
 	if isTimeWorkChange {
+		// получаем пользователя, который вносит изменения.
+		var authorUpdate domain.User
+		_users, err := s.Services.User.FindUser(&domain.UserFilter{ID: []string{userID}})
+		if err != nil {
+			return nil, err
+		}
+		if len(_users.Data) > 0 {
+			authorUpdate = _users.Data[0]
+		}
+
 		// находим пользователей для создания уведомлений.
 		roles, err := s.Services.Role.FindRole(&domain.RoleFilter{Code: []string{"admin", "boss"}})
 		if err != nil {
@@ -156,34 +167,64 @@ func (s *WorkTimeService) UpdateWorkTime(id string, userID string, data *domain.
 			users = _users.Data
 		}
 
+		// получаем пользователя, для которого изменили рабочую сессию.
+		var worker domain.User
+		_workers, err := s.Services.User.FindUser(&domain.UserFilter{ID: []string{existWorkTime.Data[0].WorkerId.Hex()}})
+		if err != nil {
+			return nil, err
+		}
+		if len(_workers.Data) > 0 {
+			worker = _workers.Data[0]
+		}
+
+		// протяженность рабочей сессии
+		durationNew := result.To.Sub(result.From)
+		_durationNewText, _ := time.ParseDuration(durationNew.String())
+		durationNewText := strings.Replace(_durationNewText.String(), "h", "ч.", 1)
+		durationNewText = strings.Replace(durationNewText, "m", "мин.", 1)
+		durationNewText = strings.Replace(durationNewText, "s", "сек.", 1)
+		durationOld := existWorkTime.Data[0].To.Sub(existWorkTime.Data[0].From)
+		_durationOldText, _ := time.ParseDuration(durationOld.String())
+		durationOldText := strings.Replace(_durationOldText.String(), "h", "ч.", 1)
+		durationOldText = strings.Replace(durationOldText, "m", "мин.", 1)
+		durationOldText = strings.Replace(durationOldText, "s", "сек.", 1)
+		// durationOldText := fmt.Sprintf("%d:%d:%d", int64(_durationOldText.Hours()), int64(_durationOldText.Minutes()), int64(_durationOldText.Seconds()))
+
 		for i := range users {
 			// отправка уведомления администраторам и нач. цеху
-			_, err = s.Services.Notify.CreateNotify(userID, &domain.NotifyInput{
+			s.Services.Notify.CreateNotify(userID, &domain.NotifyInput{
 				UserTo: users[i].ID.Hex(),
 				Title:  domain.PatchWorkTimeTitle,
 				Message: fmt.Sprintf(
-					domain.PatchWorkTime,
+					domain.PatchWorkTimeAdmin,
+					authorUpdate.Name,
+					worker.Name,
 					existWorkTime.Data[0].Date.Format("02.01.2006"),
 					existWorkTime.Data[0].From.Format("02.01.2006 15:04:05"),
 					existWorkTime.Data[0].To.Format("02.01.2006 15:04:05"),
+					durationOldText,
 					result.From.Format("02.01.2006 15:04:05"),
 					result.To.Format("02.01.2006 15:04:05"),
+					durationNewText,
 				),
 				// Link:       "/(tabs)/finance",
 				// LinkOption: map[string]interface{}{},
 			})
 		}
 		// отправка уведомления сотруднику, для кого меняются данные
-		_, err = s.Services.Notify.CreateNotify(userID, &domain.NotifyInput{
+		s.Services.Notify.CreateNotify(userID, &domain.NotifyInput{
 			UserTo: existWorkTime.Data[0].WorkerId.Hex(),
 			Title:  domain.PatchWorkTimeTitle,
 			Message: fmt.Sprintf(
 				domain.PatchWorkTime,
+				authorUpdate.Name,
 				existWorkTime.Data[0].Date.Format("02.01.2006"),
 				existWorkTime.Data[0].From.Format("02.01.2006 15:04:05"),
 				existWorkTime.Data[0].To.Format("02.01.2006 15:04:05"),
+				durationOldText,
 				result.From.Format("02.01.2006 15:04:05"),
 				result.To.Format("02.01.2006 15:04:05"),
+				durationNewText,
 			),
 			// Link:       "/(tabs)/finance",
 			// LinkOption: map[string]interface{}{},

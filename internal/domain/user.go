@@ -38,9 +38,11 @@ type User struct {
 	TaskWorkers []TaskWorker       `json:"taskWorkers" bson:"taskWorkers" form:"taskWorkers"`
 	// Workes     *int64             `json:"workes" bson:"workes"`
 
-	PostObject Post    `json:"postObject" bson:"postObject"`
-	RoleObject Role    `json:"roleObject" bson:"roleObject"`
-	Images     []Image `json:"images,omitempty" bson:"images,omitempty"`
+	PostObject Post       `json:"postObject" bson:"postObject"`
+	RoleObject Role       `json:"roleObject" bson:"roleObject"`
+	Images     []Image    `json:"images,omitempty" bson:"images,omitempty"`
+	IsWork     int        `json:"isWork" bson:"isWork"`
+	WorkTimes  []WorkTime `json:"workTimes" bson:"workTimes"`
 	// Post   []string `json:"post" bson:"post"`
 	Auth        AuthPublicData `json:"auth,omitempty" bson:"auth,omitempty"`
 	AuthPrivate AuthPrivate    `json:"-" bson:"authPrivate,omitempty"`
