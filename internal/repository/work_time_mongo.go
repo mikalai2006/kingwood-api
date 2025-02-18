@@ -404,6 +404,9 @@ func (r *WorkTimeMongo) UpdateWorkTime(id string, userID string, data *domain.Wo
 	if data.Total != nil {
 		newData["total"] = data.Total
 	}
+	if data.Oklad != nil {
+		newData["oklad"] = data.Oklad
+	}
 	if !data.From.IsZero() {
 		newData["from"] = data.From
 	}

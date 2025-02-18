@@ -9,6 +9,11 @@ type Response[D any] struct {
 	Data  []D `json:"data" bson:"data"`
 }
 
+type ResultMetadata struct {
+	ID    interface{} `json:"_id" bson:"_id"`
+	Total int         `json:"total" bson:"total"`
+}
+
 type ResponseTokens struct {
 	AccessToken  string `json:"access_token" bson:"access_token"`
 	RefreshToken string `json:"refresh_token" bson:"refresh_token"`

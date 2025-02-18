@@ -97,3 +97,8 @@ type OrderFilter struct {
 	Limit *int                `json:"$limit,omitempty"`
 	Skip  *int                `json:"$skip,omitempty"`
 }
+
+type ResultFacetOrder struct {
+	Metadata []ResultMetadata `json:"metadata" bson:"metadata"`
+	Data     []Order          `json:"data" bson:"data"`
+}

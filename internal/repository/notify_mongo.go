@@ -25,7 +25,7 @@ func (r *NotifyMongo) FindNotifyPopulate(input *domain.NotifyFilter) (domain.Res
 	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
 	defer cancel()
 
-	var results []domain.Notify
+	// var results []domain.Notify
 	var response domain.Response[domain.Notify]
 
 	// Filters
@@ -68,6 +68,9 @@ func (r *NotifyMongo) FindNotifyPopulate(input *domain.NotifyFilter) (domain.Res
 		}
 
 		q = append(q, bson.E{"userTo", bson.D{{"$in", ids}}})
+	}
+	if input.Status != nil {
+		q = append(q, bson.E{"status", input.Status})
 	}
 
 	pipe := mongo.Pipeline{}
@@ -221,19 +224,39 @@ func (r *NotifyMongo) FindNotifyPopulate(input *domain.NotifyFilter) (domain.Res
 		pipe = append(pipe, bson.D{{"$sort", sortParam}})
 		// fmt.Println("sortParam: ", len(input.Sort), sortParam, pipe)
 	} else {
-		pipe = append(pipe, bson.D{{"$sort", bson.D{{"createdAt", 1}}}})
+		pipe = append(pipe, bson.D{{"$sort", bson.D{{"createdAt", -1}}}})
 	}
 
 	skip := 0
 	limit := 10
+	dataOptions := bson.A{}
 	if input.Skip != nil {
-		pipe = append(pipe, bson.D{{"$skip", input.Skip}})
 		skip = *input.Skip
+		dataOptions = append(dataOptions, bson.D{{"$skip", skip}})
 	}
 	if input.Limit != nil {
-		pipe = append(pipe, bson.D{{"$limit", input.Limit}})
 		limit = *input.Limit
+		dataOptions = append(dataOptions, bson.D{{"$limit", limit}})
 	}
+	if input.Sort != nil {
+		sortParam := bson.D{}
+		for i := range input.Sort {
+			sortParam = append(sortParam, bson.E{input.Sort[i].Key, input.Sort[i].Value})
+		}
+		dataOptions = append(dataOptions, bson.D{{"$sort", sortParam}})
+	} else {
+		pipe = append(pipe, bson.D{{"$sort", bson.D{{"createdAt", -1}}}})
+	}
+
+	pipe = append(pipe, bson.D{{Key: "$facet", Value: bson.D{
+		{"data", dataOptions},
+		{Key: "metadata", Value: mongo.Pipeline{
+			bson.D{{"$group", bson.D{
+				{"_id", nil},
+				{"total", bson.D{{"$sum", 1}}}}}},
+		}},
+	},
+	}})
 
 	cursor, err := r.db.Collection(tblNotify).Aggregate(ctx, pipe) // Find(ctx, params.Filter, opts)
 	// cursor, err := r.db.Collection(TblNode).Find(ctx, filter, opts)
@@ -242,8 +265,23 @@ func (r *NotifyMongo) FindNotifyPopulate(input *domain.NotifyFilter) (domain.Res
 	}
 	defer cursor.Close(ctx)
 
-	if er := cursor.All(ctx, &results); er != nil {
+	resultMap := []bson.M{}
+	if er := cursor.All(ctx, &resultMap); er != nil {
 		return response, er
+	}
+	resultFacetOne := domain.ResultFacetNotify{}
+	if len(resultMap) > 0 {
+		bsonBytes, errs := bson.Marshal(resultMap[0])
+		if errs != nil {
+			fmt.Println("rrrrr: errs ", errs)
+		}
+
+		bson.Unmarshal(bsonBytes, &resultFacetOne)
+	}
+
+	total := 0
+	if len(resultFacetOne.Metadata) > 0 {
+		total = resultFacetOne.Metadata[0].Total
 	}
 
 	// count, err := r.db.Collection(tblNotify).CountDocuments(ctx, params.Filter)
@@ -252,10 +290,10 @@ func (r *NotifyMongo) FindNotifyPopulate(input *domain.NotifyFilter) (domain.Res
 	// }
 
 	response = domain.Response[domain.Notify]{
-		Total: int(0),
+		Total: total,
 		Skip:  skip,
 		Limit: limit,
-		Data:  results,
+		Data:  resultFacetOne.Data,
 	}
 	return response, nil
 }

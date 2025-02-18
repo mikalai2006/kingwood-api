@@ -21,15 +21,6 @@ func NewOrderMongo(db *mongo.Database, i18n config.I18nConfig) *OrderMongo {
 	return &OrderMongo{db: db, i18n: i18n}
 }
 
-type ResultMetadata struct {
-	ID    interface{} `json:"_id" bson:"_id"`
-	Total int         `json:"total" bson:"total"`
-}
-type ResultFacet struct {
-	Metadata []ResultMetadata `json:"metadata" bson:"metadata"`
-	Data     []domain.Order   `json:"data" bson:"data"`
-}
-
 func (r *OrderMongo) FindOrder(input *domain.OrderFilter) (domain.Response[domain.Order], error) {
 	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
 	defer cancel()
@@ -284,7 +275,7 @@ func (r *OrderMongo) FindOrder(input *domain.OrderFilter) (domain.Response[domai
 	if er := cursor.All(ctx, &resultMap); er != nil {
 		return response, er
 	}
-	resultFacetOne := ResultFacet{}
+	resultFacetOne := domain.ResultFacetOrder{}
 	if len(resultMap) > 0 {
 		bsonBytes, errs := bson.Marshal(resultMap[0])
 		if errs != nil {

@@ -72,6 +72,11 @@ type NotifyFilter struct {
 	UserTo []*string           `json:"userTo,omitempty"`
 	Status *int                `json:"status,omitempty"`
 	Sort   []*FilterSortParams `json:"sort,omitempty"`
-	Limit  *int                `json:"limit,omitempty"`
-	Skip   *int                `json:"skip,omitempty"`
+	Limit  *int                `json:"$limit,omitempty"`
+	Skip   *int                `json:"$skip,omitempty"`
+}
+
+type ResultFacetNotify struct {
+	Metadata []ResultMetadata `json:"metadata" bson:"metadata"`
+	Data     []Notify         `json:"data" bson:"data"`
 }
