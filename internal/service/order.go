@@ -36,6 +36,17 @@ func (s *OrderService) CreateOrder(userID string, data *domain.Order) (*domain.O
 	if err != nil {
 		return nil, err
 	}
+
+	// получаем пользователя, который добавил изделие.
+	var authorCreate domain.User
+	_users, err := s.Services.User.FindUser(&domain.UserFilter{ID: []string{userID}})
+	if err != nil {
+		return nil, err
+	}
+	if len(_users.Data) > 0 {
+		authorCreate = _users.Data[0]
+	}
+
 	// existReview, err := s.repo.FindReview(domain.RequestParams{
 	// 	Filter:  bson.M{"node_id": review.NodeID, "userId": userIDPrimitive},
 	// 	Options: domain.Options{Limit: 1},
@@ -114,7 +125,7 @@ func (s *OrderService) CreateOrder(userID string, data *domain.Order) (*domain.O
 		_, err = s.Services.Notify.CreateNotify(userID, &domain.NotifyInput{
 			UserTo:  users[i].ID.Hex(),
 			Title:   domain.NewOrderTitle,
-			Message: fmt.Sprintf(domain.NewOrder, result.Number, result.Name, result.Object.Name),
+			Message: fmt.Sprintf(domain.NewOrder, authorCreate.Name, result.Number, result.Name, result.Object.Name),
 		})
 	}
 
