@@ -71,6 +71,7 @@ type TaskWorkerInputData struct {
 
 type TaskWorkerFilter struct {
 	ID          []string            `json:"id,omitempty"`
+	Query       string              `json:"query"`
 	ObjectId    []string            `json:"objectId,omitempty"`
 	OrderId     []string            `json:"orderId,omitempty"`
 	TaskId      []string            `json:"taskId,omitempty"`

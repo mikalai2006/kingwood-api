@@ -65,13 +65,13 @@ func (s *WorkTimeService) CreateWorkTime(userID string, data *domain.WorkTime) (
 	total := int64(0)
 	if !data.From.IsZero() && !data.To.IsZero() {
 		totalMinutes := data.To.Sub(data.From).Minutes()
-		total = int64(math.Ceil(totalMinutes * (float64(*data.Oklad) / 60)))
+		total = int64(math.Round(totalMinutes * (float64(*data.Oklad) / 60)))
 
 		// totalMinutes := data.To.Sub(data.From).Minutes()
 		// total = int64(math.Floor(totalMinutes) * (float64(*data.Oklad) / float64(60)))
-		// fmt.Println("minute: ", (float64(*data.Oklad) / float64(60)))
-		// fmt.Println("totalMinutes: ", totalMinutes)
-		// fmt.Println("math ceil totalMinutes: ", math.Floor(totalMinutes))
+		fmt.Println("minute: ", (float64(*data.Oklad) / float64(60)))
+		fmt.Println("totalMinutes: ", totalMinutes)
+		fmt.Println("math ceil totalMinutes: ", math.Floor(totalMinutes))
 	}
 
 	if total > 0 {
@@ -237,7 +237,11 @@ func (s *WorkTimeService) UpdateWorkTime(id string, userID string, data *domain.
 	total := int64(0)
 	if !result.From.IsZero() && !result.To.IsZero() {
 		totalMinutes := result.To.Sub(result.From).Minutes()
-		total = int64(math.Ceil(totalMinutes * (float64(*result.Oklad) / 60)))
+		total = int64(math.Round(totalMinutes * (float64(*result.Oklad) / 60)))
+
+		fmt.Println("minute: ", (float64(*data.Oklad) / float64(60)))
+		fmt.Println("totalMinutes: ", totalMinutes)
+		fmt.Println("math ceil totalMinutes: ", math.Floor(totalMinutes))
 	}
 
 	if total > 0 {
@@ -273,7 +277,7 @@ func (s *WorkTimeService) UpdateWorkTime(id string, userID string, data *domain.
 		newRobotUpdateData.To = toNew
 
 		totalMinutesPrev := toNew.Sub(result.From).Minutes()
-		totalPrev := int64(math.Ceil(totalMinutesPrev * (float64(*result.Oklad) / 60)))
+		totalPrev := int64(math.Round(totalMinutesPrev * (float64(*result.Oklad) / 60)))
 		// update total.
 		newRobotUpdateData.Total = &totalPrev
 	}
@@ -286,7 +290,7 @@ func (s *WorkTimeService) UpdateWorkTime(id string, userID string, data *domain.
 	if explodeDate {
 		// Переносим часть рабочего времени на другой день
 		totalMinutesNext := oldTo.Sub(fromNew).Minutes()
-		totalNext := int64(math.Ceil(totalMinutesNext * (float64(*result.Oklad) / 60)))
+		totalNext := int64(math.Round(totalMinutesNext * (float64(*result.Oklad) / 60)))
 		// fmt.Println("totalMinutesNext:", totalMinutesNext, " totalNext:", totalNext, " oldTo:", oldTo)
 		result, err = s.repo.CreateWorkTime(userID, &domain.WorkTime{
 			UserID:   result.UserID,

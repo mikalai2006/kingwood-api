@@ -231,7 +231,7 @@ func NewServices(cfgService *ConfigServices) *Services {
 	WorkTime := NewWorkTimeService(cfgService.Repositories.WorkTime, cfgService.Hub, User, TaskStatus)
 	Task := NewTaskService(cfgService.Repositories.Task, cfgService.Hub, User, TaskStatus, Order)
 	TaskWorker := NewTaskWorkerService(cfgService.Repositories.TaskWorker, User, TaskStatus, Task, cfgService.Hub)
-	TaskHistory := NewWorkHistoryService(cfgService.Repositories.WorkHistory, cfgService.Hub, User, TaskStatus)
+	TaskHistory := NewWorkHistoryService(cfgService.Repositories.WorkHistory, cfgService.Hub)
 	Notify := NewNotifyService(cfgService.Repositories.Notify, cfgService.Hub)
 	Pay := NewPayService(cfgService.Repositories.Pay, cfgService.Hub)
 
@@ -266,6 +266,7 @@ func NewServices(cfgService *ConfigServices) *Services {
 	MessageStatus.Services = services
 	Message.Services = services
 	WorkTime.Services = services
+	TaskHistory.Services = services
 
 	return services
 }

@@ -508,10 +508,10 @@ func (r *UserMongo) FindUser(input *domain.UserFilter) (domain.Response[domain.U
 	}})
 	pipe = append(pipe, bson.D{{Key: "$set", Value: bson.M{"auth": bson.M{"$first": "$auths"}}}})
 
-	// workTimes.
+	// workHistorys.
 	pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
-		"from": tblWorkTime,
-		"as":   "workTimes",
+		"from": tblWorkHistory,
+		"as":   "workHistorys",
 		"let":  bson.D{{Key: "id", Value: "$_id"}},
 		"pipeline": mongo.Pipeline{
 			bson.D{
@@ -676,7 +676,7 @@ func (r *UserMongo) FindUser(input *domain.UserFilter) (domain.Response[domain.U
 
 	// устанавливаем работает ли пользователь.
 	for i := range resultSlice {
-		if len(resultSlice[i].WorkTimes) > 0 {
+		if len(resultSlice[i].WorkHistorys) > 0 {
 			resultSlice[i].IsWork = 1
 		}
 	}

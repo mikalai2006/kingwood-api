@@ -47,6 +47,8 @@ type WorkTimeInput struct {
 	From time.Time `json:"from" bson:"from"`
 	To   time.Time `json:"to" bson:"to"`
 
+	OrderId string `json:"orderId" bson:"orderId" primitive:"true"`
+
 	CreatedAt time.Time `json:"createdAt" bson:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt" bson:"updatedAt"`
 }

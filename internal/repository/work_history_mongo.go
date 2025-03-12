@@ -160,6 +160,19 @@ func (r *WorkHistoryMongo) FindWorkHistoryPopulate(input domain.WorkHistoryFilte
 	q := bson.D{}
 
 	// Filters
+	if input.ID != nil && len(input.ID) > 0 {
+		ids := []primitive.ObjectID{}
+		for i, _ := range input.ID {
+			idPrimitive, err := primitive.ObjectIDFromHex(input.ID[i])
+			if err != nil {
+				return response, err
+			}
+
+			ids = append(ids, idPrimitive)
+		}
+
+		q = append(q, bson.E{"_id", bson.D{{"$in", ids}}})
+	}
 	if input.WorkerId != nil && len(input.WorkerId) > 0 {
 		workerIds := []primitive.ObjectID{}
 		for i, _ := range input.WorkerId {
@@ -172,6 +185,19 @@ func (r *WorkHistoryMongo) FindWorkHistoryPopulate(input domain.WorkHistoryFilte
 		}
 
 		q = append(q, bson.E{"workerId", bson.D{{"$in", workerIds}}})
+	}
+	if input.TaskWorkerId != nil && len(input.TaskWorkerId) > 0 {
+		ids := []primitive.ObjectID{}
+		for i, _ := range input.TaskWorkerId {
+			pid, err := primitive.ObjectIDFromHex(input.TaskWorkerId[i])
+			if err != nil {
+				return response, err
+			}
+
+			ids = append(ids, pid)
+		}
+
+		q = append(q, bson.E{"taskWorkerId", bson.D{{"$in", ids}}})
 	}
 	if input.WorkTimeId != nil && len(input.WorkTimeId) > 0 {
 		ids := []primitive.ObjectID{}
@@ -205,18 +231,142 @@ func (r *WorkHistoryMongo) FindWorkHistoryPopulate(input domain.WorkHistoryFilte
 
 	pipe := mongo.Pipeline{}
 	pipe = append(pipe, bson.D{{"$match", q}})
-	// pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
-	// 	"from": tblObject,
-	// 	"as":   "objecta",
-	// 	// "localField":   "userId",
-	// 	// "foreignField": "_id",
-	// 	"let": bson.D{{Key: "objectId", Value: "$objectId"}},
-	// 	"pipeline": mongo.Pipeline{
-	// 		bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$_id", "$$objectId"}}}}},
-	// 		bson.D{{"$limit", 1}},
-	// 	},
-	// }}})
-	// pipe = append(pipe, bson.D{{Key: "$set", Value: bson.M{"object": bson.M{"$first": "$objecta"}}}})
+
+	// object.
+	pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
+		"from": tblObject,
+		"as":   "objecta",
+		// "localField":   "userId",
+		// "foreignField": "_id",
+		"let": bson.D{{Key: "objectId", Value: "$objectId"}},
+		"pipeline": mongo.Pipeline{
+			bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$_id", "$$objectId"}}}}},
+			bson.D{{"$limit", 1}},
+		},
+	}}})
+	pipe = append(pipe, bson.D{{Key: "$set", Value: bson.M{"object": bson.M{"$first": "$objecta"}}}})
+
+	// order.
+	pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
+		"from": TblOrder,
+		"as":   "ordera",
+		// "localField":   "userId",
+		// "foreignField": "_id",
+		"let": bson.D{{Key: "orderId", Value: "$orderId"}},
+		"pipeline": mongo.Pipeline{
+			bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$_id", "$$orderId"}}}}},
+			bson.D{{"$limit", 1}},
+			bson.D{{Key: "$lookup", Value: bson.M{
+				"from": tblObject,
+				"as":   "objecta",
+				// "localField":   "userId",
+				// "foreignField": "_id",
+				"let": bson.D{{Key: "objectId", Value: "$objectId"}},
+				"pipeline": mongo.Pipeline{
+					bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$_id", "$$objectId"}}}}},
+					bson.D{{"$limit", 1}},
+				},
+			}}},
+			bson.D{{Key: "$set", Value: bson.M{"object": bson.M{"$first": "$objecta"}}}},
+		},
+	}}})
+	pipe = append(pipe, bson.D{{Key: "$set", Value: bson.M{"order": bson.M{"$first": "$ordera"}}}})
+
+	// task.
+	pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
+		"from":         tblTask,
+		"as":           "taska",
+		"localField":   "taskId",
+		"foreignField": "_id",
+		"pipeline": mongo.Pipeline{
+			bson.D{{Key: "$lookup", Value: bson.M{
+				"from":         tblOperation,
+				"as":           "operationa",
+				"localField":   "operationId",
+				"foreignField": "_id",
+			}}},
+			bson.D{{Key: "$set", Value: bson.M{"operation": bson.M{"$first": "$operationa"}}}},
+		},
+	}}})
+	pipe = append(pipe, bson.D{{Key: "$set", Value: bson.M{"task": bson.M{"$first": "$taska"}}}})
+
+	// worker.
+	pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
+		"from": tblUsers,
+		"as":   "usera",
+		"let":  bson.D{{Key: "workerId", Value: "$workerId"}},
+		"pipeline": mongo.Pipeline{
+			bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$_id", "$$workerId"}}}}},
+			bson.D{{"$limit", 1}},
+			bson.D{{
+				Key: "$lookup",
+				Value: bson.M{
+					"from": tblImage,
+					"as":   "images",
+					"let":  bson.D{{Key: "serviceId", Value: bson.D{{"$toString", "$_id"}}}},
+					"pipeline": mongo.Pipeline{
+						bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$serviceId", "$$serviceId"}}}}},
+					},
+				},
+			}},
+			// add populate auth.
+			bson.D{{
+				Key: "$lookup",
+				Value: bson.M{
+					"from":         TblAuth,
+					"as":           "auths",
+					"localField":   "userId",
+					"foreignField": "_id",
+					// "let": bson.D{{Key: "roleId", Value: bson.D{{"$toString", "$roleId"}}}},
+					// "pipeline": mongo.Pipeline{
+					// 	bson.D{{Key: "$match", Value: bson.M{"$_id": bson.M{"$eq": [2]string{"$roleId", "$$_id"}}}}},
+					// },
+				},
+			}},
+			bson.D{{Key: "$set", Value: bson.M{"auth": bson.M{"$first": "$auths"}}}},
+			bson.D{{Key: "$set", Value: bson.M{"authPrivate": bson.M{"$first": "$auths"}}}},
+
+			// post.
+			bson.D{{
+				Key: "$lookup",
+				Value: bson.M{
+					"from": TblPost,
+					"as":   "posts",
+					// "localField":   "_id",
+					// "foreignField": "serviceId",
+					"let": bson.D{{Key: "postId", Value: "$postId"}},
+					"pipeline": mongo.Pipeline{
+						bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$_id", "$$postId"}}}}},
+					},
+				},
+			}},
+			bson.D{{Key: "$set", Value: bson.M{"postObject": bson.M{"$first": "$posts"}}}},
+			// role.
+			bson.D{{Key: "$lookup", Value: bson.M{
+				"from": TblRole,
+				"as":   "rolea",
+				// "localField":   "userId",
+				// "foreignField": "_id",
+				"let": bson.D{{Key: "roleId", Value: "$roleId"}},
+				"pipeline": mongo.Pipeline{
+					bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$_id", "$$roleId"}}}}},
+					bson.D{{"$limit", 1}},
+				},
+			}}},
+			bson.D{{Key: "$set", Value: bson.M{"roleObject": bson.M{"$first": "$rolea"}}}},
+		},
+	}}},
+		bson.D{{Key: "$set", Value: bson.M{"worker": bson.M{"$first": "$usera"}}}},
+	)
+
+	if input.Sort != nil && len(input.Sort) > 0 {
+		sortParam := bson.D{}
+		for i := range input.Sort {
+			sortParam = append(sortParam, bson.E{input.Sort[i].Key, input.Sort[i].Value})
+		}
+		pipe = append(pipe, bson.D{{"$sort", sortParam}})
+		// fmt.Println("sortParam: ", len(input.Sort), sortParam, pipe)
+	}
 
 	if input.Sort != nil && len(input.Sort) > 0 {
 		sortParam := bson.D{}
@@ -532,21 +682,27 @@ func (r *WorkHistoryMongo) CreateWorkHistory(userID string, data *domain.WorkHis
 	if data.Total != nil {
 		defaultTotal = *data.Total
 	}
+	defaultTotalTime := int64(0)
+	if data.TotalTime != nil {
+		defaultTotalTime = *data.TotalTime
+	}
 
 	newTask := domain.WorkHistoryInput{
-		OrderId:     data.OrderId,
-		TaskId:      data.TaskId,
-		WorkerId:    data.WorkerId,
-		ObjectId:    data.ObjectId,
-		OperationId: data.OperationId,
-		UserID:      userIDPrimitive,
-		Status:      &data.Status,
-		Date:        date,
-		From:        data.From,
-		To:          data.To,
-		WorkTimeId:  data.WorkTimeId,
-		Oklad:       data.Oklad,
-		Total:       &defaultTotal,
+		OrderId:      &data.OrderId,
+		TaskId:       &data.TaskId,
+		WorkerId:     data.WorkerId,
+		ObjectId:     &data.ObjectId,
+		OperationId:  &data.OperationId,
+		UserID:       userIDPrimitive,
+		TaskWorkerId: &data.TaskWorkerId,
+		Status:       &data.Status,
+		Date:         date,
+		From:         data.From,
+		To:           data.To,
+		WorkTimeId:   data.WorkTimeId,
+		TotalTime:    &defaultTotalTime,
+		Oklad:        data.Oklad,
+		Total:        &defaultTotal,
 
 		CreatedAt: updatedAt,
 		UpdatedAt: updatedAt,
@@ -589,11 +745,14 @@ func (r *WorkHistoryMongo) UpdateWorkHistory(id string, userID string, data *dom
 	if data.Status != nil {
 		newData["status"] = &data.Status
 	}
-	if !data.OrderId.IsZero() {
+	if data.OrderId != nil {
 		newData["orderId"] = data.OrderId
 	}
-	if !data.TaskId.IsZero() {
+	if data.TaskId != nil {
 		newData["taskId"] = data.TaskId
+	}
+	if data.OperationId != nil {
+		newData["operationId"] = data.OperationId
 	}
 	if !data.WorkerId.IsZero() {
 		newData["workerId"] = data.WorkerId
@@ -601,6 +760,16 @@ func (r *WorkHistoryMongo) UpdateWorkHistory(id string, userID string, data *dom
 	if !data.WorkTimeId.IsZero() {
 		newData["workTimeId"] = data.WorkTimeId
 	}
+	if data.TaskWorkerId != nil {
+		newData["taskWorkerId"] = data.TaskWorkerId
+	}
+	if data.ObjectId != nil {
+		newData["objectId"] = data.ObjectId
+	}
+	if data.TotalTime != nil {
+		newData["totalTime"] = data.TotalTime
+	}
+
 	if !data.From.IsZero() {
 		newData["from"] = data.From
 	}
@@ -612,14 +781,22 @@ func (r *WorkHistoryMongo) UpdateWorkHistory(id string, userID string, data *dom
 	}
 	newData["updatedAt"] = time.Now()
 
+	if len(data.Props) > 0 {
+		newData["props"] = data.Props
+	}
+
 	_, err = collection.UpdateOne(ctx, filter, bson.M{"$set": newData})
 	if err != nil {
 		return result, err
 	}
 
-	err = collection.FindOne(ctx, filter).Decode(&result)
+	// err = collection.FindOne(ctx, filter).Decode(&result)
+	updatedItems, err := r.FindWorkHistoryPopulate(domain.WorkHistoryFilter{ID: []string{id}})
 	if err != nil {
 		return result, err
+	}
+	if len(updatedItems.Data) > 0 {
+		result = &updatedItems.Data[0]
 	}
 
 	return result, nil

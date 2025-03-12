@@ -232,12 +232,14 @@ func (r *NotifyMongo) FindNotifyPopulate(input *domain.NotifyFilter) (domain.Res
 	dataOptions := bson.A{}
 	if input.Skip != nil {
 		skip = *input.Skip
-		dataOptions = append(dataOptions, bson.D{{"$skip", skip}})
 	}
+	dataOptions = append(dataOptions, bson.D{{"$skip", skip}})
+
 	if input.Limit != nil {
 		limit = *input.Limit
-		dataOptions = append(dataOptions, bson.D{{"$limit", limit}})
 	}
+	dataOptions = append(dataOptions, bson.D{{"$limit", limit}})
+
 	if input.Sort != nil {
 		sortParam := bson.D{}
 		for i := range input.Sort {
@@ -245,8 +247,12 @@ func (r *NotifyMongo) FindNotifyPopulate(input *domain.NotifyFilter) (domain.Res
 		}
 		dataOptions = append(dataOptions, bson.D{{"$sort", sortParam}})
 	} else {
-		pipe = append(pipe, bson.D{{"$sort", bson.D{{"createdAt", -1}}}})
+		dataOptions = append(dataOptions, bson.D{{"$sort", bson.D{{"createdAt", -1}}}})
+		//pipe = append(pipe, bson.D{{"$sort", bson.D{{"createdAt", -1}}}})
 	}
+
+	// pipe = append(pipe, bson.D{{"$skip", skip}})
+	// pipe = append(pipe, bson.D{{"$limit", limit}})
 
 	pipe = append(pipe, bson.D{{Key: "$facet", Value: bson.D{
 		{"data", dataOptions},
@@ -288,7 +294,7 @@ func (r *NotifyMongo) FindNotifyPopulate(input *domain.NotifyFilter) (domain.Res
 	// if err != nil {
 	// 	return response, err
 	// }
-
+	// fmt.Println("skip=", skip, " limit=", limit, " s+t=", skip+limit, resultFacetOne.Metadata)
 	response = domain.Response[domain.Notify]{
 		Total: total,
 		Skip:  skip,

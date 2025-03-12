@@ -81,6 +81,7 @@ type OrderFilter struct {
 	Name            string     `json:"name,omitempty"`
 	Group           []string   `json:"group,omitempty"`
 	Status          *int64     `json:"status"`
+	Query           string     `json:"query"`
 	Number          *int       `json:"number"`
 	ObjectId        []string   `json:"objectId" bson:"objectId" form:"objectId"`
 	StolyarComplete *int64     `json:"stolyarComplete"`

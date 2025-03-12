@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/mikalai2006/kingwood-api/internal/config"
@@ -117,6 +118,20 @@ func (r *OrderMongo) FindOrder(input *domain.OrderFilter) (domain.Response[domai
 	if input.Number != nil {
 		q = append(q, bson.E{"number", input.Number})
 	}
+	if input.Query != "" {
+		qu := []interface{}{}
+		i, err := strconv.Atoi(input.Query)
+		if err == nil {
+			qu = append(qu, bson.D{{"number", i}})
+		}
+		qu = append(qu, bson.D{{"name", bson.D{{"$regex", primitive.Regex(primitive.Regex{Pattern: input.Query, Options: "i"})}}}}) //, {"$options", "ig"}
+
+		q = append(q, bson.E{
+			"$or",
+			qu,
+		})
+
+	}
 	if input.ObjectId != nil {
 		objectIds := []primitive.ObjectID{}
 		for key, _ := range input.ObjectId {
@@ -143,6 +158,8 @@ func (r *OrderMongo) FindOrder(input *domain.OrderFilter) (domain.Response[domai
 	if input.MontajComplete != nil {
 		q = append(q, bson.E{"montajComplete", input.MontajComplete})
 	}
+
+	// fmt.Println("q: ", q)
 
 	pipe := mongo.Pipeline{}
 	pipe = append(pipe, bson.D{{"$match", q}})
