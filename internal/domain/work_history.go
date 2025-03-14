@@ -70,6 +70,9 @@ type WorkHistoryFilter struct {
 	TaskId       []string            `json:"taskId,omitempty"`
 	OrderId      []string            `json:"orderId,omitempty"`
 	Status       *int                `json:"status,omitempty"`
+	From         time.Time           `json:"from,omitempty"`
+	To           time.Time           `json:"to,omitempty"`
+	Date         time.Time           `json:"date,omitempty"`
 	Sort         []*FilterSortParams `json:"sort,omitempty"`
 	Limit        *int                `json:"$limit,omitempty"`
 	Skip         *int                `json:"$skip,omitempty"`
