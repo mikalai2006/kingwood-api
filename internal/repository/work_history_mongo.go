@@ -31,6 +31,35 @@ func (r *WorkHistoryMongo) FindWorkHistory(input domain.WorkHistoryFilter) (doma
 	q := bson.D{}
 
 	// Filters
+	if !input.From.IsZero() {
+		q = append(q, bson.E{"from", bson.D{{"$gte", primitive.NewDateTimeFromTime(input.From)}}})
+	}
+	if !input.To.IsZero() {
+		q = append(q, bson.E{"to", bson.D{{"$lte", primitive.NewDateTimeFromTime(input.To)}}})
+	}
+	if input.Status != nil {
+		q = append(q, bson.E{"status", input.Status})
+	}
+	if !input.Date.IsZero() {
+		t := time.Time(input.Date)
+		// year, month, day := t.Date()
+		// from := time.Date(year, month, day, 0, 0, 0, 0, t.Location())
+		// to := time.Date(year, month, day, 23, 59, 59, 0, t.Location())
+
+		// eastOfUTC := time.FixedZone("UTC-3", -3*60*60)
+		eastOfUTCP := time.FixedZone("UTC+3", 3*60*60)
+		from1 := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, eastOfUTCP)
+		to1 := time.Date(t.Year(), t.Month(), t.Day(), 23, 59, 59, 0, eastOfUTCP)
+
+		// fmt.Println("======================FIND TIME WORK====================")
+		// fmt.Println("date: ", t, "====>", t.UTC())
+		// fmt.Println("from: ", from1, "====>", from1.UTC())
+		// fmt.Println("to: ", to1, "====>", to1.UTC())
+		// fmt.Println("========================================================")
+
+		q = append(q, bson.E{"date", bson.D{{"$gte", primitive.NewDateTimeFromTime(from1.UTC())}}})
+		q = append(q, bson.E{"date", bson.D{{"$lte", primitive.NewDateTimeFromTime(to1.UTC())}}})
+	}
 	if input.WorkerId != nil && len(input.WorkerId) > 0 {
 		workerIds := []primitive.ObjectID{}
 		for i, _ := range input.WorkerId {
