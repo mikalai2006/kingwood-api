@@ -1,6 +1,8 @@
 package service
 
 import (
+	"fmt"
+
 	"github.com/mikalai2006/kingwood-api/internal/domain"
 	"github.com/mikalai2006/kingwood-api/internal/repository"
 	expo "github.com/oliveroneill/exponent-server-sdk-golang/sdk"
@@ -62,7 +64,9 @@ func (s *NotifyService) CreateNotify(userID string, data *domain.NotifyInput) (*
 		if err != nil {
 			return nil, err
 		}
-
+		fmt.Println("Sent push successfully!")
+	} else {
+		fmt.Println("Sent push wrong!", userData.AuthPrivate)
 	}
 
 	return result, err
