@@ -447,6 +447,14 @@ func (s *TaskWorkerService) UpdateTaskWorker(id string, userID string, data *dom
 		return result, err
 	}
 
+	// если сам пользователь меняет, то останавливаем все taskHistory
+	if result.WorkerId.Hex() == userID {
+		existOpenWorkHistory, err = s.Services.WorkHistory.FindWorkHistoryPopulate(domain.WorkHistoryFilter{WorkerId: []string{result.WorkerId.Hex()}, Status: &status, Sort: []*domain.FilterSortParams{{Key: "createdAt", Value: -1}}}) //TaskId: []string{result.TaskId.Hex()},
+		if err != nil {
+			return result, err
+		}
+	}
+
 	for i := range existOpenWorkHistory.Data {
 		// if len(existOpenWorkHistory.Data) > 0 {
 		statusPatch := 1

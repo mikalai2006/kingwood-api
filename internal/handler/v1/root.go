@@ -60,7 +60,7 @@ func (h *HandlerV1) Init(api *gin.RouterGroup) {
 			h.registerTaskWorker(authenticated)
 			h.registerNotify(authenticated)
 			h.RegisterUser(authenticated)
-			h.registerWorkTime(authenticated)
+			// h.registerWorkTime(authenticated)
 			h.registerWorkHistory(authenticated)
 			h.registerPayTemplate(authenticated)
 		}
