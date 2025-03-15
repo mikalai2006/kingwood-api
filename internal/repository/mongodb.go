@@ -35,7 +35,6 @@ const (
 	tblTaskMontajWorker = "taskMontajWorker"
 	tblOperation        = "operation"
 	tblTaskStatus       = "taskStatus"
-	tblWorkTime         = "workTime"
 	tblWorkHistory      = "workHistory"
 	tblAppError         = "appError"
 
@@ -46,6 +45,8 @@ const (
 	tblObject      = "object"
 	TblProduct     = "product"
 	tblImage       = "image"
+
+	TblArchiveOrder = "archive_order"
 
 	MongoQueryTimeout = 10 * time.Second
 )

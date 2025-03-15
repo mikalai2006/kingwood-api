@@ -208,16 +208,8 @@ func (s *OrderService) DeleteOrder(id string, userID string) (*domain.Order, err
 		return result, err
 	}
 	for i := range allWorkHistory.Data {
-		_, err = s.Services.WorkHistory.DeleteWorkHistory(allWorkHistory.Data[i].ID.Hex())
+		_, err = s.Services.WorkHistory.DeleteWorkHistory(allWorkHistory.Data[i].ID.Hex(), userID)
 	}
-	// // delete workTime.
-	// allWorkTime, err := s.Services.WorkTime.FindWorkTimePopulate(domain.WorkTimeFilter{WorkerId: []string{id}})
-	// if err != nil {
-	// 	return result, err
-	// }
-	// for i := range allWorkTime.Data {
-	// 	_, err = s.Services.WorkTime.DeleteWorkTime(allWorkTime.Data[i].ID.Hex())
-	// }
 
 	// // delete workHistory.
 	// allWorkHistory, err := s.Services.WorkHistory.FindWorkHistoryPopulate(domain.WorkHistoryFilter{WorkerId: []string{id}})
@@ -246,8 +238,13 @@ func (s *OrderService) DeleteOrder(id string, userID string) (*domain.Order, err
 	// 	_, err = s.Services.Notify.DeleteNotify(allNotify.Data[i].ID.Hex())
 	// }
 	result, err = s.repo.DeleteOrder(id)
+	if err != nil {
+		return result, err
+	}
 
 	s.Hub.HandleMessage(domain.MessageSocket{Type: "message", Method: "DELETE", Sender: userID, Recipient: "", Content: result, ID: "room1", Service: "order"})
+
+	_, err = s.Services.CreateArchiveOrder(userID, result)
 
 	return result, err
 }

@@ -10,7 +10,6 @@ type WorkHistory struct {
 	ID     primitive.ObjectID `json:"id" bson:"_id,omitempty"`
 	UserID primitive.ObjectID `json:"userId" bson:"userId" primitive:"true"`
 
-	WorkTimeId   primitive.ObjectID     `json:"workTimeId" bson:"workTimeId" primitive:"true"`
 	ObjectId     primitive.ObjectID     `json:"objectId" bson:"objectId" primitive:"true"`
 	OrderId      primitive.ObjectID     `json:"orderId" bson:"orderId" primitive:"true"`
 	TaskId       primitive.ObjectID     `json:"taskId" bson:"taskId" primitive:"true"`
@@ -40,7 +39,6 @@ type WorkHistoryInput struct {
 	ID     primitive.ObjectID `json:"id" bson:"_id,omitempty"`
 	UserID primitive.ObjectID `json:"userId" bson:"userId"`
 
-	WorkTimeId   primitive.ObjectID  `json:"workTimeId" bson:"workTimeId" primitive:"true"`
 	ObjectId     *primitive.ObjectID `json:"objectId" bson:"objectId" primitive:"true"`
 	OrderId      *primitive.ObjectID `json:"orderId" bson:"orderId" primitive:"true"`
 	TaskId       *primitive.ObjectID `json:"taskId" bson:"taskId" primitive:"true"`
@@ -62,8 +60,7 @@ type WorkHistoryInput struct {
 }
 
 type WorkHistoryFilter struct {
-	ID         []string `json:"id,omitempty"`
-	WorkTimeId []string `json:"workTimeId,omitempty"`
+	ID []string `json:"id,omitempty"`
 	// OrderId    []string            `json:"orderId,omitempty"`
 	WorkerId     []string            `json:"workerId,omitempty"`
 	TaskWorkerId []string            `json:"taskWorkerId,omitempty"`

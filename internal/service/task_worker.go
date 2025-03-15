@@ -479,13 +479,6 @@ func (s *TaskWorkerService) UpdateTaskWorker(id string, userID string, data *dom
 			Oklad:        result.Worker.Oklad,
 		}
 
-		// workTimeActual, err := s.Services.WorkTime.FindWorkTimePopulate(domain.WorkTimeFilter{WorkerId: []string{result.WorkerId.Hex()}, Status: &status, Sort: []*domain.FilterSortParams{{Key: "createdAt", Value: -1}}})
-		// if err != nil {
-		// 	return result, err
-		// }
-		// if len(workTimeActual.Data) > 0 {
-		// 	newWorkHistory.WorkTimeId = workTimeActual.Data[0].ID
-		// }
 		// create workHistory from.
 		s.Services.WorkHistory.CreateWorkHistory(userID, &newWorkHistory)
 	}

@@ -28,11 +28,11 @@ var (
 	PatchPay      = "%s изменил ваш счет %s(%d ₽) на %s(%d ₽) за период %s"
 	PatchPayAdmin = "%s изменил счет %s: %s(%d ₽) на %s(%d ₽) за период %s"
 
-	PatchWorkTimeTitle = "Изменение рабочей сессии"
-	PatchWorkTime      = "%s изменил вашу рабочую сессию за %s: старые данные: с %s по %s(%s), новые данные: с %s по %s(%s)"
-	PatchWorkTimeAdmin = "%s изменил рабочую сессию для %s за %s: старые данные: с %s по %s(%s), новые данные: с %s по %s(%s)"
-
 	PatchWorkHistoryTitle = "Изменение рабочей сессии"
 	PatchWorkHistory      = "%s изменил вашу рабочую сессию за %s: старые данные: с %s по %s(%s)(%s), новые данные: с %s по %s(%s)(%s)"
 	PatchWorkHistoryAdmin = "%s изменил рабочую сессию для %s за %s: старые данные: с %s по %s(%s)(%s), новые данные: с %s по %s(%s)(%s)"
+
+	DeleteWorkHistoryTitle = "Удаление рабочей сессии"
+	DeleteWorkHistory      = "%s удалил вашу рабочую сессию за %s для заказа №%d - %s (объект %s)"
+	DeleteWorkHistoryAdmin = "%s удалил рабочую сессию для %s за %s для заказа №%d - %s (объект %s)"
 )

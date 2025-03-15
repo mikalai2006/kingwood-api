@@ -73,19 +73,7 @@ func (r *WorkHistoryMongo) FindWorkHistory(input domain.WorkHistoryFilter) (doma
 
 		q = append(q, bson.E{"workerId", bson.D{{"$in", workerIds}}})
 	}
-	if input.WorkTimeId != nil && len(input.WorkTimeId) > 0 {
-		ids := []primitive.ObjectID{}
-		for i, _ := range input.WorkTimeId {
-			iDPrimitive, err := primitive.ObjectIDFromHex(input.WorkTimeId[i])
-			if err != nil {
-				return response, err
-			}
 
-			ids = append(ids, iDPrimitive)
-		}
-
-		q = append(q, bson.E{"workTimeId", bson.D{{"$in", ids}}})
-	}
 	if input.TaskId != nil && len(input.TaskId) > 0 {
 		ids := []primitive.ObjectID{}
 		for i, _ := range input.TaskId {
@@ -257,19 +245,7 @@ func (r *WorkHistoryMongo) FindWorkHistoryPopulate(input domain.WorkHistoryFilte
 
 		q = append(q, bson.E{"taskWorkerId", bson.D{{"$in", ids}}})
 	}
-	if input.WorkTimeId != nil && len(input.WorkTimeId) > 0 {
-		ids := []primitive.ObjectID{}
-		for i, _ := range input.WorkTimeId {
-			iDPrimitive, err := primitive.ObjectIDFromHex(input.WorkTimeId[i])
-			if err != nil {
-				return response, err
-			}
 
-			ids = append(ids, iDPrimitive)
-		}
-
-		q = append(q, bson.E{"workTimeId", bson.D{{"$in", ids}}})
-	}
 	if input.TaskId != nil && len(input.TaskId) > 0 {
 		ids := []primitive.ObjectID{}
 		for i, _ := range input.TaskId {
@@ -506,19 +482,7 @@ func (r *WorkHistoryMongo) GetStatByOrder(input domain.WorkHistoryFilter) ([]dom
 
 		q = append(q, bson.E{"workerId", bson.D{{"$in", workerIds}}})
 	}
-	if input.WorkTimeId != nil && len(input.WorkTimeId) > 0 {
-		ids := []primitive.ObjectID{}
-		for i, _ := range input.WorkTimeId {
-			iDPrimitive, err := primitive.ObjectIDFromHex(input.WorkTimeId[i])
-			if err != nil {
-				return response, err
-			}
 
-			ids = append(ids, iDPrimitive)
-		}
-
-		q = append(q, bson.E{"workTimeId", bson.D{{"$in", ids}}})
-	}
 	if input.TaskId != nil && len(input.TaskId) > 0 {
 		ids := []primitive.ObjectID{}
 		for i, _ := range input.TaskId {
@@ -757,7 +721,6 @@ func (r *WorkHistoryMongo) CreateWorkHistory(userID string, data *domain.WorkHis
 		Date:         date,
 		From:         data.From,
 		To:           data.To,
-		WorkTimeId:   data.WorkTimeId,
 		TotalTime:    &defaultTotalTime,
 		Oklad:        data.Oklad,
 		Total:        &defaultTotal,
@@ -815,9 +778,6 @@ func (r *WorkHistoryMongo) UpdateWorkHistory(id string, userID string, data *dom
 	if !data.WorkerId.IsZero() {
 		newData["workerId"] = data.WorkerId
 	}
-	if !data.WorkTimeId.IsZero() {
-		newData["workTimeId"] = data.WorkTimeId
-	}
 	if data.TaskWorkerId != nil {
 		newData["taskWorkerId"] = data.TaskWorkerId
 	}
@@ -872,11 +832,20 @@ func (r *WorkHistoryMongo) DeleteWorkHistory(id string) (*domain.WorkHistory, er
 		return result, err
 	}
 
-	filter := bson.M{"_id": idPrimitive}
-
-	err = collection.FindOne(ctx, filter).Decode(&result)
+	removeItems, err := r.FindWorkHistoryPopulate(domain.WorkHistoryFilter{ID: []string{id}})
 	if err != nil {
 		return result, err
+	}
+
+	filter := bson.M{"_id": idPrimitive}
+
+	if len(removeItems.Data) > 0 {
+		result = &removeItems.Data[0]
+	} else {
+		err = collection.FindOne(ctx, filter).Decode(&result)
+		if err != nil {
+			return result, err
+		}
 	}
 
 	_, err = collection.DeleteOne(ctx, filter)

@@ -47,6 +47,12 @@ type Order interface {
 	DeleteOrder(id string, userID string) (*domain.Order, error)
 }
 
+type ArchiveOrder interface {
+	CreateArchiveOrder(userID string, Order *domain.Order) (*domain.ArchiveOrder, error)
+	FindArchiveOrder(input *domain.ArchiveOrderFilter) (domain.Response[domain.ArchiveOrder], error)
+	DeleteArchiveOrder(id string, userID string) (*domain.ArchiveOrder, error)
+}
+
 type Operation interface {
 	CreateOperation(userID string, data *domain.Operation) (*domain.Operation, error)
 	FindOperation(params domain.RequestParams) (domain.Response[domain.Operation], error)
@@ -69,20 +75,12 @@ type Task interface {
 	DeleteTask(id string, userID string, checkStatus bool) (*domain.Task, error)
 }
 
-type WorkTime interface {
-	CreateWorkTime(userID string, data *domain.WorkTime) (*domain.WorkTime, error)
-	FindWorkTime(input domain.WorkTimeFilter) (domain.Response[domain.WorkTime], error)
-	FindWorkTimePopulate(input domain.WorkTimeFilter) (domain.Response[domain.WorkTime], error)
-	UpdateWorkTime(id string, userID string, data *domain.WorkTimeInput) (*domain.WorkTime, error)
-	DeleteWorkTime(id string) (*domain.WorkTime, error)
-}
-
 type WorkHistory interface {
 	CreateWorkHistory(userID string, data *domain.WorkHistory) (*domain.WorkHistory, error)
 	FindWorkHistory(input domain.WorkHistoryFilter) (domain.Response[domain.WorkHistory], error)
 	FindWorkHistoryPopulate(input domain.WorkHistoryFilter) (domain.Response[domain.WorkHistory], error)
 	UpdateWorkHistory(id string, userID string, data *domain.WorkHistoryInput) (*domain.WorkHistory, error)
-	DeleteWorkHistory(id string) (*domain.WorkHistory, error)
+	DeleteWorkHistory(id string, userID string) (*domain.WorkHistory, error)
 	GetStatByOrder(input domain.WorkHistoryFilter) ([]domain.WorkHistoryStatByOrder, error)
 }
 
@@ -188,9 +186,10 @@ type Services struct {
 	Pay
 	PayTemplate
 	Object
-	WorkTime
 	WorkHistory
 	Notify
+
+	ArchiveOrder
 }
 
 type ConfigServices struct {
@@ -228,12 +227,13 @@ func NewServices(cfgService *ConfigServices) *Services {
 	Message := NewMessageService(cfgService.Repositories.Message, cfgService.Hub, cfgService.ImageService)
 	Operation := NewOperationService(cfgService.Repositories.Operation, User)
 	Order := NewOrderService(cfgService.Repositories.Order, User, cfgService.Hub, Operation)
-	WorkTime := NewWorkTimeService(cfgService.Repositories.WorkTime, cfgService.Hub, User, TaskStatus)
 	Task := NewTaskService(cfgService.Repositories.Task, cfgService.Hub, User, TaskStatus, Order)
 	TaskWorker := NewTaskWorkerService(cfgService.Repositories.TaskWorker, User, TaskStatus, Task, cfgService.Hub)
-	TaskHistory := NewWorkHistoryService(cfgService.Repositories.WorkHistory, cfgService.Hub)
+	WorkHistory := NewWorkHistoryService(cfgService.Repositories.WorkHistory, cfgService.Hub)
 	Notify := NewNotifyService(cfgService.Repositories.Notify, cfgService.Hub)
 	Pay := NewPayService(cfgService.Repositories.Pay, cfgService.Hub)
+
+	ArchiveOrder := NewArchiveOrderService(cfgService.Repositories.ArchiveOrder)
 
 	services := &Services{
 		AppError:      NewAppErrorService(cfgService.Repositories.AppError, cfgService.Hub),
@@ -253,9 +253,10 @@ func NewServices(cfgService *ConfigServices) *Services {
 		Pay:           Pay,
 		PayTemplate:   NewPayTemplateService(cfgService.Repositories.PayTemplate, cfgService.I18n),
 		Object:        NewObjectService(cfgService.Repositories.Object, cfgService.Hub, User),
-		WorkTime:      WorkTime,
-		WorkHistory:   TaskHistory,
+		WorkHistory:   WorkHistory,
 		Notify:        Notify,
+
+		ArchiveOrder: ArchiveOrder,
 	}
 	Task.Services = services
 	TaskWorker.Services = services
@@ -265,8 +266,9 @@ func NewServices(cfgService *ConfigServices) *Services {
 	User.Services = services
 	MessageStatus.Services = services
 	Message.Services = services
-	WorkTime.Services = services
-	TaskHistory.Services = services
+	WorkHistory.Services = services
+
+	ArchiveOrder.Services = services
 
 	return services
 }

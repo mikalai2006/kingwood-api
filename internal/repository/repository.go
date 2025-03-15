@@ -52,6 +52,12 @@ type Order interface {
 	DeleteOrder(id string) (*domain.Order, error)
 }
 
+type ArchiveOrder interface {
+	CreateArchiveOrder(userID string, Order *domain.Order) (*domain.ArchiveOrder, error)
+	FindArchiveOrder(input *domain.ArchiveOrderFilter) (domain.Response[domain.ArchiveOrder], error)
+	DeleteArchiveOrder(id string) (*domain.ArchiveOrder, error)
+}
+
 type Operation interface {
 	FindOperation(params domain.RequestParams) (domain.Response[domain.Operation], error)
 	CreateOperation(userID string, data *domain.Operation) (*domain.Operation, error)
@@ -65,14 +71,6 @@ type Task interface {
 	CreateTask(userID string, Order *domain.Task) (*domain.Task, error)
 	UpdateTask(id string, userID string, data *domain.TaskInput) (*domain.Task, error)
 	DeleteTask(id string) (*domain.Task, error)
-}
-
-type WorkTime interface {
-	FindWorkTime(input domain.WorkTimeFilter) (domain.Response[domain.WorkTime], error)
-	FindWorkTimePopulate(params domain.WorkTimeFilter) (domain.Response[domain.WorkTime], error)
-	CreateWorkTime(userID string, Order *domain.WorkTime) (*domain.WorkTime, error)
-	UpdateWorkTime(id string, userID string, data *domain.WorkTimeInput) (*domain.WorkTime, error)
-	DeleteWorkTime(id string) (*domain.WorkTime, error)
 }
 
 type WorkHistory interface {
@@ -187,9 +185,11 @@ type Repositories struct {
 	Pay
 	PayTemplate
 	Object
-	WorkTime
+
 	WorkHistory
 	Notify
+
+	ArchiveOrder
 }
 
 func NewRepositories(mongodb *mongo.Database, i18n config.I18nConfig) *Repositories {
@@ -211,9 +211,10 @@ func NewRepositories(mongodb *mongo.Database, i18n config.I18nConfig) *Repositor
 		Pay:           NewPayMongo(mongodb, i18n),
 		PayTemplate:   NewPayTemplateMongo(mongodb, i18n),
 		Object:        NewObjectMongo(mongodb, i18n),
-		WorkTime:      NewWorkTimeMongo(mongodb, i18n),
 		WorkHistory:   NewWorkHistoryMongo(mongodb, i18n),
 		Notify:        NewNotifyMongo(mongodb, i18n),
+
+		ArchiveOrder: NewArchiveOrderMongo(mongodb, i18n),
 	}
 }
 

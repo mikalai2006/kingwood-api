@@ -194,14 +194,14 @@ func (h *HandlerV1) DeleteWorkHistory(c *gin.Context) {
 		return
 	}
 
-	_, err := middleware.GetUID(c)
+	userID, err := middleware.GetUID(c)
 	if err != nil {
 		// c.AbortWithError(http.StatusUnauthorized, err)
 		appG.ResponseError(http.StatusUnauthorized, err, gin.H{"hello": "world"})
 		return
 	}
 
-	user, err := h.Services.WorkHistory.DeleteWorkHistory(id) // , input
+	user, err := h.Services.WorkHistory.DeleteWorkHistory(id, userID) // , input
 	if err != nil {
 		// c.AbortWithError(http.StatusBadRequest, err)
 		appG.ResponseError(http.StatusBadRequest, err, nil)

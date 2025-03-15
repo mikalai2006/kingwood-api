@@ -51,16 +51,6 @@ func (s *UserService) DeleteUser(id string, userID string) (domain.User, error) 
 		_, err = s.Services.TaskWorker.DeleteTaskWorker(allTaskWorkers.Data[i].ID.Hex(), userID, false)
 	}
 
-	// delete workTime.
-	allWorkTime, err := s.Services.WorkTime.FindWorkTimePopulate(domain.WorkTimeFilter{WorkerId: []string{id}})
-	if err != nil {
-		return result, err
-	}
-	for i := range allWorkTime.Data {
-		// fmt.Println("Remove WorkTime: ", allWorkTime.Data[i].ID)
-		_, err = s.Services.WorkTime.DeleteWorkTime(allWorkTime.Data[i].ID.Hex())
-	}
-
 	// delete workHistory.
 	allWorkHistory, err := s.Services.WorkHistory.FindWorkHistoryPopulate(domain.WorkHistoryFilter{WorkerId: []string{id}})
 	if err != nil {
@@ -68,7 +58,7 @@ func (s *UserService) DeleteUser(id string, userID string) (domain.User, error) 
 	}
 	for i := range allWorkHistory.Data {
 		// fmt.Println("Remove WorkHistory: ", allWorkHistory.Data[i].ID)
-		_, err = s.Services.WorkHistory.DeleteWorkHistory(allWorkHistory.Data[i].ID.Hex())
+		_, err = s.Services.WorkHistory.DeleteWorkHistory(allWorkHistory.Data[i].ID.Hex(), id)
 	}
 
 	// delete pay.

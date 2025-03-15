@@ -219,7 +219,6 @@ func (s *WorkHistoryService) UpdateWorkHistory(id string, userID string, data *d
 		// 		TaskId:      result.TaskId,
 		// 		OperationId: result.OperationId,
 		// 		Status:      result.Status,
-		// 		WorkTimeId:  result.WorkTimeId,
 		// 		Date:        fromNew,
 		// 		From:        fromNew,
 		// 		To:          oldTo,
@@ -350,8 +349,79 @@ func (s *WorkHistoryService) UpdateWorkHistory(id string, userID string, data *d
 	return result, err
 }
 
-func (s *WorkHistoryService) DeleteWorkHistory(id string) (*domain.WorkHistory, error) {
-	result, err := s.repo.DeleteWorkHistory(id)
+func (s *WorkHistoryService) DeleteWorkHistory(id string, userID string) (*domain.WorkHistory, error) {
+	var result *domain.WorkHistory
+
+	// получаем инициатора запроса.
+	var authorRequest domain.User
+	_users, err := s.Services.User.FindUser(&domain.UserFilter{ID: []string{userID}})
+	if err != nil {
+		return nil, err
+	}
+	if len(_users.Data) > 0 {
+		authorRequest = _users.Data[0]
+	}
+
+	// Находим рабочую сессию для удаления
+	existWorkHistory, err := s.Services.WorkHistory.FindWorkHistoryPopulate(domain.WorkHistoryFilter{ID: []string{result.TaskId.Hex()}})
+	if err != nil {
+		return result, err
+	}
+
+	// add notify.
+	for i := range existWorkHistory.Data {
+		s.Hub.HandleMessage(domain.MessageSocket{Type: "message", Method: "DELETE", Sender: "userID", Recipient: existWorkHistory.Data[i].WorkerId.Hex(), Content: existWorkHistory.Data[i], ID: "room1", Service: "WorkHistory"})
+
+		_, err = s.Services.Notify.CreateNotify(userID, &domain.NotifyInput{
+			UserTo:  result.WorkerId.Hex(),
+			Title:   domain.DeleteWorkHistoryTitle,
+			Message: fmt.Sprintf(domain.DeleteWorkHistory, authorRequest.Name, existWorkHistory.Data[i].Date.Format("02.01.2006"), result.Order.Number, result.Order.Name, result.Object.Name),
+		})
+
+		// находим пользователей(администрацию) для создания уведомлений.
+		roles, err := s.Services.Role.FindRole(&domain.RoleFilter{Code: []string{"admin", "boss"}})
+		if err != nil {
+			return nil, err
+		}
+		ids := []string{}
+		var users []domain.User
+
+		if len(roles.Data) > 0 {
+			for i := range roles.Data {
+				ids = append(ids, roles.Data[i].ID.Hex())
+			}
+
+			_users, err := s.Services.User.FindUser(&domain.UserFilter{RoleId: ids})
+			if err != nil {
+				return nil, err
+			}
+
+			users = _users.Data
+		}
+
+		// получаем пользователя, для которого удалили задание.
+		var worker domain.User
+		_workers, err := s.Services.User.FindUser(&domain.UserFilter{ID: []string{result.WorkerId.Hex()}})
+		if err != nil {
+			return nil, err
+		}
+		if len(_workers.Data) > 0 {
+			worker = _workers.Data[0]
+		}
+
+		// отправляем уведомления админам.
+		for i := range users {
+			s.Hub.HandleMessage(domain.MessageSocket{Type: "message", Method: "DELETE", Sender: "userID", Recipient: users[i].ID.Hex(), Content: existWorkHistory.Data[i], ID: "room1", Service: "WorkHistory"})
+
+			_, err = s.Services.Notify.CreateNotify(userID, &domain.NotifyInput{
+				UserTo:  users[i].ID.Hex(),
+				Title:   domain.DeleteWorkHistoryTitle,
+				Message: fmt.Sprintf(domain.DeleteWorkHistoryAdmin, authorRequest.Name, worker.Name, existWorkHistory.Data[i].Date.Format("02.01.2006"), result.Order.Number, result.Order.Name, result.Object.Name),
+			})
+		}
+	}
+
+	result, err = s.repo.DeleteWorkHistory(id)
 
 	return result, err
 }
