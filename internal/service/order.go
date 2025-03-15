@@ -202,6 +202,14 @@ func (s *OrderService) DeleteOrder(id string, userID string) (*domain.Order, err
 		_, err = s.Services.Task.DeleteTask(allTasks.Data[i].ID.Hex(), userID, false)
 	}
 
+	// delete workHistory.
+	allWorkHistory, err := s.Services.WorkHistory.FindWorkHistory(domain.WorkHistoryFilter{OrderId: []string{id}})
+	if err != nil {
+		return result, err
+	}
+	for i := range allWorkHistory.Data {
+		_, err = s.Services.WorkHistory.DeleteWorkHistory(allWorkHistory.Data[i].ID.Hex())
+	}
 	// // delete workTime.
 	// allWorkTime, err := s.Services.WorkTime.FindWorkTimePopulate(domain.WorkTimeFilter{WorkerId: []string{id}})
 	// if err != nil {
