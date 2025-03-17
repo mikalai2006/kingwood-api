@@ -38,7 +38,7 @@ func (s *UserService) DeleteUser(id string, userID string) (domain.User, error) 
 	}
 	for i := range allImages.Data {
 		// fmt.Println("Remove image: ", allImages.Data[i].ID)
-		_, err = s.Services.Image.DeleteImage(allImages.Data[i].ID.Hex())
+		_, err = s.Services.Image.DeleteImage(userID, allImages.Data[i].ID.Hex())
 	}
 
 	// delete taskWorkers.

@@ -363,9 +363,13 @@ func (s *WorkHistoryService) DeleteWorkHistory(id string, userID string) (*domai
 	}
 
 	// Находим рабочую сессию для удаления
-	existWorkHistory, err := s.Services.WorkHistory.FindWorkHistoryPopulate(domain.WorkHistoryFilter{ID: []string{result.TaskId.Hex()}})
+	existWorkHistory, err := s.Services.WorkHistory.FindWorkHistoryPopulate(domain.WorkHistoryFilter{ID: []string{id}})
 	if err != nil {
 		return result, err
+	}
+
+	if len(existWorkHistory.Data) > 0 {
+		result = &existWorkHistory.Data[0]
 	}
 
 	// add notify.
@@ -411,17 +415,19 @@ func (s *WorkHistoryService) DeleteWorkHistory(id string, userID string) (*domai
 
 		// отправляем уведомления админам.
 		for i := range users {
-			s.Hub.HandleMessage(domain.MessageSocket{Type: "message", Method: "DELETE", Sender: "userID", Recipient: users[i].ID.Hex(), Content: existWorkHistory.Data[i], ID: "room1", Service: "WorkHistory"})
+			s.Hub.HandleMessage(domain.MessageSocket{Type: "message", Method: "DELETE", Sender: "userID", Recipient: users[i].ID.Hex(), Content: result, ID: "room1", Service: "WorkHistory"})
 
 			_, err = s.Services.Notify.CreateNotify(userID, &domain.NotifyInput{
 				UserTo:  users[i].ID.Hex(),
 				Title:   domain.DeleteWorkHistoryTitle,
-				Message: fmt.Sprintf(domain.DeleteWorkHistoryAdmin, authorRequest.Name, worker.Name, existWorkHistory.Data[i].Date.Format("02.01.2006"), result.Order.Number, result.Order.Name, result.Object.Name),
+				Message: fmt.Sprintf(domain.DeleteWorkHistoryAdmin, authorRequest.Name, worker.Name, result.Date.Format("02.01.2006"), result.Order.Number, result.Order.Name, result.Object.Name),
 			})
 		}
 	}
 
 	result, err = s.repo.DeleteWorkHistory(id)
+
+	_, err = s.Services.CreateArchiveWorkHistory(userID, result)
 
 	return result, err
 }

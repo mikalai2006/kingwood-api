@@ -64,6 +64,11 @@ func (h *HandlerV1) Init(api *gin.RouterGroup) {
 			h.registerPayTemplate(authenticated)
 
 			h.registerArchiveOrder(authenticated)
+			h.registerArchiveTask(authenticated)
+			h.registerArchiveTaskWorker(authenticated)
+			h.registerArchiveWorkHistory(authenticated)
+			h.RegisterArchiveImage(authenticated)
+			h.registerArchiveMessage(authenticated)
 		}
 
 		v1.GET("/", func(c *gin.Context) {

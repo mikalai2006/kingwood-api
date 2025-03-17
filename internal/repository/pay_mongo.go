@@ -261,6 +261,7 @@ func (r *PayMongo) UpdatePay(id string, userID string, data *domain.PayInput) (*
 		newData["props"] = data.Props
 	}
 	newData["updatedAt"] = time.Now()
+	newData["userId"] = userID
 
 	_, err = collection.UpdateOne(ctx, filter, bson.M{"$set": newData})
 	if err != nil {

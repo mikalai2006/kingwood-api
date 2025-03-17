@@ -182,7 +182,10 @@ func (s *OrderService) DeleteOrder(id string, userID string) (*domain.Order, err
 		return result, err
 	}
 	for i := range allImages.Data {
-		_, err = s.Services.Image.DeleteImage(allImages.Data[i].ID.Hex())
+		_, err = s.Services.Image.DeleteImage(userID, allImages.Data[i].ID.Hex())
+		if err != nil {
+			return result, err
+		}
 	}
 	// delete taskWorkers.
 	allTaskWorkers, err := s.Services.TaskWorker.FindTaskWorkerPopulate(&domain.TaskWorkerFilter{OrderId: []string{id}})
@@ -191,6 +194,9 @@ func (s *OrderService) DeleteOrder(id string, userID string) (*domain.Order, err
 	}
 	for i := range allTaskWorkers.Data {
 		_, err = s.Services.TaskWorker.DeleteTaskWorker(allTaskWorkers.Data[i].ID.Hex(), userID, false)
+		if err != nil {
+			return result, err
+		}
 	}
 
 	// delete task.
@@ -200,6 +206,21 @@ func (s *OrderService) DeleteOrder(id string, userID string) (*domain.Order, err
 	}
 	for i := range allTasks.Data {
 		_, err = s.Services.Task.DeleteTask(allTasks.Data[i].ID.Hex(), userID, false)
+		if err != nil {
+			return result, err
+		}
+	}
+
+	// delete messages.
+	allMessages, err := s.Services.Message.FindMessage(&domain.MessageFilter{OrderID: []string{id}})
+	if err != nil {
+		return result, err
+	}
+	for i := range allMessages.Data {
+		_, err = s.Services.Message.DeleteMessage(allMessages.Data[i].ID.Hex(), userID)
+		if err != nil {
+			return result, err
+		}
 	}
 
 	// delete workHistory.
@@ -209,6 +230,9 @@ func (s *OrderService) DeleteOrder(id string, userID string) (*domain.Order, err
 	}
 	for i := range allWorkHistory.Data {
 		_, err = s.Services.WorkHistory.DeleteWorkHistory(allWorkHistory.Data[i].ID.Hex(), userID)
+		if err != nil {
+			return result, err
+		}
 	}
 
 	// // delete workHistory.

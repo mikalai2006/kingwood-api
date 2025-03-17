@@ -2,7 +2,6 @@ package service
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/mikalai2006/kingwood-api/internal/config"
 	"github.com/mikalai2006/kingwood-api/internal/domain"
@@ -72,21 +71,26 @@ func (s *MessageService) UpdateMessage(id string, userID string, data *domain.Me
 	return s.repo.UpdateMessage(id, userID, data)
 }
 
-func (s *MessageService) DeleteMessage(id string) (domain.Message, error) {
+func (s *MessageService) DeleteMessage(id string, userID string) (domain.Message, error) {
 	result, err := s.repo.DeleteMessage(id)
 
-	// Delete images for message.
-	for i := range result.Images {
-		objImage := result.Images[i]
-		pathDir := fmt.Sprintf("public/%s", objImage.Service)
+	// // Delete images for message.
+	// for i := range result.Images {
+	// 	objImage := result.Images[i]
+	// 	pathDir := fmt.Sprintf("public/%s", objImage.Service)
 
-		path := fmt.Sprintf("%s/%s/%s%s", pathDir, objImage.ServiceID, objImage.Path, objImage.Ext)
-		os.Remove(path)
+	// 	path := fmt.Sprintf("%s/%s/%s%s", pathDir, objImage.ServiceID, objImage.Path, objImage.Ext)
+	// 	os.Remove(path)
 
-		for j := range s.imageConfig.Sizes {
-			path := fmt.Sprintf("%s/%s/%s-%s%s", pathDir, objImage.ServiceID, s.imageConfig.Sizes[j].Prefix, objImage.Path, objImage.Ext)
-			os.Remove(path)
-		}
+	// 	for j := range s.imageConfig.Sizes {
+	// 		path := fmt.Sprintf("%s/%s/%s-%s%s", pathDir, objImage.ServiceID, s.imageConfig.Sizes[j].Prefix, objImage.Path, objImage.Ext)
+	// 		os.Remove(path)
+	// 	}
+	// }
+
+	if !result.ID.IsZero() {
+		// add to archive.
+		_, err = s.Services.CreateArchiveMessage(userID, &result)
 	}
 
 	return result, err

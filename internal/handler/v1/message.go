@@ -175,7 +175,12 @@ func (h *HandlerV1) DeleteMessage(c *gin.Context) {
 		appG.ResponseError(http.StatusBadRequest, errors.New("for remove need id"), nil)
 		return
 	}
-
+	userID, err := middleware.GetUID(c)
+	if err != nil {
+		// c.AbortWithError(http.StatusUnauthorized, err)
+		appG.ResponseError(http.StatusUnauthorized, err, gin.H{"hello": "world"})
+		return
+	}
 	// implementation roles for user.
 	// roles, err := middleware.GetRoles(c)
 	// if err != nil {
@@ -187,7 +192,7 @@ func (h *HandlerV1) DeleteMessage(c *gin.Context) {
 	// 	return
 	// }
 
-	node, err := h.Services.Message.DeleteMessage(id) // , input
+	node, err := h.Services.Message.DeleteMessage(id, userID) // , input
 	if err != nil {
 		// c.AbortWithError(http.StatusBadRequest, err)
 		appG.ResponseError(http.StatusBadRequest, err, nil)

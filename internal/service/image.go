@@ -1,14 +1,9 @@
 package service
 
 import (
-	"errors"
-	"fmt"
-	"os"
-
 	"github.com/mikalai2006/kingwood-api/internal/config"
 	"github.com/mikalai2006/kingwood-api/internal/domain"
 	"github.com/mikalai2006/kingwood-api/internal/repository"
-	"github.com/mikalai2006/kingwood-api/internal/utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -16,6 +11,7 @@ import (
 type ImageService struct {
 	repo        repository.Image
 	imageConfig config.IImageConfig
+	Services    *Services
 }
 
 func NewImageService(repo repository.Image, imageConfig config.IImageConfig) *ImageService {
@@ -53,7 +49,7 @@ func (s *ImageService) CreateImage(userID string, image *domain.ImageInput) (dom
 
 		if len(existImage.Data) > 0 {
 			for i, _ := range existImage.Data {
-				_, _ = s.DeleteImage(existImage.Data[i].ID.Hex())
+				_, _ = s.DeleteImage(userID, existImage.Data[i].ID.Hex())
 				// if err != nil {
 				// 	return result, err
 				// }
@@ -66,60 +62,69 @@ func (s *ImageService) CreateImage(userID string, image *domain.ImageInput) (dom
 	return result, err
 }
 
-func (s *ImageService) DeleteImage(id string) (domain.Image, error) {
-	result := domain.Image{}
-	imageForRemove, err := s.GetImage(id)
+func (s *ImageService) DeleteImage(userID string, id string) (domain.Image, error) {
+	// result := domain.Image{}
+	// imageForRemove, err := s.GetImage(id)
+	// if err != nil {
+	// 	return result, err
+	// }
+	// if imageForRemove.Service == "" {
+	// 	return result, errors.New("not found item for remove")
+	// } else {
+	// 	pathOfRemove := fmt.Sprintf("public/%s", imageForRemove.Service)
+
+	// 	if imageForRemove.ServiceID != "" {
+	// 		pathOfRemove = fmt.Sprintf("%s/%s", pathOfRemove, imageForRemove.ServiceID)
+	// 	}
+
+	// 	pathRemove := fmt.Sprintf("%s/%s%s", pathOfRemove, imageForRemove.Path, imageForRemove.Ext)
+	// 	os.Remove(pathRemove)
+	// 	// if err != nil {
+	// 	// 	return result, err
+	// 	// }
+
+	// 	// remove srcset.
+	// 	for i := range s.imageConfig.Sizes {
+	// 		dataImg := s.imageConfig.Sizes[i]
+	// 		pathRemove = fmt.Sprintf("%s/%v-%s%s", pathOfRemove, dataImg.Prefix, imageForRemove.Path, imageForRemove.Ext) // ".webp"
+	// 		// fmt.Println("pathRemove2=", pathRemove)
+	// 		os.Remove(pathRemove)
+	// 		// if err != nil {
+	// 		// 	return result, err
+	// 		// }
+	// 	}
+
+	// 	isEmpty, err := utils.IsEmptyDir(pathOfRemove)
+	// 	if err != nil {
+	// 		return result, err
+	// 	}
+	// 	if isEmpty {
+	// 		err = os.Remove(pathOfRemove)
+	// 		if err != nil {
+	// 			return result, err
+	// 		}
+	// 	}
+
+	// 	// pathRemove = fmt.Sprintf("%s/xs-%s", pathOfRemove, imageForRemove.Path)
+	// 	// err = os.Remove(pathRemove)
+	// 	// if err != nil {
+	// 	// 	appG.ResponseError(http.StatusBadRequest, err, nil)
+	// 	// }
+	// 	// pathRemove = fmt.Sprintf("%s/lg-%s", pathOfRemove, imageForRemove.Path)
+	// 	// err = os.Remove(pathRemove)
+	// 	// if err != nil {
+	// 	// 	appG.ResponseError(http.StatusBadRequest, err, nil)
+	// 	// }
+	// }
+	result, err := s.repo.DeleteImage(id)
 	if err != nil {
 		return result, err
 	}
-	if imageForRemove.Service == "" {
-		return result, errors.New("not found item for remove")
-	} else {
-		pathOfRemove := fmt.Sprintf("public/%s", imageForRemove.Service)
 
-		if imageForRemove.ServiceID != "" {
-			pathOfRemove = fmt.Sprintf("%s/%s", pathOfRemove, imageForRemove.ServiceID)
-		}
-
-		pathRemove := fmt.Sprintf("%s/%s%s", pathOfRemove, imageForRemove.Path, imageForRemove.Ext)
-		os.Remove(pathRemove)
-		// if err != nil {
-		// 	return result, err
-		// }
-
-		// remove srcset.
-		for i := range s.imageConfig.Sizes {
-			dataImg := s.imageConfig.Sizes[i]
-			pathRemove = fmt.Sprintf("%s/%v-%s%s", pathOfRemove, dataImg.Prefix, imageForRemove.Path, imageForRemove.Ext) // ".webp"
-			// fmt.Println("pathRemove2=", pathRemove)
-			os.Remove(pathRemove)
-			// if err != nil {
-			// 	return result, err
-			// }
-		}
-
-		isEmpty, err := utils.IsEmptyDir(pathOfRemove)
-		if err != nil {
-			return result, err
-		}
-		if isEmpty {
-			err = os.Remove(pathOfRemove)
-			if err != nil {
-				return result, err
-			}
-		}
-
-		// pathRemove = fmt.Sprintf("%s/xs-%s", pathOfRemove, imageForRemove.Path)
-		// err = os.Remove(pathRemove)
-		// if err != nil {
-		// 	appG.ResponseError(http.StatusBadRequest, err, nil)
-		// }
-		// pathRemove = fmt.Sprintf("%s/lg-%s", pathOfRemove, imageForRemove.Path)
-		// err = os.Remove(pathRemove)
-		// if err != nil {
-		// 	appG.ResponseError(http.StatusBadRequest, err, nil)
-		// }
+	if !result.ID.IsZero() {
+		// add to archive.
+		_, err = s.Services.CreateArchiveImage(userID, &result)
 	}
 
-	return s.repo.DeleteImage(id)
+	return result, err //s.repo.DeleteImage(id)
 }

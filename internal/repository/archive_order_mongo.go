@@ -70,7 +70,7 @@ func (r *ArchiveOrderMongo) CreateArchiveOrder(userID string, data *domain.Order
 		return nil, err
 	}
 
-	r.db.Collection(TblArchiveOrder).FindOne(ctx, bson.M{"_id": res.InsertedID}).Decode(&result)
+	err = r.db.Collection(TblArchiveOrder).FindOne(ctx, bson.M{"_id": res.InsertedID}).Decode(&result)
 	if err != nil {
 		return nil, err
 	}
@@ -180,7 +180,7 @@ func (r *ArchiveOrderMongo) FindArchiveOrder(input *domain.ArchiveOrderFilter) (
 
 	// tasks.
 	pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
-		"from": tblTask,
+		"from": TblArchiveTask,
 		"as":   "tasks",
 		"let":  bson.D{{Key: "id", Value: "$_id"}},
 		"pipeline": mongo.Pipeline{

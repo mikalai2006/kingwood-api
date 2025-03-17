@@ -17,7 +17,7 @@ type Pay struct {
 	Name     string             `json:"name" bson:"name"`
 
 	Worker User                   `json:"worker" bson:"worker"`
-	Props  map[string]interface{} `json:"-" bson:"props"`
+	Props  map[string]interface{} `json:"props" bson:"props"`
 
 	CreatedAt time.Time `json:"createdAt" bson:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt" bson:"updatedAt"`
@@ -32,7 +32,7 @@ type PayInput struct {
 	Year     *int64                 `json:"year" bson:"year"`
 	Total    *int64                 `json:"total" bson:"total"`
 	Name     string                 `json:"name" bson:"name"`
-	Props    map[string]interface{} `json:"-" bson:"props"`
+	Props    map[string]interface{} `json:"props" bson:"props"`
 
 	CreatedAt time.Time `json:"createdAt" bson:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt" bson:"updatedAt"`

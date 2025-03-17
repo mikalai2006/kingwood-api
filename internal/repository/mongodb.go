@@ -46,7 +46,14 @@ const (
 	TblProduct     = "product"
 	tblImage       = "image"
 
-	TblArchiveOrder = "archive_order"
+	TblArchiveOrder         = "archive_order"
+	TblArchiveTask          = "archive_task"
+	TblArchiveTaskWorker    = "archive_task_worker"
+	TblArchiveWorkHistory   = "archive_work_history"
+	TblArchiveMessage       = "archive_message"
+	TblArchiveMessageStatus = "archive_message_status"
+	TblArchiveImage         = "archive_image"
+	TblArchivePay           = "archive_pay"
 
 	MongoQueryTimeout = 10 * time.Second
 )

@@ -126,6 +126,12 @@ func (h *HandlerV1) deleteImage(c *gin.Context) {
 		return
 	}
 
+	userID, err := middleware.GetUID(c)
+	if err != nil {
+		appG.ResponseError(http.StatusUnauthorized, err, nil)
+		return
+	}
+
 	// imageForRemove, err := h.services.Image.GetImage(id)
 	// if err != nil {
 	// 	appG.ResponseError(http.StatusBadRequest, err, nil)
@@ -169,7 +175,7 @@ func (h *HandlerV1) deleteImage(c *gin.Context) {
 	// 	// }
 	// }
 
-	image, err := h.Services.Image.DeleteImage(id)
+	image, err := h.Services.Image.DeleteImage(userID, id)
 	if err != nil {
 		appG.ResponseError(http.StatusBadRequest, err, nil)
 		return

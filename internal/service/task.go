@@ -254,6 +254,8 @@ func (s *TaskService) DeleteTask(id string, userID string, checkStatus bool) (*d
 
 	s.Hub.HandleMessage(domain.MessageSocket{Type: "message", Method: "DELETE", Sender: "userID", Recipient: "", Content: result, ID: "room1", Service: "task"})
 
+	_, err = s.Services.CreateArchiveTask(userID, result)
+
 	return result, err
 }
 

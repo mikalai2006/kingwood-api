@@ -29,6 +29,13 @@ type Message interface {
 	DeleteMessage(id string) (domain.Message, error)
 	GetGroupForUser(userID string) ([]domain.MessageGroupForUser, error)
 }
+
+type ArchiveMessage interface {
+	CreateArchiveMessage(userID string, message *domain.Message) (*domain.ArchiveMessage, error)
+	FindArchiveMessage(params *domain.ArchiveMessageFilter) (domain.Response[domain.ArchiveMessage], error)
+	DeleteArchiveMessage(id string) (domain.ArchiveMessage, error)
+}
+
 type MessageStatus interface {
 	CreateMessageStatus(userID string, message *domain.MessageStatus) (*domain.MessageStatus, error)
 	FindMessageStatus(params *domain.MessageStatusFilter) (domain.Response[domain.MessageStatus], error)
@@ -73,6 +80,12 @@ type Task interface {
 	DeleteTask(id string) (*domain.Task, error)
 }
 
+type ArchiveTask interface {
+	CreateArchiveTask(userID string, Order *domain.Task) (*domain.ArchiveTask, error)
+	FindArchiveTask(params domain.ArchiveTaskFilter) (domain.Response[domain.ArchiveTask], error)
+	DeleteArchiveTask(id string) (*domain.ArchiveTask, error)
+}
+
 type WorkHistory interface {
 	FindWorkHistory(input domain.WorkHistoryFilter) (domain.Response[domain.WorkHistory], error)
 	FindWorkHistoryPopulate(params domain.WorkHistoryFilter) (domain.Response[domain.WorkHistory], error)
@@ -80,6 +93,12 @@ type WorkHistory interface {
 	UpdateWorkHistory(id string, userID string, data *domain.WorkHistoryInput) (*domain.WorkHistory, error)
 	DeleteWorkHistory(id string) (*domain.WorkHistory, error)
 	GetStatByOrder(input domain.WorkHistoryFilter) ([]domain.WorkHistoryStatByOrder, error)
+}
+
+type ArchiveWorkHistory interface {
+	CreateArchiveWorkHistory(userID string, Order *domain.WorkHistory) (*domain.ArchiveWorkHistory, error)
+	FindArchiveWorkHistory(input domain.ArchiveWorkHistoryFilter) (domain.Response[domain.ArchiveWorkHistory], error)
+	DeleteArchiveWorkHistory(id string) (*domain.ArchiveWorkHistory, error)
 }
 
 type Object interface {
@@ -95,6 +114,12 @@ type TaskWorker interface {
 	CreateTaskWorker(userID string, Order *domain.TaskWorker) (*domain.TaskWorker, error)
 	UpdateTaskWorker(id string, userID string, data *domain.TaskWorkerInput) (*domain.TaskWorker, error)
 	DeleteTaskWorker(id string) (*domain.TaskWorker, error)
+}
+
+type ArchiveTaskWorker interface {
+	CreateArchiveTaskWorker(userID string, Order *domain.TaskWorker) (*domain.ArchiveTaskWorker, error)
+	FindArchiveTaskWorker(input *domain.ArchiveTaskWorkerFilter) (domain.Response[domain.ArchiveTaskWorker], error)
+	DeleteArchiveTaskWorker(id string) (*domain.ArchiveTaskWorker, error)
 }
 
 type Pay interface {
@@ -140,6 +165,12 @@ type Image interface {
 	GetImageDirs(id string) ([]interface{}, error)
 	FindImage(params domain.RequestParams) (domain.Response[domain.Image], error)
 	DeleteImage(id string) (domain.Image, error)
+}
+
+type ArchiveImage interface {
+	CreateArchiveImage(userID string, data *domain.Image) (domain.ArchiveImage, error)
+	FindArchiveImage(params domain.RequestParams) (domain.Response[domain.ArchiveImage], error)
+	DeleteArchiveImage(id string) (domain.ArchiveImage, error)
 }
 
 type Lang interface {
@@ -190,6 +221,11 @@ type Repositories struct {
 	Notify
 
 	ArchiveOrder
+	ArchiveTask
+	ArchiveTaskWorker
+	ArchiveWorkHistory
+	ArchiveImage
+	ArchiveMessage
 }
 
 func NewRepositories(mongodb *mongo.Database, i18n config.I18nConfig) *Repositories {
@@ -214,7 +250,12 @@ func NewRepositories(mongodb *mongo.Database, i18n config.I18nConfig) *Repositor
 		WorkHistory:   NewWorkHistoryMongo(mongodb, i18n),
 		Notify:        NewNotifyMongo(mongodb, i18n),
 
-		ArchiveOrder: NewArchiveOrderMongo(mongodb, i18n),
+		ArchiveOrder:       NewArchiveOrderMongo(mongodb, i18n),
+		ArchiveTask:        NewArchiveTaskMongo(mongodb, i18n),
+		ArchiveTaskWorker:  NewArchiveTaskWorkerMongo(mongodb, i18n),
+		ArchiveWorkHistory: NewArchiveWorkHistoryMongo(mongodb, i18n),
+		ArchiveImage:       NewArchiveImageMongo(mongodb, i18n),
+		ArchiveMessage:     NewArchiveMessageMongo(mongodb, i18n),
 	}
 }
 

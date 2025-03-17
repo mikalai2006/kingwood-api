@@ -590,6 +590,12 @@ func (s *TaskWorkerService) DeleteTaskWorker(id string, userID string, checkStat
 		})
 	}
 
+	// add to archive.
+	_, err = s.Services.CreateArchiveTaskWorker(userID, result)
+	if err != nil {
+		return result, err
+	}
+
 	return result, err
 }
 

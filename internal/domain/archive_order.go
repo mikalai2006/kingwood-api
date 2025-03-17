@@ -30,8 +30,8 @@ type ArchiveOrder struct {
 
 	Meta ArchiveMeta `json:"meta" bson:"meta"`
 	// User User `json:"user" bson:"user"`
-	Object Object `json:"object" bson:"object"`
-	Tasks  []Task `json:"tasks" bson:"tasks" form:"tasks"`
+	Object Object        `json:"object" bson:"object"`
+	Tasks  []ArchiveTask `json:"tasks" bson:"tasks" form:"tasks"`
 
 	Year      *int      `json:"year" bson:"year"`
 	CreatedAt time.Time `json:"createdAt" bson:"createdAt"`

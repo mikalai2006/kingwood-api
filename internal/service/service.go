@@ -28,8 +28,14 @@ type Message interface {
 	CreateMessage(userID string, message *domain.MessageInput) (*domain.Message, error)
 	FindMessage(params *domain.MessageFilter) (domain.Response[domain.Message], error)
 	UpdateMessage(id string, userID string, data *domain.MessageInput) (*domain.Message, error)
-	DeleteMessage(id string) (domain.Message, error)
+	DeleteMessage(id string, userID string) (domain.Message, error)
 	GetGroupForUser(userID string) ([]domain.MessageGroupForUser, error)
+}
+
+type ArchiveMessage interface {
+	CreateArchiveMessage(userID string, message *domain.Message) (*domain.ArchiveMessage, error)
+	FindArchiveMessage(params *domain.ArchiveMessageFilter) (domain.Response[domain.ArchiveMessage], error)
+	DeleteArchiveMessage(id string) (domain.ArchiveMessage, error)
 }
 
 type MessageStatus interface {
@@ -75,6 +81,12 @@ type Task interface {
 	DeleteTask(id string, userID string, checkStatus bool) (*domain.Task, error)
 }
 
+type ArchiveTask interface {
+	CreateArchiveTask(userID string, data *domain.Task) (*domain.ArchiveTask, error)
+	FindArchiveTask(params domain.ArchiveTaskFilter) (domain.Response[domain.ArchiveTask], error)
+	DeleteArchiveTask(id string, userID string) (*domain.ArchiveTask, error)
+}
+
 type WorkHistory interface {
 	CreateWorkHistory(userID string, data *domain.WorkHistory) (*domain.WorkHistory, error)
 	FindWorkHistory(input domain.WorkHistoryFilter) (domain.Response[domain.WorkHistory], error)
@@ -84,12 +96,24 @@ type WorkHistory interface {
 	GetStatByOrder(input domain.WorkHistoryFilter) ([]domain.WorkHistoryStatByOrder, error)
 }
 
+type ArchiveWorkHistory interface {
+	CreateArchiveWorkHistory(userID string, data *domain.WorkHistory) (*domain.ArchiveWorkHistory, error)
+	FindArchiveWorkHistory(input domain.ArchiveWorkHistoryFilter) (domain.Response[domain.ArchiveWorkHistory], error)
+	DeleteArchiveWorkHistory(id string, userID string) (*domain.ArchiveWorkHistory, error)
+}
+
 type TaskWorker interface {
 	CreateTaskWorker(userID string, data *domain.TaskWorker, autoCreate int) (*domain.TaskWorker, error)
 	FindTaskWorkerPopulate(input *domain.TaskWorkerFilter) (domain.Response[domain.TaskWorker], error)
 	// FindTaskWorker(params domain.RequestParams) (domain.Response[domain.TaskWorker], error)
 	UpdateTaskWorker(id string, userID string, data *domain.TaskWorkerInput, autoUpdate int) (*domain.TaskWorker, error)
 	DeleteTaskWorker(id string, userID string, checkStatus bool) (*domain.TaskWorker, error)
+}
+
+type ArchiveTaskWorker interface {
+	CreateArchiveTaskWorker(userID string, data *domain.TaskWorker) (*domain.ArchiveTaskWorker, error)
+	FindArchiveTaskWorker(input *domain.ArchiveTaskWorkerFilter) (domain.Response[domain.ArchiveTaskWorker], error)
+	DeleteArchiveTaskWorker(id string, userID string) (*domain.ArchiveTaskWorker, error)
 }
 
 type Notify interface {
@@ -141,7 +165,13 @@ type Image interface {
 	GetImage(id string) (domain.Image, error)
 	GetImageDirs(id string) ([]interface{}, error)
 	FindImage(params domain.RequestParams) (domain.Response[domain.Image], error)
-	DeleteImage(id string) (domain.Image, error)
+	DeleteImage(userID string, id string) (domain.Image, error)
+}
+
+type ArchiveImage interface {
+	CreateArchiveImage(userID string, data *domain.Image) (domain.ArchiveImage, error)
+	FindArchiveImage(params domain.RequestParams) (domain.Response[domain.ArchiveImage], error)
+	DeleteArchiveImage(id string) (domain.ArchiveImage, error)
 }
 
 type Role interface {
@@ -190,6 +220,11 @@ type Services struct {
 	Notify
 
 	ArchiveOrder
+	ArchiveTask
+	ArchiveTaskWorker
+	ArchiveWorkHistory
+	ArchiveImage
+	ArchiveMessage
 }
 
 type ConfigServices struct {
@@ -234,6 +269,11 @@ func NewServices(cfgService *ConfigServices) *Services {
 	Pay := NewPayService(cfgService.Repositories.Pay, cfgService.Hub)
 
 	ArchiveOrder := NewArchiveOrderService(cfgService.Repositories.ArchiveOrder)
+	ArchiveTask := NewArchiveTaskService(cfgService.Repositories.ArchiveTask)
+	ArchiveTaskWorker := NewArchiveTaskWorkerService(cfgService.Repositories.ArchiveTaskWorker, cfgService.Hub)
+	ArchiveWorkHistory := NewArchiveWorkHistoryService(cfgService.Repositories.ArchiveWorkHistory, cfgService.Hub)
+	ArchiveImage := NewArchiveImageService(cfgService.Repositories.ArchiveImage, Image.imageConfig)
+	ArchiveMessage := NewArchiveMessageService(cfgService.Repositories.ArchiveMessage, cfgService.Hub, Image.imageConfig)
 
 	services := &Services{
 		AppError:      NewAppErrorService(cfgService.Repositories.AppError, cfgService.Hub),
@@ -256,7 +296,12 @@ func NewServices(cfgService *ConfigServices) *Services {
 		WorkHistory:   WorkHistory,
 		Notify:        Notify,
 
-		ArchiveOrder: ArchiveOrder,
+		ArchiveOrder:       ArchiveOrder,
+		ArchiveTask:        ArchiveTask,
+		ArchiveTaskWorker:  ArchiveTaskWorker,
+		ArchiveWorkHistory: ArchiveWorkHistory,
+		ArchiveImage:       ArchiveImage,
+		ArchiveMessage:     ArchiveMessage,
 	}
 	Task.Services = services
 	TaskWorker.Services = services
@@ -267,8 +312,13 @@ func NewServices(cfgService *ConfigServices) *Services {
 	MessageStatus.Services = services
 	Message.Services = services
 	WorkHistory.Services = services
+	Image.Services = services
 
 	ArchiveOrder.Services = services
+	ArchiveTask.Services = services
+	ArchiveTaskWorker.Services = services
+	ArchiveWorkHistory.Services = services
+	ArchiveMessage.Services = services
 
 	return services
 }
