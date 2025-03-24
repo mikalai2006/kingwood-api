@@ -70,7 +70,13 @@ type Object interface {
 	CreateObject(userID string, data *domain.Object) (*domain.Object, error)
 	FindObject(input *domain.ObjectFilter) (domain.Response[domain.Object], error)
 	UpdateObject(id string, userID string, data *domain.ObjectInput) (*domain.Object, error)
-	DeleteObject(id string) (*domain.Object, error)
+	DeleteObject(id string, userID string) (*domain.Object, error)
+}
+
+type ArchiveObject interface {
+	CreateArchiveObject(userID string, data *domain.Object) (*domain.ArchiveObject, error)
+	FindArchiveObject(input *domain.ArchiveObjectFilter) (domain.Response[domain.ArchiveObject], error)
+	DeleteArchiveObject(id string, userID string) (*domain.ArchiveObject, error)
 }
 
 type Task interface {
@@ -225,6 +231,7 @@ type Services struct {
 	ArchiveWorkHistory
 	ArchiveImage
 	ArchiveMessage
+	ArchiveObject
 }
 
 type ConfigServices struct {
@@ -267,6 +274,7 @@ func NewServices(cfgService *ConfigServices) *Services {
 	WorkHistory := NewWorkHistoryService(cfgService.Repositories.WorkHistory, cfgService.Hub)
 	Notify := NewNotifyService(cfgService.Repositories.Notify, cfgService.Hub)
 	Pay := NewPayService(cfgService.Repositories.Pay, cfgService.Hub)
+	Object := NewObjectService(cfgService.Repositories.Object, cfgService.Hub)
 
 	ArchiveOrder := NewArchiveOrderService(cfgService.Repositories.ArchiveOrder)
 	ArchiveTask := NewArchiveTaskService(cfgService.Repositories.ArchiveTask)
@@ -274,6 +282,7 @@ func NewServices(cfgService *ConfigServices) *Services {
 	ArchiveWorkHistory := NewArchiveWorkHistoryService(cfgService.Repositories.ArchiveWorkHistory, cfgService.Hub)
 	ArchiveImage := NewArchiveImageService(cfgService.Repositories.ArchiveImage, Image.imageConfig)
 	ArchiveMessage := NewArchiveMessageService(cfgService.Repositories.ArchiveMessage, cfgService.Hub, Image.imageConfig)
+	ArchiveObject := NewArchiveObjectService(cfgService.Repositories.ArchiveObject, cfgService.Hub)
 
 	services := &Services{
 		AppError:      NewAppErrorService(cfgService.Repositories.AppError, cfgService.Hub),
@@ -292,7 +301,7 @@ func NewServices(cfgService *ConfigServices) *Services {
 		TaskStatus:    TaskStatus,
 		Pay:           Pay,
 		PayTemplate:   NewPayTemplateService(cfgService.Repositories.PayTemplate, cfgService.I18n),
-		Object:        NewObjectService(cfgService.Repositories.Object, cfgService.Hub, User),
+		Object:        Object,
 		WorkHistory:   WorkHistory,
 		Notify:        Notify,
 
@@ -302,6 +311,7 @@ func NewServices(cfgService *ConfigServices) *Services {
 		ArchiveWorkHistory: ArchiveWorkHistory,
 		ArchiveImage:       ArchiveImage,
 		ArchiveMessage:     ArchiveMessage,
+		ArchiveObject:      ArchiveObject,
 	}
 	Task.Services = services
 	TaskWorker.Services = services
@@ -313,12 +323,14 @@ func NewServices(cfgService *ConfigServices) *Services {
 	Message.Services = services
 	WorkHistory.Services = services
 	Image.Services = services
+	Object.Services = services
 
 	ArchiveOrder.Services = services
 	ArchiveTask.Services = services
 	ArchiveTaskWorker.Services = services
 	ArchiveWorkHistory.Services = services
 	ArchiveMessage.Services = services
+	ArchiveObject.Services = services
 
 	return services
 }

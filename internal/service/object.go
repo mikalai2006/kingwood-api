@@ -7,13 +7,13 @@ import (
 )
 
 type ObjectService struct {
-	repo        repository.Object
-	Hub         *Hub
-	userService *UserService
+	repo     repository.Object
+	Hub      *Hub
+	Services *Services
 }
 
-func NewObjectService(repo repository.Object, hub *Hub, userService *UserService) *ObjectService {
-	return &ObjectService{repo: repo, Hub: hub, userService: userService}
+func NewObjectService(repo repository.Object, hub *Hub) *ObjectService {
+	return &ObjectService{repo: repo, Hub: hub}
 }
 
 func (s *ObjectService) FindObject(input *domain.ObjectFilter) (domain.Response[domain.Object], error) {
@@ -91,8 +91,29 @@ func (s *ObjectService) UpdateObject(id string, userID string, data *domain.Obje
 	return result, err
 }
 
-func (s *ObjectService) DeleteObject(id string) (*domain.Object, error) {
-	result, err := s.repo.DeleteObject(id)
+func (s *ObjectService) DeleteObject(id string, userID string) (*domain.Object, error) {
+	var result *domain.Object
+
+	// delete orders.
+	allOrders, err := s.Services.Order.FindOrder(&domain.OrderFilter{ObjectId: []string{id}})
+	if err != nil {
+		return result, err
+	}
+	for i := range allOrders.Data {
+		_, err = s.Services.Order.DeleteOrder(allOrders.Data[i].ID.Hex(), userID)
+		if err != nil {
+			return result, err
+		}
+	}
+
+	result, err = s.repo.DeleteObject(id, userID)
+	if err != nil {
+		return result, err
+	}
+
+	s.Hub.HandleMessage(domain.MessageSocket{Type: "message", Method: "DELETE", Sender: userID, Recipient: "", Content: result, ID: "room1", Service: "object"})
+
+	_, err = s.Services.CreateArchiveObject(userID, result)
 
 	return result, err
 }

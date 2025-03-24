@@ -541,7 +541,8 @@ func (r *UserMongo) FindUser(input *domain.UserFilter) (domain.Response[domain.U
 		"let":  bson.D{{Key: "id", Value: "$_id"}},
 		"pipeline": mongo.Pipeline{
 			bson.D{{Key: "$match", Value: bson.M{
-				"$expr": bson.M{"$eq": [2]string{"$workerId", "$$id"}},
+				"$expr":  bson.M{"$eq": [2]string{"$workerId", "$$id"}},
+				"status": bson.D{{"$nin", [2]string{"finish", "autofinish"}}},
 			}}},
 
 			// object.

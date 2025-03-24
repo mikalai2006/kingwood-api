@@ -68,6 +68,9 @@ func (r *TaskWorkerMongo) FindTaskWorkerPopulate(input *domain.TaskWorkerFilter)
 
 	// Filters
 	q := bson.D{}
+	if input.Status != nil && len(input.Status) > 0 {
+		q = append(q, bson.E{"status", bson.D{{"$in", input.Status}}})
+	}
 	if input.From != nil && !input.From.IsZero() {
 		q = append(q, bson.E{"from", bson.D{{"$gte", primitive.NewDateTimeFromTime(*input.From)}}})
 	}

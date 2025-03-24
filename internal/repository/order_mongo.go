@@ -214,6 +214,121 @@ func (r *OrderMongo) FindOrder(input *domain.OrderFilter) (domain.Response[domai
 									},
 								},
 							}},
+							// bson.D{{Key: "$lookup", Value: bson.M{
+							// 	"from": tblTaskWorker,
+							// 	"as":   "taskWorkers",
+							// 	"let":  bson.D{{Key: "id", Value: "$_id"}},
+							// 	"pipeline": mongo.Pipeline{
+							// 		bson.D{{Key: "$match", Value: bson.M{
+							// 			"$expr":  bson.M{"$eq": [2]string{"$workerId", "$$id"}},
+							// 			"status": bson.D{{"$nin", [2]string{"finish", "autofinish"}}},
+							// 		}}},
+
+							// 		// object.
+							// 		bson.D{{Key: "$lookup", Value: bson.M{
+							// 			"from": tblObject,
+							// 			"as":   "objecta",
+							// 			"let":  bson.D{{Key: "objectId", Value: "$objectId"}},
+							// 			"pipeline": mongo.Pipeline{
+							// 				bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$_id", "$$objectId"}}}}},
+							// 				bson.D{{"$limit", 1}},
+							// 			},
+							// 		}}},
+							// 		bson.D{{Key: "$set", Value: bson.M{"object": bson.M{"$first": "$objecta"}}}},
+
+							// 		// order.
+							// 		bson.D{{Key: "$lookup", Value: bson.M{
+							// 			"from": TblOrder,
+							// 			"as":   "ordera",
+							// 			"let":  bson.D{{Key: "orderId", Value: "$orderId"}},
+							// 			"pipeline": mongo.Pipeline{
+							// 				bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$_id", "$$orderId"}}}}},
+							// 				bson.D{{"$limit", 1}},
+							// 			},
+							// 		}}},
+							// 		bson.D{{Key: "$set", Value: bson.M{"order": bson.M{"$first": "$ordera"}}}},
+
+							// 		// task.
+							// 		bson.D{{Key: "$lookup", Value: bson.M{
+							// 			"from": tblTask,
+							// 			"as":   "taska",
+							// 			"let":  bson.D{{Key: "taskId", Value: "$taskId"}},
+							// 			"pipeline": mongo.Pipeline{
+							// 				bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$_id", "$$taskId"}}}}},
+							// 				bson.D{{"$limit", 1}},
+							// 			},
+							// 		}}},
+							// 		bson.D{{Key: "$set", Value: bson.M{"task": bson.M{"$first": "$taska"}}}},
+
+							// 		// worker.
+							// 		bson.D{{Key: "$lookup", Value: bson.M{
+							// 			"from": tblUsers,
+							// 			"as":   "usera",
+							// 			"let":  bson.D{{Key: "workerId", Value: "$workerId"}},
+							// 			"pipeline": mongo.Pipeline{
+							// 				bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$_id", "$$workerId"}}}}},
+							// 				bson.D{{"$limit", 1}},
+							// 				bson.D{{
+							// 					Key: "$lookup",
+							// 					Value: bson.M{
+							// 						"from": tblImage,
+							// 						"as":   "images",
+							// 						"let":  bson.D{{Key: "serviceId", Value: bson.D{{"$toString", "$_id"}}}},
+							// 						"pipeline": mongo.Pipeline{
+							// 							bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$serviceId", "$$serviceId"}}}}},
+							// 						},
+							// 					},
+							// 				}},
+							// 				// add populate auth.
+							// 				bson.D{{
+							// 					Key: "$lookup",
+							// 					Value: bson.M{
+							// 						"from":         TblAuth,
+							// 						"as":           "auths",
+							// 						"localField":   "userId",
+							// 						"foreignField": "_id",
+							// 						// "let": bson.D{{Key: "roleId", Value: bson.D{{"$toString", "$roleId"}}}},
+							// 						// "pipeline": mongo.Pipeline{
+							// 						// 	bson.D{{Key: "$match", Value: bson.M{"$_id": bson.M{"$eq": [2]string{"$roleId", "$$_id"}}}}},
+							// 						// },
+							// 					},
+							// 				}},
+							// 				bson.D{{Key: "$set", Value: bson.M{"auth": bson.M{"$first": "$auths"}}}},
+							// 				bson.D{{Key: "$set", Value: bson.M{"authPrivate": bson.M{"$first": "$auths"}}}},
+
+							// 				// post.
+							// 				bson.D{{
+							// 					Key: "$lookup",
+							// 					Value: bson.M{
+							// 						"from": TblPost,
+							// 						"as":   "posts",
+							// 						// "localField":   "_id",
+							// 						// "foreignField": "serviceId",
+							// 						"let": bson.D{{Key: "postId", Value: "$postId"}},
+							// 						"pipeline": mongo.Pipeline{
+							// 							bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$_id", "$$postId"}}}}},
+							// 						},
+							// 					},
+							// 				}},
+							// 				bson.D{{Key: "$set", Value: bson.M{"postObject": bson.M{"$first": "$posts"}}}},
+							// 				// role.
+							// 				bson.D{{Key: "$lookup", Value: bson.M{
+							// 					"from": TblRole,
+							// 					"as":   "rolea",
+							// 					// "localField":   "userId",
+							// 					// "foreignField": "_id",
+							// 					"let": bson.D{{Key: "roleId", Value: "$roleId"}},
+							// 					"pipeline": mongo.Pipeline{
+							// 						bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$_id", "$$roleId"}}}}},
+							// 						bson.D{{"$limit", 1}},
+							// 					},
+							// 				}}},
+							// 				bson.D{{Key: "$set", Value: bson.M{"roleObject": bson.M{"$first": "$rolea"}}}},
+							// 			},
+							// 		}}},
+							// 		bson.D{{Key: "$set", Value: bson.M{"worker": bson.M{"$first": "$usera"}}}},
+							// 	},
+							// }}},
 						},
 					}}},
 					bson.D{{Key: "$set", Value: bson.M{"worker": bson.M{"$first": "$usera"}}}},

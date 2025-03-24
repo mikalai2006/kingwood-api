@@ -303,7 +303,7 @@ func (r *ObjectMongo) UpdateObject(id string, userID string, data *domain.Object
 	return result, nil
 }
 
-func (r *ObjectMongo) DeleteObject(id string) (*domain.Object, error) {
+func (r *ObjectMongo) DeleteObject(id string, userID string) (*domain.Object, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
 	defer cancel()
 

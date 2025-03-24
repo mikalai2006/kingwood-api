@@ -14,11 +14,12 @@ import (
 )
 
 func (h *HandlerV1) registerObject(router *gin.RouterGroup) {
-	Object := router.Group("/object")
-	Object.POST("", h.CreateObject)
-	Object.POST("/find", h.FindObject)
-	Object.PATCH("/:id", h.SetUserFromRequest, h.UpdateObject)
-	Object.POST("/list", h.CreateObjectList)
+	route := router.Group("/object")
+	route.POST("", h.CreateObject)
+	route.POST("/find", h.FindObject)
+	route.PATCH("/:id", h.SetUserFromRequest, h.UpdateObject)
+	route.POST("/list", h.CreateObjectList)
+	route.DELETE("/:id", h.DeleteObject)
 }
 
 func (h *HandlerV1) CreateObject(c *gin.Context) {
@@ -167,7 +168,28 @@ func (h *HandlerV1) UpdateObject(c *gin.Context) {
 }
 
 func (h *HandlerV1) DeleteObject(c *gin.Context) {
+	appG := app.Gin{C: c}
 
+	id := c.Param("id")
+	if id == "" {
+		// c.AbortWithError(http.StatusBadRequest, errors.New("for remove need id"))
+		appG.ResponseError(http.StatusBadRequest, errors.New("for remove need id"), nil)
+		return
+	}
+	userID, err := middleware.GetUID(c)
+	if err != nil {
+		// c.AbortWithError(http.StatusUnauthorized, err)
+		appG.ResponseError(http.StatusUnauthorized, err, gin.H{"hello": "world"})
+	}
+
+	user, err := h.Services.Object.DeleteObject(id, userID)
+	if err != nil {
+		// c.AbortWithError(http.StatusBadRequest, err)
+		appG.ResponseError(http.StatusBadRequest, err, nil)
+		return
+	}
+
+	c.JSON(http.StatusOK, user)
 }
 
 func (h *HandlerV1) CreateOrExistObject(c *gin.Context, input *domain.Object) (*domain.Object, error) {

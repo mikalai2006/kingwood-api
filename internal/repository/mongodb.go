@@ -54,6 +54,7 @@ const (
 	TblArchiveMessageStatus = "archive_message_status"
 	TblArchiveImage         = "archive_image"
 	TblArchivePay           = "archive_pay"
+	TblArchiveObject        = "archive_object"
 
 	MongoQueryTimeout = 10 * time.Second
 )

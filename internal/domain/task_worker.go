@@ -75,6 +75,7 @@ type TaskWorkerFilter struct {
 	ObjectId    []string            `json:"objectId,omitempty"`
 	OrderId     []string            `json:"orderId,omitempty"`
 	TaskId      []string            `json:"taskId,omitempty"`
+	Status      []string            `json:"status"`
 	WorkerId    []string            `json:"workerId,omitempty"`
 	OperationId []string            `json:"operationId,omitempty"`
 	From        *time.Time          `json:"from,omitempty"`

@@ -105,7 +105,13 @@ type Object interface {
 	FindObject(input *domain.ObjectFilter) (domain.Response[domain.Object], error)
 	CreateObject(userID string, Order *domain.Object) (*domain.Object, error)
 	UpdateObject(id string, userID string, data *domain.ObjectInput) (*domain.Object, error)
-	DeleteObject(id string) (*domain.Object, error)
+	DeleteObject(id string, userID string) (*domain.Object, error)
+}
+
+type ArchiveObject interface {
+	CreateArchiveObject(userID string, Order *domain.Object) (*domain.ArchiveObject, error)
+	FindArchiveObject(input *domain.ArchiveObjectFilter) (domain.Response[domain.ArchiveObject], error)
+	DeleteArchiveObject(id string, userID string) (*domain.ArchiveObject, error)
 }
 
 type TaskWorker interface {
@@ -226,6 +232,7 @@ type Repositories struct {
 	ArchiveWorkHistory
 	ArchiveImage
 	ArchiveMessage
+	ArchiveObject
 }
 
 func NewRepositories(mongodb *mongo.Database, i18n config.I18nConfig) *Repositories {
@@ -256,6 +263,7 @@ func NewRepositories(mongodb *mongo.Database, i18n config.I18nConfig) *Repositor
 		ArchiveWorkHistory: NewArchiveWorkHistoryMongo(mongodb, i18n),
 		ArchiveImage:       NewArchiveImageMongo(mongodb, i18n),
 		ArchiveMessage:     NewArchiveMessageMongo(mongodb, i18n),
+		ArchiveObject:      NewArchiveObjectMongo(mongodb, i18n),
 	}
 }
 
