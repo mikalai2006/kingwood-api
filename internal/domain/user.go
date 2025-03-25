@@ -36,7 +36,7 @@ type User struct {
 	TypePay  *int64                 `json:"typePay" bson:"typePay"`
 	Oklad    *int64                 `json:"oklad" bson:"oklad"`
 	Props    map[string]interface{} `json:"props" bson:"props" form:"props"`
-	Blocked  *bool                  `json:"blocked" bson:"blocked" form:"blocked"`
+	Blocked  *int                   `json:"blocked" bson:"blocked" form:"blocked"`
 
 	TaskWorkers []TaskWorker `json:"taskWorkers" bson:"taskWorkers" form:"taskWorkers"`
 	// Workes     *int64             `json:"workes" bson:"workes"`
@@ -71,7 +71,7 @@ type UserInput struct {
 	Birthday *string                `json:"birthday" bson:"birthday" form:"birthday"`
 	Online   *bool                  `json:"online" bson:"online" form:"online"`
 	Props    map[string]interface{} `json:"props" bson:"props" form:"props"`
-	Blocked  *bool                  `json:"blocked" bson:"blocked" form:"blocked"`
+	Blocked  *int                   `json:"blocked" bson:"blocked" form:"blocked"`
 
 	TypePay *int64 `json:"typePay" bson:"typePay" form:"typePay"`
 	Oklad   *int64 `json:"oklad" bson:"oklad" form:"oklad"`
@@ -100,7 +100,7 @@ type UserInputMongo struct {
 	TypePay *int64                 `json:"typePay" bson:"typePay" form:"typePay"`
 	Oklad   *int64                 `json:"oklad" bson:"oklad" form:"oklad"`
 	Props   map[string]interface{} `json:"props" bson:"props" form:"props"`
-	Blocked *bool                  `json:"blocked" bson:"blocked" form:"blocked"`
+	Blocked *int                   `json:"blocked" bson:"blocked" form:"blocked"`
 	// Workes  *int64 `json:"workes" bson:"workes" form:"workes"`
 
 	LastTime  time.Time `json:"lastTime" bson:"lastTime"`
