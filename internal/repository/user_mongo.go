@@ -399,6 +399,9 @@ func (r *UserMongo) FindUser(input *domain.UserFilter) (domain.Response[domain.U
 	if input.Archive != nil {
 		q = append(q, bson.E{"archive", input.Archive})
 	}
+	if input.Blocked != nil {
+		q = append(q, bson.E{"blocked", input.Blocked})
+	}
 	if input.Hidden != nil {
 		q = append(q, bson.E{"hidden", input.Hidden})
 	}
@@ -783,7 +786,7 @@ func (r *UserMongo) DeleteUser(id string) (domain.User, error) {
 	return result, nil
 }
 
-func (r *UserMongo) UpdateUser(id string, user *domain.UserInput) (domain.User, error) {
+func (r *UserMongo) UpdateUser(id string, data *domain.UserInput) (domain.User, error) {
 	var result domain.User
 	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
 	defer cancel()
@@ -804,51 +807,54 @@ func (r *UserMongo) UpdateUser(id string, user *domain.UserInput) (domain.User, 
 
 	newData := bson.M{}
 
-	if user.Name != "" {
-		newData["name"] = user.Name
+	if data.Name != "" {
+		newData["name"] = data.Name
 	}
-	if user.Phone != "" {
-		newData["phone"] = user.Phone
+	if data.Phone != "" {
+		newData["phone"] = data.Phone
 	}
-	if user.Birthday != nil {
-		newData["birthday"] = user.Birthday
+	if data.Birthday != nil {
+		newData["birthday"] = data.Birthday
 	}
-	if user.Oklad != nil {
-		newData["oklad"] = user.Oklad
+	if data.Oklad != nil {
+		newData["oklad"] = data.Oklad
 	}
-	if user.TypePay != nil {
-		newData["typePay"] = user.TypePay
+	if data.TypePay != nil {
+		newData["typePay"] = data.TypePay
 	}
-	if user.Archive != nil {
-		newData["archive"] = user.Archive
+	if data.Archive != nil {
+		newData["archive"] = data.Archive
 	}
-	if user.Hidden != nil {
-		newData["hidden"] = user.Hidden
+	if data.Hidden != nil {
+		newData["hidden"] = data.Hidden
 	}
-	if user.RoleId != "" {
-		IDPrimitive, err := primitive.ObjectIDFromHex(user.RoleId)
+	if data.Blocked != nil {
+		newData["blocked"] = data.Blocked
+	}
+	if data.RoleId != "" {
+		IDPrimitive, err := primitive.ObjectIDFromHex(data.RoleId)
 		if err != nil {
 			return result, err
 		}
 		newData["roleId"] = IDPrimitive
 	}
 	// fmt.Println("user.TypeWork=", user.TypeWork)
-	if user.TypeWork != nil {
-		newData["typeWork"] = user.TypeWork
+	if data.TypeWork != nil {
+		newData["typeWork"] = data.TypeWork
 	}
 	//  else {
 	// 	newData["typeWork"] = []string{}
 	// }
 
-	if !user.LastTime.IsZero() {
-		newData["lastTime"] = user.LastTime
+	if !data.LastTime.IsZero() {
+		newData["lastTime"] = data.LastTime
 	}
-	if user.Online != nil {
-		newData["online"] = user.Online
+	if data.Online != nil {
+		newData["online"] = data.Online
 	}
 
-	if user.PostId != "" {
-		IDPrimitive, err := primitive.ObjectIDFromHex(user.PostId)
+	if data.PostId != "" {
+		IDPrimitive, err := primitive.ObjectIDFromHex(data.PostId)
 		if err != nil {
 			return result, err
 		}

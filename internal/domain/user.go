@@ -30,12 +30,15 @@ type User struct {
 	// Bal    int      `json:"bal" bson:"bal"`
 	// Role   Role     `json:"role" bson:"role"`
 
-	RoleId      primitive.ObjectID `json:"roleId" bson:"roleId" form:"roleId" primitive:"true"`
-	PostId      primitive.ObjectID `json:"postId" bson:"postId" form:"postId"`
-	TypeWork    []string           `json:"typeWork" bson:"typeWork"`
-	TypePay     *int64             `json:"typePay" bson:"typePay"`
-	Oklad       *int64             `json:"oklad" bson:"oklad"`
-	TaskWorkers []TaskWorker       `json:"taskWorkers" bson:"taskWorkers" form:"taskWorkers"`
+	RoleId   primitive.ObjectID     `json:"roleId" bson:"roleId" form:"roleId" primitive:"true"`
+	PostId   primitive.ObjectID     `json:"postId" bson:"postId" form:"postId"`
+	TypeWork []string               `json:"typeWork" bson:"typeWork"`
+	TypePay  *int64                 `json:"typePay" bson:"typePay"`
+	Oklad    *int64                 `json:"oklad" bson:"oklad"`
+	Props    map[string]interface{} `json:"props" bson:"props" form:"props"`
+	Blocked  *bool                  `json:"blocked" bson:"blocked" form:"blocked"`
+
+	TaskWorkers []TaskWorker `json:"taskWorkers" bson:"taskWorkers" form:"taskWorkers"`
 	// Workes     *int64             `json:"workes" bson:"workes"`
 
 	PostObject   Post          `json:"postObject" bson:"postObject"`
@@ -62,11 +65,13 @@ type UserInput struct {
 	Hidden  *int `json:"hidden" bson:"hidden" form:"hidden"`
 	Archive *int `json:"archive" bson:"archive" form:"archive"`
 	// Post   []int  `json:"post" bson:"post" form:"post"`
-	RoleId   string   `json:"roleId" bson:"roleId" form:"roleId"`
-	PostId   string   `json:"postId" bson:"postId" form:"postId"`
-	TypeWork []string `json:"typeWork" bson:"typeWork" form:"typeWork"`
-	Birthday *string  `json:"birthday" bson:"birthday" form:"birthday"`
-	Online   *bool    `json:"online" bson:"online" form:"online"`
+	RoleId   string                 `json:"roleId" bson:"roleId" form:"roleId"`
+	PostId   string                 `json:"postId" bson:"postId" form:"postId"`
+	TypeWork []string               `json:"typeWork" bson:"typeWork" form:"typeWork"`
+	Birthday *string                `json:"birthday" bson:"birthday" form:"birthday"`
+	Online   *bool                  `json:"online" bson:"online" form:"online"`
+	Props    map[string]interface{} `json:"props" bson:"props" form:"props"`
+	Blocked  *bool                  `json:"blocked" bson:"blocked" form:"blocked"`
 
 	TypePay *int64 `json:"typePay" bson:"typePay" form:"typePay"`
 	Oklad   *int64 `json:"oklad" bson:"oklad" form:"oklad"`
@@ -92,8 +97,10 @@ type UserInputMongo struct {
 	TypeWork []string           `json:"typeWork" bson:"typeWork"`
 	Birthday *string            `json:"birthday" bson:"birthday" form:"birthday"`
 
-	TypePay *int64 `json:"typePay" bson:"typePay" form:"typePay"`
-	Oklad   *int64 `json:"oklad" bson:"oklad" form:"oklad"`
+	TypePay *int64                 `json:"typePay" bson:"typePay" form:"typePay"`
+	Oklad   *int64                 `json:"oklad" bson:"oklad" form:"oklad"`
+	Props   map[string]interface{} `json:"props" bson:"props" form:"props"`
+	Blocked *bool                  `json:"blocked" bson:"blocked" form:"blocked"`
 	// Workes  *int64 `json:"workes" bson:"workes" form:"workes"`
 
 	LastTime  time.Time `json:"lastTime" bson:"lastTime"`
@@ -106,6 +113,7 @@ type UserFilter struct {
 	UserId  []string            `json:"userId,omitempty"`
 	RoleId  []string            `json:"roleId,omitempty"`
 	Hidden  *int                `json:"hidden,omitempty"`
+	Blocked *int                `json:"blocked,omitempty"`
 	Archive *int                `json:"archive,omitempty"`
 	Sort    []*FilterSortParams `json:"sort,omitempty"`
 	Limit   *int                `json:"$limit,omitempty"`
