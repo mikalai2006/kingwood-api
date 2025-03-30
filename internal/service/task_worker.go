@@ -677,10 +677,10 @@ func (s *TaskWorkerService) CheckStatusTask(userID string, result *domain.TaskWo
 		// }
 
 		// change task status.
+		active := int64(1)
 		fmt.Println("update taskWorker: ", len(taskWorkersStatus), taskWorkersStatus)
 		// if len(taskWorkersStatus) == 1 || (len(taskWorkersStatus) > 1 && isProcess) {
 		if len(taskWorkersStatus) > 0 {
-			active := int64(1)
 			if result.Status == "finish" {
 				active = int64(0)
 			}
@@ -743,6 +743,21 @@ func (s *TaskWorkerService) CheckStatusTask(userID string, result *domain.TaskWo
 				return result, err
 			}
 
+		} else {
+			// если есть задания, но не нашлось совпадений(autofinish), выставляем статус wait.
+			if len(taskWorkers.Data) > 0 {
+				statuses, err := s.Services.TaskStatus.FindTaskStatus(domain.RequestParams{Filter: bson.D{{"status", "wait"}}})
+				if err != nil {
+					return result, err
+				}
+
+				if len(statuses.Data) > 0 {
+					_, err := s.taskService.UpdateTask(result.TaskId.Hex(), userID, &domain.TaskInput{StatusId: statuses.Data[0].ID, Status: "wait", Active: &active})
+					if err != nil {
+						return result, err
+					}
+				}
+			}
 		}
 	} else {
 		statuses, err := s.Services.TaskStatus.FindTaskStatus(domain.RequestParams{Filter: bson.D{{"status", "wait"}}})

@@ -113,12 +113,14 @@ func (r *MessageMongo) FindMessage(params *domain.MessageFilter) (domain.Respons
 	dataOptions := bson.A{}
 	if params.Skip != nil {
 		skip = *params.Skip
-		dataOptions = append(dataOptions, bson.D{{"$skip", skip}})
 	}
+	dataOptions = append(dataOptions, bson.D{{"$skip", skip}})
+
 	if params.Limit != nil {
 		limit = *params.Limit
-		dataOptions = append(dataOptions, bson.D{{"$limit", limit}})
 	}
+	dataOptions = append(dataOptions, bson.D{{"$limit", limit}})
+
 	if params.Sort != nil {
 		sortParam := bson.D{}
 		for i := range params.Sort {

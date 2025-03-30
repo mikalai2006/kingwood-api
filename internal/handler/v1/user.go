@@ -2,12 +2,14 @@ package v1
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/mikalai2006/kingwood-api/internal/domain"
 	"github.com/mikalai2006/kingwood-api/internal/middleware"
 	"github.com/mikalai2006/kingwood-api/internal/utils"
 	"github.com/mikalai2006/kingwood-api/pkg/app"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 func (h *HandlerV1) RegisterUser(router *gin.RouterGroup) {
@@ -17,6 +19,7 @@ func (h *HandlerV1) RegisterUser(router *gin.RouterGroup) {
 	user.GET("/:id", h.GetUser)
 	user.DELETE("/:id", h.DeleteUser)
 	user.PATCH("/:id", h.UpdateUser)
+	user.PATCH("/block/:id", h.BlockUser)
 }
 
 // @Summary Get user by Id
@@ -219,6 +222,127 @@ func (h *HandlerV1) UpdateUser(c *gin.Context) {
 	if err != nil {
 		appG.ResponseError(http.StatusBadRequest, err, nil)
 		return
+	}
+
+	// limit := 1
+	// result, err := h.Services.User.FindUser(&domain.UserFilter{ID: []string{user.ID.Hex()}, Limit: &limit})
+	// // domain.RequestParams{Filter: bson.D{{"_id", user.ID}}})
+	// if err != nil {
+	// 	appG.ResponseError(http.StatusBadRequest, err, nil)
+	// 	return
+	// }
+
+	c.JSON(http.StatusOK, result)
+}
+
+func (h *HandlerV1) BlockUser(c *gin.Context) {
+	appG := app.Gin{C: c}
+
+	id := c.Param("id")
+
+	userID, err := middleware.GetUID(c)
+	if err != nil {
+		appG.ResponseError(http.StatusUnauthorized, err, nil)
+		return
+	}
+
+	var inputx domain.UserInput
+	if er := c.Bind(&inputx); er != nil {
+		appG.ResponseError(http.StatusBadRequest, er, nil)
+		return
+	}
+
+	input := domain.UserInput{
+		Blocked: inputx.Blocked,
+	}
+
+	result, err := h.Services.User.UpdateUser(id, &input)
+	if err != nil {
+		appG.ResponseError(http.StatusBadRequest, err, nil)
+		return
+	}
+
+	if inputx.Blocked != nil && *inputx.Blocked > 0 {
+
+		// remove PUSH token.
+		_, err = h.Services.Authorization.UpdateAuth(result.UserID.Hex(), &domain.AuthInput{
+			PushToken: "0",
+		})
+		if err != nil {
+			appG.ResponseError(http.StatusBadRequest, err, nil)
+			return
+		}
+
+		// stop all workHistorys.
+		statusNull := int(0)
+		workHistorys, err := h.Services.WorkHistory.FindWorkHistoryPopulate(domain.WorkHistoryFilter{WorkerId: []string{id}, Status: &statusNull})
+		if err != nil {
+			appG.ResponseError(http.StatusBadRequest, err, nil)
+			return
+		}
+
+		status := int(1)
+		if len(workHistorys.Data) > 0 {
+			for i := range workHistorys.Data {
+				h.Services.WorkHistory.UpdateWorkHistory(
+					workHistorys.Data[i].ID.Hex(),
+					userID,
+					&domain.WorkHistoryInput{
+						Status: &status,
+						To:     time.Now(),
+					},
+				)
+			}
+		}
+
+		// get status autofinish.
+		statusAutoFinish, err := h.Services.TaskStatus.FindTaskStatus(domain.RequestParams{Filter: bson.D{{"status", "autofinish"}}})
+		if err != nil {
+			appG.ResponseError(http.StatusBadRequest, err, nil)
+			return
+		}
+
+		// stop all taskWorker.
+		if len(statusAutoFinish.Data) > 0 {
+			taskWorkers, err := h.Services.TaskWorker.FindTaskWorkerPopulate(&domain.TaskWorkerFilter{WorkerId: []string{id}, Status: []string{"wait", "process", "pause", "autofinish"}})
+			if err != nil {
+				appG.ResponseError(http.StatusBadRequest, err, nil)
+				return
+			}
+
+			for i := range taskWorkers.Data {
+				h.Services.TaskWorker.UpdateTaskWorker(
+					taskWorkers.Data[i].ID.Hex(),
+					userID,
+					&domain.TaskWorkerInput{
+						Status:   statusAutoFinish.Data[0].Status,
+						StatusId: statusAutoFinish.Data[0].ID,
+					},
+					1,
+				)
+			}
+		}
+	}
+
+	// read all notify.
+	limit := 500
+	notys, err := h.Services.Notify.FindNotifyPopulate(&domain.NotifyFilter{UserTo: []*string{&id}, Limit: &limit})
+	if err != nil {
+		appG.ResponseError(http.StatusBadRequest, err, nil)
+		return
+	}
+
+	if len(notys.Data) > 0 {
+		statusNoty := 1
+		for i := range notys.Data {
+			h.Services.Notify.UpdateNotify(
+				notys.Data[i].ID.Hex(),
+				userID,
+				&domain.NotifyInput{
+					Status: &statusNoty,
+				},
+			)
+		}
 	}
 
 	// limit := 1
