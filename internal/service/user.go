@@ -58,7 +58,7 @@ func (s *UserService) DeleteUser(id string, userID string) (domain.User, error) 
 	}
 	for i := range allWorkHistory.Data {
 		// fmt.Println("Remove WorkHistory: ", allWorkHistory.Data[i].ID)
-		_, err = s.Services.WorkHistory.DeleteWorkHistory(allWorkHistory.Data[i].ID.Hex(), id)
+		_, err = s.Services.WorkHistory.DeleteWorkHistory(allWorkHistory.Data[i].ID.Hex(), userID, false)
 	}
 
 	// delete pay.

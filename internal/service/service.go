@@ -98,7 +98,7 @@ type WorkHistory interface {
 	FindWorkHistory(input domain.WorkHistoryFilter) (domain.Response[domain.WorkHistory], error)
 	FindWorkHistoryPopulate(input domain.WorkHistoryFilter) (domain.Response[domain.WorkHistory], error)
 	UpdateWorkHistory(id string, userID string, data *domain.WorkHistoryInput) (*domain.WorkHistory, error)
-	DeleteWorkHistory(id string, userID string) (*domain.WorkHistory, error)
+	DeleteWorkHistory(id string, userID string, createNotify bool) (*domain.WorkHistory, error)
 	GetStatByOrder(input domain.WorkHistoryFilter) ([]domain.WorkHistoryStatByOrder, error)
 }
 

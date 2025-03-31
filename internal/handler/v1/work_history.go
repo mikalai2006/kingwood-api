@@ -201,7 +201,7 @@ func (h *HandlerV1) DeleteWorkHistory(c *gin.Context) {
 		return
 	}
 
-	user, err := h.Services.WorkHistory.DeleteWorkHistory(id, userID) // , input
+	user, err := h.Services.WorkHistory.DeleteWorkHistory(id, userID, true) // , input
 	if err != nil {
 		// c.AbortWithError(http.StatusBadRequest, err)
 		appG.ResponseError(http.StatusBadRequest, err, nil)

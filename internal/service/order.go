@@ -229,7 +229,7 @@ func (s *OrderService) DeleteOrder(id string, userID string) (*domain.Order, err
 		return result, err
 	}
 	for i := range allWorkHistory.Data {
-		_, err = s.Services.WorkHistory.DeleteWorkHistory(allWorkHistory.Data[i].ID.Hex(), userID)
+		_, err = s.Services.WorkHistory.DeleteWorkHistory(allWorkHistory.Data[i].ID.Hex(), userID, false)
 		if err != nil {
 			return result, err
 		}
