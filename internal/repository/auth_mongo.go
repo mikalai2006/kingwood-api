@@ -243,8 +243,10 @@ func (r *AuthMongo) GetByCredentials(auth *domain.AuthInput) (domain.Auth, error
 	// }
 
 	// check blocked.
-	if *user.User.Blocked == 1 {
-		return user, domain.ErrBlocked
+	if user.User.Blocked != nil {
+		if *user.User.Blocked == 1 {
+			return user, domain.ErrBlocked
+		}
 	}
 
 	if err := r.db.Collection(tblUsers).FindOneAndUpdate(ctx, bson.M{
