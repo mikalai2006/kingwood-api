@@ -717,6 +717,7 @@ func (r *UserMongo) CreateUser(userID string, data *domain.User) (*domain.User, 
 		typeWork = data.TypeWork
 	}
 
+	blockedValue := 0
 	newUser := domain.UserInputMongo{
 		// Avatar: user.Avatar,
 		Name:   data.Name,
@@ -731,6 +732,7 @@ func (r *UserMongo) CreateUser(userID string, data *domain.User) (*domain.User, 
 		Birthday: data.Birthday,
 		TypePay:  data.TypePay,
 		Oklad:    data.Oklad,
+		Blocked:  &blockedValue,
 		// Roles:     user.Roles,
 		LastTime:  time.Now(),
 		CreatedAt: time.Now(),
