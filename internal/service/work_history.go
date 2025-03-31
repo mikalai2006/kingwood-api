@@ -84,6 +84,34 @@ func (s *WorkHistoryService) CreateWorkHistory(userID string, data *domain.WorkH
 
 	s.Hub.HandleMessage(domain.MessageSocket{Type: "message", Method: "CREATE", Sender: userID, Recipient: userID, Content: result, ID: "room1", Service: "workHistory"})
 
+	// находим пользователей(администрацию) для рассылки создания раб.сессии.
+	roles, err := s.Services.Role.FindRole(&domain.RoleFilter{Code: []string{"admin", "boss"}})
+	if err != nil {
+		return nil, err
+	}
+	ids := []string{}
+	var users []domain.User
+
+	if len(roles.Data) > 0 {
+		for i := range roles.Data {
+			ids = append(ids, roles.Data[i].ID.Hex())
+		}
+
+		_users, err := s.Services.User.FindUser(&domain.UserFilter{RoleId: ids})
+		if err != nil {
+			return nil, err
+		}
+
+		users = _users.Data
+	}
+
+	// отправляем уведомления администрации.
+	for i := range users {
+
+		s.Hub.HandleMessage(domain.MessageSocket{Type: "message", Method: "CREATE", Sender: userID, Recipient: users[i].ID.Hex(), Content: result, ID: "room1", Service: "workHistory"})
+
+	}
+
 	// // set user stat
 	// if err == nil {
 	// 	_, _ = s.userService.SetStat(userID, domain.UserStat{AddReview: 1})
@@ -99,11 +127,11 @@ func (s *WorkHistoryService) UpdateWorkHistory(id string, userID string, data *d
 		return nil, err
 	}
 
-	fmt.Println("data: ", data)
-	fmt.Println("id: ", id)
-	fmt.Println("WorkerId: ", data.WorkerId)
-	fmt.Println("From: ", existWorkHistory.Data[0].From, data.From)
-	fmt.Println("To: ", existWorkHistory.Data[0].To, data.To)
+	// fmt.Println("data: ", data)
+	// fmt.Println("id: ", id)
+	// fmt.Println("WorkerId: ", data.WorkerId)
+	// fmt.Println("From: ", existWorkHistory.Data[0].From, data.From)
+	// fmt.Println("To: ", existWorkHistory.Data[0].To, data.To)
 
 	// статус изменения времени.
 	isWorkHistoryChange := false
@@ -143,7 +171,7 @@ func (s *WorkHistoryService) UpdateWorkHistory(id string, userID string, data *d
 			data.Props = newProps
 		}
 	}
-	fmt.Println("isWorkHistoryChange: ", isWorkHistoryChange)
+	// fmt.Println("isWorkHistoryChange: ", isWorkHistoryChange)
 
 	result, err := s.repo.UpdateWorkHistory(id, userID, data)
 	if err != nil {
@@ -322,7 +350,10 @@ func (s *WorkHistoryService) UpdateWorkHistory(id string, userID string, data *d
 				// Link:       "/(tabs)/finance",
 				// LinkOption: map[string]interface{}{},
 			})
+
+			s.Hub.HandleMessage(domain.MessageSocket{Type: "message", Method: "PATCH", Sender: userID, Recipient: users[i].ID.Hex(), Content: result, ID: "room1", Service: "workHistory"})
 		}
+
 		// отправка уведомления сотруднику, для кого меняются данные
 		s.Services.Notify.CreateNotify(userID, &domain.NotifyInput{
 			UserTo: existWorkHistory.Data[0].WorkerId.Hex(),
