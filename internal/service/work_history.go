@@ -85,7 +85,7 @@ func (s *WorkHistoryService) CreateWorkHistory(userID string, data *domain.WorkH
 	s.Hub.HandleMessage(domain.MessageSocket{Type: "message", Method: "CREATE", Sender: userID, Recipient: userID, Content: result, ID: "room1", Service: "workHistory"})
 
 	// находим пользователей(администрацию) для рассылки создания раб.сессии.
-	roles, err := s.Services.Role.FindRole(&domain.RoleFilter{Code: []string{"admin", "boss"}})
+	roles, err := s.Services.Role.FindRole(&domain.RoleFilter{Code: []string{"admin", "boss", "systemrole"}})
 	if err != nil {
 		return nil, err
 	}
@@ -261,7 +261,7 @@ func (s *WorkHistoryService) UpdateWorkHistory(id string, userID string, data *d
 		s.Hub.HandleMessage(domain.MessageSocket{Type: "message", Method: "PATCH", Sender: userID, Recipient: result.WorkerId.Hex(), Content: result, ID: "room1", Service: "workHistory"})
 
 		// находим пользователей(администрацию) для рассылки создания раб.сессии.
-		roles, err := s.Services.Role.FindRole(&domain.RoleFilter{Code: []string{"admin", "boss"}})
+		roles, err := s.Services.Role.FindRole(&domain.RoleFilter{Code: []string{"admin", "boss", "systemrole"}})
 		if err != nil {
 			return nil, err
 		}
@@ -301,7 +301,7 @@ func (s *WorkHistoryService) UpdateWorkHistory(id string, userID string, data *d
 		}
 
 		// находим пользователей для создания уведомлений.
-		roles, err := s.Services.Role.FindRole(&domain.RoleFilter{Code: []string{"admin", "boss"}})
+		roles, err := s.Services.Role.FindRole(&domain.RoleFilter{Code: []string{"admin", "boss", "systemrole"}})
 		if err != nil {
 			return nil, err
 		}
@@ -439,7 +439,7 @@ func (s *WorkHistoryService) DeleteWorkHistory(id string, userID string) (*domai
 		})
 
 		// находим пользователей(администрацию) для создания уведомлений.
-		roles, err := s.Services.Role.FindRole(&domain.RoleFilter{Code: []string{"admin", "boss"}})
+		roles, err := s.Services.Role.FindRole(&domain.RoleFilter{Code: []string{"admin", "boss", "systemrole"}})
 		if err != nil {
 			return nil, err
 		}
