@@ -259,6 +259,34 @@ func (s *WorkHistoryService) UpdateWorkHistory(id string, userID string, data *d
 		// }
 
 		s.Hub.HandleMessage(domain.MessageSocket{Type: "message", Method: "PATCH", Sender: userID, Recipient: result.WorkerId.Hex(), Content: result, ID: "room1", Service: "workHistory"})
+
+		// находим пользователей(администрацию) для рассылки создания раб.сессии.
+		roles, err := s.Services.Role.FindRole(&domain.RoleFilter{Code: []string{"admin", "boss"}})
+		if err != nil {
+			return nil, err
+		}
+		ids := []string{}
+		var users []domain.User
+
+		if len(roles.Data) > 0 {
+			for i := range roles.Data {
+				ids = append(ids, roles.Data[i].ID.Hex())
+			}
+
+			_users, err := s.Services.User.FindUser(&domain.UserFilter{RoleId: ids})
+			if err != nil {
+				return nil, err
+			}
+
+			users = _users.Data
+		}
+
+		// отправляем уведомления администрации.
+		for i := range users {
+
+			s.Hub.HandleMessage(domain.MessageSocket{Type: "message", Method: "PATCH", Sender: userID, Recipient: users[i].ID.Hex(), Content: result, ID: "room1", Service: "workHistory"})
+
+		}
 	}
 
 	if isWorkHistoryChange {
@@ -350,10 +378,7 @@ func (s *WorkHistoryService) UpdateWorkHistory(id string, userID string, data *d
 				// Link:       "/(tabs)/finance",
 				// LinkOption: map[string]interface{}{},
 			})
-
-			s.Hub.HandleMessage(domain.MessageSocket{Type: "message", Method: "PATCH", Sender: userID, Recipient: users[i].ID.Hex(), Content: result, ID: "room1", Service: "workHistory"})
 		}
-
 		// отправка уведомления сотруднику, для кого меняются данные
 		s.Services.Notify.CreateNotify(userID, &domain.NotifyInput{
 			UserTo: existWorkHistory.Data[0].WorkerId.Hex(),
