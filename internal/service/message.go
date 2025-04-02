@@ -53,15 +53,16 @@ func (s *MessageService) CreateMessage(userID string, data *domain.MessageInput)
 	s.Hub.HandleMessage(domain.MessageSocket{Type: "message", Method: "PATCH", Sender: userID, Recipient: "", Content: result, ID: "room1", Service: "message"})
 
 	for i := range taskWorkers.Data {
-		// add notify.
-		_, err = s.Services.Notify.CreateNotify(userID, &domain.NotifyInput{
-			UserTo:     taskWorkers.Data[i].WorkerId.Hex(),
-			Title:      domain.NewMessageTitle,
-			Message:    fmt.Sprintf(domain.NewMessage, taskWorkers.Data[i].Order.Number, taskWorkers.Data[i].Order.Name, taskWorkers.Data[i].Object.Name),
-			Link:       "/[orderId]/message",
-			LinkOption: map[string]interface{}{"orderId": result.OrderID.Hex()},
-		})
-
+		if userID != taskWorkers.Data[i].WorkerId.Hex() {
+			// add notify.
+			_, err = s.Services.Notify.CreateNotify(userID, &domain.NotifyInput{
+				UserTo:     taskWorkers.Data[i].WorkerId.Hex(),
+				Title:      domain.NewMessageTitle,
+				Message:    fmt.Sprintf(domain.NewMessage, taskWorkers.Data[i].Order.Number, taskWorkers.Data[i].Order.Name, taskWorkers.Data[i].Object.Name),
+				Link:       "/[orderId]/message",
+				LinkOption: map[string]interface{}{"orderId": result.OrderID.Hex()},
+			})
+		}
 	}
 
 	return result, err
