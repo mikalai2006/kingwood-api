@@ -78,6 +78,8 @@ func (s *OrderService) CreateOrder(userID string, data *domain.Order) (*domain.O
 		}
 		if len(lastOrders.Data) > 0 {
 			data.Number = lastOrders.Data[0].Number + 1
+		} else {
+			data.Number = 1
 		}
 	} else {
 		// // если в данных есть number, проверяем на существование такого номера
