@@ -69,7 +69,7 @@ func (s *PayService) CreatePay(userID string, data *domain.Pay) (*domain.Pay, er
 	})
 
 	// находим пользователей для создания уведомлений.
-	roles, err := s.Services.Role.FindRole(&domain.RoleFilter{Code: []string{"admin", "boss", "systemrole"}})
+	roles, err := s.Services.Role.FindRole(&domain.RoleFilter{Code: []string{"admin", "boss"}})
 	if err != nil {
 		return nil, err
 	}
@@ -182,7 +182,7 @@ func (s *PayService) UpdatePay(id string, userID string, data *domain.PayInput) 
 		})
 
 		// находим пользователей для создания уведомлений.
-		roles, err := s.Services.Role.FindRole(&domain.RoleFilter{Code: []string{"admin", "boss", "systemrole"}})
+		roles, err := s.Services.Role.FindRole(&domain.RoleFilter{Code: []string{"admin", "boss"}})
 		if err != nil {
 			return nil, err
 		}
