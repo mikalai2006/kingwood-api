@@ -863,6 +863,8 @@ func (r *UserMongo) UpdateUser(id string, data *domain.UserInput) (domain.User, 
 		newData["postId"] = IDPrimitive
 	}
 
+	newData["updatedAt"] = time.Now()
+
 	// fmt.Println("data=", user)
 	_, err = collection.UpdateOne(ctx, filter, bson.M{"$set": newData})
 	if err != nil {
