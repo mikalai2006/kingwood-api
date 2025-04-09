@@ -126,7 +126,13 @@ type Notify interface {
 	CreateNotify(userID string, data *domain.NotifyInput) (*domain.Notify, error)
 	FindNotifyPopulate(input *domain.NotifyFilter) (domain.Response[domain.Notify], error)
 	UpdateNotify(id string, userID string, data *domain.NotifyInput) (*domain.Notify, error)
-	DeleteNotify(id string) (*domain.Notify, error)
+	DeleteNotify(id string, userID string) (*domain.Notify, error)
+}
+
+type ArchiveNotify interface {
+	CreateArchiveNotify(userID string, data *domain.Notify) (*domain.ArchiveNotify, error)
+	FindArchiveNotifyPopulate(input *domain.ArchiveNotifyFilter) (domain.Response[domain.ArchiveNotify], error)
+	DeleteArchiveNotify(id string, userID string) (*domain.ArchiveNotify, error)
 }
 
 type TaskStatus interface {
@@ -232,6 +238,7 @@ type Services struct {
 	ArchiveImage
 	ArchiveMessage
 	ArchiveObject
+	ArchiveNotify
 }
 
 type ConfigServices struct {
@@ -283,6 +290,7 @@ func NewServices(cfgService *ConfigServices) *Services {
 	ArchiveImage := NewArchiveImageService(cfgService.Repositories.ArchiveImage, Image.imageConfig)
 	ArchiveMessage := NewArchiveMessageService(cfgService.Repositories.ArchiveMessage, cfgService.Hub, Image.imageConfig)
 	ArchiveObject := NewArchiveObjectService(cfgService.Repositories.ArchiveObject, cfgService.Hub)
+	ArchiveNotify := NewArchiveNotifyService(cfgService.Repositories.ArchiveNotify, cfgService.Hub)
 
 	services := &Services{
 		AppError:      NewAppErrorService(cfgService.Repositories.AppError, cfgService.Hub),
@@ -312,6 +320,7 @@ func NewServices(cfgService *ConfigServices) *Services {
 		ArchiveImage:       ArchiveImage,
 		ArchiveMessage:     ArchiveMessage,
 		ArchiveObject:      ArchiveObject,
+		ArchiveNotify:      ArchiveNotify,
 	}
 	Task.Services = services
 	TaskWorker.Services = services

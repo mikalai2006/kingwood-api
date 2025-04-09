@@ -78,7 +78,7 @@ func (s *UserService) DeleteUser(id string, userID string) (domain.User, error) 
 	}
 	for i := range allNotify.Data {
 		// fmt.Println("Remove Notify: ", allNotify.Data[i].ID)
-		_, err = s.Services.Notify.DeleteNotify(allNotify.Data[i].ID.Hex())
+		_, err = s.Services.Notify.DeleteNotify(allNotify.Data[i].ID.Hex(), userID)
 	}
 
 	result, err = s.repo.DeleteUser(id)

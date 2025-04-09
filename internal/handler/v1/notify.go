@@ -220,8 +220,14 @@ func (h *HandlerV1) DeleteNotify(c *gin.Context) {
 		appG.ResponseError(http.StatusBadRequest, errors.New("for remove need id"), nil)
 		return
 	}
+	userID, err := middleware.GetUID(c)
+	if err != nil {
+		// c.AbortWithError(http.StatusUnauthorized, err)
+		appG.ResponseError(http.StatusUnauthorized, err, gin.H{"hello": "world"})
+		return
+	}
 
-	user, err := h.Services.Notify.DeleteNotify(id) // , input
+	user, err := h.Services.Notify.DeleteNotify(id, userID) // , input
 	if err != nil {
 		// c.AbortWithError(http.StatusBadRequest, err)
 		appG.ResponseError(http.StatusBadRequest, err, nil)

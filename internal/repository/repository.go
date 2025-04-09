@@ -51,6 +51,12 @@ type Notify interface {
 	DeleteNotify(id string) (*domain.Notify, error)
 }
 
+type ArchiveNotify interface {
+	CreateArchiveNotify(userID string, data *domain.Notify) (*domain.ArchiveNotify, error)
+	FindArchiveNotifyPopulate(input *domain.ArchiveNotifyFilter) (domain.Response[domain.ArchiveNotify], error)
+	DeleteArchiveNotify(id string, userID string) (*domain.ArchiveNotify, error)
+}
+
 type Order interface {
 	FindOrder(input *domain.OrderFilter) (domain.Response[domain.Order], error)
 	// GetAllOrder(params domain.RequestParams) (domain.Response[domain.Order], error)
@@ -233,6 +239,7 @@ type Repositories struct {
 	ArchiveImage
 	ArchiveMessage
 	ArchiveObject
+	ArchiveNotify
 }
 
 func NewRepositories(mongodb *mongo.Database, i18n config.I18nConfig) *Repositories {
@@ -264,6 +271,7 @@ func NewRepositories(mongodb *mongo.Database, i18n config.I18nConfig) *Repositor
 		ArchiveImage:       NewArchiveImageMongo(mongodb, i18n),
 		ArchiveMessage:     NewArchiveMessageMongo(mongodb, i18n),
 		ArchiveObject:      NewArchiveObjectMongo(mongodb, i18n),
+		ArchiveNotify:      NewArchiveNotifyMongo(mongodb, i18n),
 	}
 }
 
