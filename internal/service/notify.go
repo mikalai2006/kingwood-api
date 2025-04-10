@@ -99,7 +99,7 @@ func (s *NotifyService) DeleteNotify(id string, userID string) (*domain.Notify, 
 
 	result.Status = 1
 
-	// s.Hub.HandleMessage(domain.MessageSocket{Type: "message", Method: "DELETE", Sender: "userID", Recipient: "", Content: result, ID: "room1", Service: "task"})
+	s.Hub.HandleMessage(domain.MessageSocket{Type: "message", Method: "DELETE", Sender: "userID", Recipient: result.UserTo.Hex(), Content: result, ID: "room1", Service: "notify"})
 
 	_, err = s.Services.ArchiveNotify.CreateArchiveNotify(userID, result)
 

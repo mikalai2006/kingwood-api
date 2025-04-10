@@ -28,7 +28,7 @@ func (s *ArchiveNotifyService) CreateArchiveNotify(userID string, data *domain.N
 	}
 
 	// send by socket.
-	// s.Hub.HandleMessage(domain.MessageSocket{Type: "message", Method: "CREATE", Sender: userID, Recipient: result.UserTo.Hex(), Content: result, ID: "room1", Service: "ArchiveNotify"})
+	s.Hub.HandleMessage(domain.MessageSocket{Type: "message", Method: "CREATE", Sender: userID, Recipient: result.UserTo.Hex(), Content: result, ID: "room1", Service: "archiveNotify"})
 
 	// // send by push notification.
 	// userData, err := s.Services.User.GetUser(result.UserTo.Hex())

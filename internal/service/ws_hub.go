@@ -101,12 +101,12 @@ func (h *Hub) HandleMessage(message domain.MessageSocket) {
 	//Check if the message is a type of "message"
 	if message.Type == "message" || message.Type == "error" {
 		clients := h.clients[message.ID]
-		fmt.Println("===============MESSAGE====================")
-		fmt.Println("len clients=", len(clients))
-		fmt.Println("Recipient=", message.Recipient)
+		// fmt.Println("===============MESSAGE====================")
+		// fmt.Println("len clients=", len(clients))
+		// fmt.Println("Recipient=", message.Recipient)
 		for client := range clients {
 			if client.UserId == message.Recipient || message.Recipient == "" {
-				fmt.Println("Send message client=====>", client.UserId)
+				// fmt.Println("Send message client=====>", client.UserId)
 				select {
 				case client.send <- message:
 				default:
@@ -115,12 +115,12 @@ func (h *Hub) HandleMessage(message domain.MessageSocket) {
 				}
 			}
 		}
-		fmt.Println("===========================================")
+		// fmt.Println("===========================================")
 	}
 
 	//Check if the message is a type of "notification"
 	if message.Type == "notification" {
-		fmt.Println("Notification: ", message.Content)
+		// fmt.Println("Notification: ", message.Content)
 		clients := h.clients[message.Recipient]
 		for client := range clients {
 			select {

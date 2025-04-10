@@ -1,7 +1,6 @@
 package service
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/mikalai2006/kingwood-api/internal/domain"
@@ -305,7 +304,7 @@ func (s *TaskService) CheckStatusOrder(userID string, result *domain.Task) (*dom
 	allTasksStatus := []string{}
 
 	for i := range tasksForOrder.Data {
-		fmt.Println("range ", i, ":", tasksForOrder.Data[i].Status, tasksForOrder.Data[i].Operation.Group)
+		// fmt.Println("range ", i, ":", tasksForOrder.Data[i].Status, tasksForOrder.Data[i].Operation.Group)
 		if tasksForOrder.Data[i].Operation.Group == "2" {
 			stolyarComplete.CountAll = stolyarComplete.CountAll + 1
 			if utils.Contains([]string{"finish", "autofinish"}, tasksForOrder.Data[i].Status) {
@@ -401,7 +400,7 @@ func (s *TaskService) CheckStatusOrder(userID string, result *domain.Task) (*dom
 			dataUpdateOrder.Status = &status
 		}
 	}
-	fmt.Println("update taskWorker dataUpdateOrder: ", dataUpdateOrder.Status, allTasksStatus, len(allTasksStatus))
+	// fmt.Println("update taskWorker dataUpdateOrder: ", dataUpdateOrder.Status, allTasksStatus, len(allTasksStatus))
 
 	_, err = s.orderService.UpdateOrder(result.OrderId.Hex(), userID, dataUpdateOrder)
 	if err != nil {

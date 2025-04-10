@@ -16,6 +16,10 @@ var (
 	PatchTaskWorker      = "%s изменил задание: %s, заказ №%d - %s (объект %s)"
 	PatchTaskWorkerAdmin = "%s изменил задание для %s: %s, заказ №%d - %s (объект %s)"
 
+	FinishTaskWorkerTitle = "Завершение задания"
+	FinishTaskWorker      = "%s завершил задание: %s, заказ №%d - %s (объект %s)"
+	// FinishTaskWorkerAdmin = "%s завершил задание для %s: %s, заказ №%d - %s (объект %s)"
+
 	DeleteTaskWorkerTitle = "Удаление задания"
 	DeleteTaskWorker      = "%s удалил задание: %s, заказ №%d - %s (объект %s)"
 	DeleteTaskWorkerAdmin = "%s удалил задание для %s: %s, заказ №%d - %s (объект %s)"
