@@ -433,10 +433,15 @@ func (s *WorkHistoryService) DeleteWorkHistory(id string, userID string, createN
 		s.Hub.HandleMessage(domain.MessageSocket{Type: "message", Method: "DELETE", Sender: "userID", Recipient: existWorkHistory.Data[i].WorkerId.Hex(), Content: existWorkHistory.Data[i], ID: "room1", Service: "WorkHistory"})
 
 		if createNotify {
+			message := fmt.Sprintf(domain.DeleteWorkHistory, authorRequest.Name, existWorkHistory.Data[i].Date.Format("02.01.2006"), result.Order.Number, result.Order.Name, result.Object.Name)
+			if result.Object.Name == "" {
+				message = fmt.Sprintf(domain.DeleteWorkHistoryNotOrder, authorRequest.Name, existWorkHistory.Data[i].Date.Format("02.01.2006"))
+			}
+
 			_, err = s.Services.Notify.CreateNotify(userID, &domain.NotifyInput{
 				UserTo:  result.WorkerId.Hex(),
 				Title:   domain.DeleteWorkHistoryTitle,
-				Message: fmt.Sprintf(domain.DeleteWorkHistory, authorRequest.Name, existWorkHistory.Data[i].Date.Format("02.01.2006"), result.Order.Number, result.Order.Name, result.Object.Name),
+				Message: message,
 			})
 		}
 
@@ -476,10 +481,14 @@ func (s *WorkHistoryService) DeleteWorkHistory(id string, userID string, createN
 			s.Hub.HandleMessage(domain.MessageSocket{Type: "message", Method: "DELETE", Sender: "userID", Recipient: users[i].ID.Hex(), Content: result, ID: "room1", Service: "WorkHistory"})
 
 			if createNotify {
+				message := fmt.Sprintf(domain.DeleteWorkHistoryAdmin, authorRequest.Name, worker.Name, result.Date.Format("02.01.2006"), result.Order.Number, result.Order.Name, result.Object.Name)
+				if result.Object.Name == "" {
+					message = fmt.Sprintf(domain.DeleteWorkHistoryAdminNotOrder, authorRequest.Name, worker.Name, result.Date.Format("02.01.2006"))
+				}
 				_, _ = s.Services.Notify.CreateNotify(userID, &domain.NotifyInput{
 					UserTo:  users[i].ID.Hex(),
 					Title:   domain.DeleteWorkHistoryTitle,
-					Message: fmt.Sprintf(domain.DeleteWorkHistoryAdmin, authorRequest.Name, worker.Name, result.Date.Format("02.01.2006"), result.Order.Number, result.Order.Name, result.Object.Name),
+					Message: message,
 				})
 			}
 		}

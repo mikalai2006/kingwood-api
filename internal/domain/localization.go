@@ -36,7 +36,9 @@ var (
 	PatchWorkHistory      = "%s изменил вашу рабочую сессию за %s: старые данные: с %s по %s(%s)(%s), новые данные: с %s по %s(%s)(%s)"
 	PatchWorkHistoryAdmin = "%s изменил рабочую сессию для %s за %s: старые данные: с %s по %s(%s)(%s), новые данные: с %s по %s(%s)(%s)"
 
-	DeleteWorkHistoryTitle = "Удаление рабочей сессии"
-	DeleteWorkHistory      = "%s удалил вашу рабочую сессию за %s для заказа №%d - %s (объект %s)"
-	DeleteWorkHistoryAdmin = "%s удалил рабочую сессию для %s за %s для заказа №%d - %s (объект %s)"
+	DeleteWorkHistoryTitle         = "Удаление рабочей сессии"
+	DeleteWorkHistory              = "%s удалил вашу рабочую сессию за %s для заказа №%d - %s (объект %s)"
+	DeleteWorkHistoryNotOrder      = "%s удалил вашу рабочую сессию за %s - хоз.работы"
+	DeleteWorkHistoryAdmin         = "%s удалил рабочую сессию для %s за %s для заказа №%d - %s (объект %s)"
+	DeleteWorkHistoryAdminNotOrder = "%s удалил рабочую сессию для %s за %s - хоз.работы"
 )
