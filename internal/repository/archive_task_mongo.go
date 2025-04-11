@@ -163,7 +163,7 @@ func (r *ArchiveTaskMongo) FindArchiveTask(input domain.ArchiveTaskFilter) (doma
 	pipe = append(pipe, bson.D{{Key: "$set", Value: bson.M{"object": bson.M{"$first": "$objecta"}}}})
 	// order.
 	pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
-		"from": TblOrder,
+		"from": TblArchiveOrder,
 		"as":   "ordera",
 		// "localField":   "userId",
 		// "foreignField": "_id",

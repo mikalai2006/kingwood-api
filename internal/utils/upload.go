@@ -3,6 +3,7 @@ package utils
 import (
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -225,6 +226,8 @@ func UploadResizeMultipleFileForMessage(c *gin.Context, info *domain.MessageImag
 	// fmt.Println("files: ", files)
 
 	for _, file := range files {
+		// fmt.Println("filepath.Ext(file.Filename): ", filepath.Ext(file.Filename))
+		imageTypes := []string{".jpg", ".jpeg", ".png", ".webp", ".ico", ".tif", ".bmp", ".gif"}
 		objImages := VImages{}
 		fileExt := filepath.Ext(file.Filename)
 
@@ -237,54 +240,110 @@ func UploadResizeMultipleFileForMessage(c *gin.Context, info *domain.MessageImag
 			Path: filenameOriginal,
 			Ext:  fileExt,
 		})
-		objImages.Images = append(objImages.Images, VMode{
-			Quality: 100,
-			Name:    filenameOriginal,
-			Ext:     fileExt,
-			Resize:  true,
-			Size:    2000,
-		})
-		// add adaptive.
-		for i := range imageConfig.Sizes {
-			dataSize := imageConfig.Sizes[i]
-			filenameLg := fmt.Sprintf("%v-%v-%v", dataSize.Prefix, strings.ReplaceAll(strings.ToLower(originalFileName), " ", "-"), now.Unix())
 
+		if Contains(imageTypes, filepath.Ext(file.Filename)) {
 			objImages.Images = append(objImages.Images, VMode{
-				Quality: dataSize.Quality,
-				Name:    filenameLg,
-				Resize:  true,
-				Size:    dataSize.Size,
+				Quality: 100,
+				Name:    filenameOriginal,
 				Ext:     fileExt,
+				Resize:  true,
+				Size:    2000,
 			})
-		}
+			// add adaptive.
+			for i := range imageConfig.Sizes {
+				dataSize := imageConfig.Sizes[i]
+				filenameLg := fmt.Sprintf("%v-%v-%v", dataSize.Prefix, strings.ReplaceAll(strings.ToLower(originalFileName), " ", "-"), now.Unix())
 
-		imaging.AutoOrientation(true)
-
-		readerFile, _ := file.Open()
-		imageFile, err := imaging.Decode(readerFile, imaging.AutoOrientation(true))
-		if err != nil {
-			// log.Fatal(err)
-			return filePaths, err
-		}
-		// fmt.Println(filePaths)
-
-		// create images.
-		for i := range objImages.Images {
-			dataImg := objImages.Images[i]
-			imageForSave := imageFile
-
-			// imageForSave, err := imaging.Open(imageForSave, imaging.AutoOrientation(true))
-
-			if dataImg.Resize == true {
-				imageForSave = imaging.Resize(imageForSave, dataImg.Size, 0, imaging.Lanczos) //Fill(imageForSave, 600, 600, imaging.Center, imaging.Lanczos)
-				//Resize(imageForSave, dataImg.Size, 0, imaging.Lanczos)
+				objImages.Images = append(objImages.Images, VMode{
+					Quality: dataSize.Quality,
+					Name:    filenameLg,
+					Resize:  true,
+					Size:    dataSize.Size,
+					Ext:     fileExt,
+				})
 			}
 
-			err = imaging.Save(imageForSave, fmt.Sprintf("%s/%v%v", pathDir, dataImg.Name, dataImg.Ext), imaging.JPEGQuality(dataImg.Quality))
+			imaging.AutoOrientation(true)
+
+			readerFile, _ := file.Open()
+			imageFile, err := imaging.Decode(readerFile, imaging.AutoOrientation(true))
 			if err != nil {
+				// log.Fatal(err)
 				return filePaths, err
 			}
+			// fmt.Println(filePaths)
+
+			// create images.
+			for i := range objImages.Images {
+				dataImg := objImages.Images[i]
+				imageForSave := imageFile
+
+				// imageForSave, err := imaging.Open(imageForSave, imaging.AutoOrientation(true))
+
+				if dataImg.Resize == true {
+					imageForSave = imaging.Resize(imageForSave, dataImg.Size, 0, imaging.Lanczos) //Fill(imageForSave, 600, 600, imaging.Center, imaging.Lanczos)
+					//Resize(imageForSave, dataImg.Size, 0, imaging.Lanczos)
+				}
+
+				err = imaging.Save(imageForSave, fmt.Sprintf("%s/%v%v", pathDir, dataImg.Name, dataImg.Ext), imaging.JPEGQuality(dataImg.Quality))
+				if err != nil {
+					return filePaths, err
+				}
+			}
+		} else {
+			readerFile, _ := file.Open()
+			// Start reading multi-part file under id "fileupload"
+			// f, fh, err := c.Request.FormFile("images")
+			// if err != nil {
+			// 	if err == http.ErrMissingFile {
+			// 		return filePaths, err
+			// 	} else {
+			// 		return filePaths, err
+			// 	}
+
+			// 	return filePaths, err
+			// }
+			// defer f.Close()
+
+			destDir, err := os.MkdirTemp("", "")
+			if err != nil {
+				// http.Error(w, err.Error(), http.StatusInternalServerError)
+
+				return filePaths, err
+			}
+
+			// Remove destDir in case of error
+			defer func() {
+				if err != nil {
+					if remErr := os.RemoveAll(destDir); remErr != nil {
+						// Log some kind of warning probably?
+					}
+				}
+			}()
+
+			// Create a file in our temporary directory with the same name
+			// as the uploaded file
+			destFile, err := os.Create(fmt.Sprintf("%s/%v%v", pathDir, filenameOriginal, fileExt)) //path.Join(destDir, fh.Filename)
+			if err != nil {
+				// http.Error(w, err.Error(), http.StatusInternalServerError)
+
+				return filePaths, err
+			}
+			defer destFile.Close()
+			// fmt.Println("destFile: ", destFile.Name(), fmt.Sprintf("%s/%v", pathDir, fh.Filename))
+
+			// Write contents of uploaded file to destFile
+			if _, err = io.Copy(destFile, readerFile); err != nil {
+				// http.Error(w, err.Error(), http.StatusInternalServerError)
+
+				return filePaths, err
+			}
+			// filePaths = append(filePaths, domain.IImagePaths{
+			// 	Path: destFile.Name(),
+			// 	Ext:  filepath.Ext(file.Filename),
+			// })
 		}
+
 	}
 
 	// ctx.JSON(http.StatusOK, gin.H{"filepaths": filePaths})

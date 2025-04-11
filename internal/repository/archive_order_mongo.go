@@ -185,11 +185,11 @@ func (r *ArchiveOrderMongo) FindArchiveOrder(input *domain.ArchiveOrderFilter) (
 		"let":  bson.D{{Key: "id", Value: "$_id"}},
 		"pipeline": mongo.Pipeline{
 			bson.D{{Key: "$match", Value: bson.M{
-				"$expr": bson.M{"$eq": [2]string{"$ArchiveOrderId", "$$id"}},
+				"$expr": bson.M{"$eq": [2]string{"$orderId", "$$id"}},
 			}}},
 			// workers.
 			bson.D{{Key: "$lookup", Value: bson.M{
-				"from":         tblTaskWorker,
+				"from":         TblArchiveTaskWorker,
 				"as":           "workers",
 				"localField":   "_id",
 				"foreignField": "taskId",
@@ -212,6 +212,35 @@ func (r *ArchiveOrderMongo) FindArchiveOrder(input *domain.ArchiveOrderFilter) (
 									},
 								},
 							}},
+
+							// post.
+							bson.D{{
+								Key: "$lookup",
+								Value: bson.M{
+									"from": TblPost,
+									"as":   "posts",
+									// "localField":   "_id",
+									// "foreignField": "serviceId",
+									"let": bson.D{{Key: "postId", Value: "$postId"}},
+									"pipeline": mongo.Pipeline{
+										bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$_id", "$$postId"}}}}},
+									},
+								},
+							}},
+							bson.D{{Key: "$set", Value: bson.M{"postObject": bson.M{"$first": "$posts"}}}},
+							// role.
+							bson.D{{Key: "$lookup", Value: bson.M{
+								"from": TblRole,
+								"as":   "rolea",
+								// "localField":   "userId",
+								// "foreignField": "_id",
+								"let": bson.D{{Key: "roleId", Value: "$roleId"}},
+								"pipeline": mongo.Pipeline{
+									bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$_id", "$$roleId"}}}}},
+									bson.D{{"$limit", 1}},
+								},
+							}}},
+							bson.D{{Key: "$set", Value: bson.M{"roleObject": bson.M{"$first": "$rolea"}}}},
 						},
 					}}},
 					bson.D{{Key: "$set", Value: bson.M{"worker": bson.M{"$first": "$usera"}}}},
