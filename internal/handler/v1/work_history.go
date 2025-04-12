@@ -22,6 +22,7 @@ func (h *HandlerV1) registerWorkHistory(router *gin.RouterGroup) {
 	route.POST("/list", h.CreateWorkHistoryList)
 	route.POST("/statByOrder", h.GetStatByOrder)
 	route.DELETE("/:id", h.DeleteWorkHistory)
+	route.POST("/clear", h.ClearWorkHistory)
 }
 
 func (h *HandlerV1) CreateWorkHistory(c *gin.Context) {
@@ -265,4 +266,25 @@ func (h *HandlerV1) GetStatByOrder(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, works)
+}
+
+func (h *HandlerV1) ClearWorkHistory(c *gin.Context) {
+	appG := app.Gin{C: c}
+
+	userID, err := middleware.GetUID(c)
+	if err != nil {
+		// c.AbortWithError(http.StatusUnauthorized, err)
+		appG.ResponseError(http.StatusUnauthorized, err, gin.H{"hello": "world"})
+		return
+	}
+	user, err := h.Services.User.GetUser(userID)
+
+	if user.RoleObject.Code == "systemrole" {
+		err = h.Services.WorkHistory.ClearWorkHistory(userID)
+	} else {
+		appG.ResponseError(http.StatusUnauthorized, err, gin.H{"hello": "world"})
+		return
+	}
+
+	c.JSON(http.StatusOK, nil)
 }

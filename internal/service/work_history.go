@@ -506,3 +506,7 @@ func (s *WorkHistoryService) GetStatByOrder(input domain.WorkHistoryFilter) ([]d
 
 	return result, err
 }
+
+func (s *WorkHistoryService) ClearWorkHistory(userID string) error {
+	return s.repo.ClearWorkHistory(userID)
+}

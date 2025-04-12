@@ -855,3 +855,17 @@ func (r *WorkHistoryMongo) DeleteWorkHistory(id string) (*domain.WorkHistory, er
 
 	return result, nil
 }
+
+func (r *WorkHistoryMongo) ClearWorkHistory(userID string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
+	defer cancel()
+
+	collection := r.db.Collection(tblWorkHistory)
+
+	_, err := collection.DeleteMany(ctx, bson.D{})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
