@@ -7,6 +7,7 @@ import (
 	"github.com/mikalai2006/kingwood-api/internal/config"
 	"github.com/mikalai2006/kingwood-api/internal/domain"
 	"github.com/mikalai2006/kingwood-api/internal/repository"
+	"github.com/mikalai2006/kingwood-api/internal/utils"
 )
 
 type ArchiveMessageService struct {
@@ -36,14 +37,26 @@ func (s *ArchiveMessageService) DeleteArchiveMessage(id string) (domain.ArchiveM
 	// Delete images for message.
 	for i := range result.Images {
 		objImage := result.Images[i]
-		pathDir := fmt.Sprintf("public/%s", objImage.Service)
+		pathDir := fmt.Sprintf("public/%s/%s", objImage.Service, objImage.ServiceID)
 
-		path := fmt.Sprintf("%s/%s/%s%s", pathDir, objImage.ServiceID, objImage.Path, objImage.Ext)
+		path := fmt.Sprintf("%s/%s%s", pathDir, objImage.Path, objImage.Ext)
 		os.Remove(path)
 
 		for j := range s.imageConfig.Sizes {
-			path := fmt.Sprintf("%s/%s/%s-%s%s", pathDir, objImage.ServiceID, s.imageConfig.Sizes[j].Prefix, objImage.Path, objImage.Ext)
+			path := fmt.Sprintf("%s/%s-%s%s", pathDir, s.imageConfig.Sizes[j].Prefix, objImage.Path, objImage.Ext)
 			os.Remove(path)
+		}
+
+		// check empty dir.
+		isEmpty, err := utils.IsEmptyDir(pathDir)
+		if err != nil {
+			return result, err
+		}
+		if isEmpty {
+			err = os.Remove(pathDir)
+			if err != nil {
+				return result, err
+			}
 		}
 	}
 

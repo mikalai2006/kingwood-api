@@ -11,6 +11,10 @@ import (
 	"github.com/mikalai2006/kingwood-api/pkg/hasher"
 )
 
+type Analytic interface {
+	GetAnalytic() (domain.Analytic, error)
+}
+
 type Authorization interface {
 	CreateAuth(auth *domain.AuthInput) (string, error)
 	GetAuth(id string) (domain.Auth, error)
@@ -22,6 +26,7 @@ type Authorization interface {
 	RemoveRefreshTokens(refreshToken string) (string, error)
 	UpdateAuth(id string, auth *domain.AuthInput) (domain.Auth, error)
 	ResetPassword(authID string, userID string, input *domain.ResetPassword) (string, error)
+	DeleteAuth(id string) (domain.Auth, error)
 }
 
 type Message interface {
@@ -126,7 +131,8 @@ type Notify interface {
 	CreateNotify(userID string, data *domain.NotifyInput) (*domain.Notify, error)
 	FindNotifyPopulate(input *domain.NotifyFilter) (domain.Response[domain.Notify], error)
 	UpdateNotify(id string, userID string, data *domain.NotifyInput) (*domain.Notify, error)
-	DeleteNotify(id string, userID string) (*domain.Notify, error)
+	DeleteNotify(id string, userID string, createArchive bool) (*domain.Notify, error)
+	ClearNotify(userID string) error
 }
 
 type ArchiveNotify interface {
@@ -151,6 +157,12 @@ type User interface {
 	Iam(userID string) (domain.User, error)
 }
 
+type ArchiveUser interface {
+	FindArchiveUser(filter *domain.ArchiveUserFilter) (domain.Response[domain.ArchiveUser], error)
+	CreateArchiveUser(userID string, user *domain.User) (*domain.ArchiveUser, error)
+	DeleteArchiveUser(id string, userID string) (domain.ArchiveUser, error)
+}
+
 type Pay interface {
 	CreatePay(userID string, data *domain.Pay) (*domain.Pay, error)
 	FindPay(input *domain.PayFilter) (domain.Response[domain.Pay], error)
@@ -158,11 +170,18 @@ type Pay interface {
 	DeletePay(id string, userID string) (*domain.Pay, error)
 }
 
+type ArchivePay interface {
+	CreateArchivePay(userID string, data *domain.Pay) (*domain.ArchivePay, error)
+	FindArchivePay(input *domain.ArchivePayFilter) (domain.Response[domain.ArchivePay], error)
+	DeleteArchivePay(id string, userID string) (*domain.ArchivePay, error)
+}
+
 type AppError interface {
 	CreateAppError(userID string, data *domain.AppError) (*domain.AppError, error)
 	FindAppError(input *domain.AppErrorFilter) (domain.Response[domain.AppError], error)
 	UpdateAppError(id string, userID string, data *domain.AppErrorInput) (*domain.AppError, error)
 	DeleteAppError(id string, userID string) (*domain.AppError, error)
+	ClearAppError(userID string) error
 }
 
 type PayTemplate interface {
@@ -176,13 +195,13 @@ type Image interface {
 	CreateImage(userID string, data *domain.ImageInput) (domain.Image, error)
 	GetImage(id string) (domain.Image, error)
 	GetImageDirs(id string) ([]interface{}, error)
-	FindImage(params domain.RequestParams) (domain.Response[domain.Image], error)
-	DeleteImage(userID string, id string) (domain.Image, error)
+	FindImage(params *domain.ImageFilter) (domain.Response[domain.Image], error)
+	DeleteImage(userID string, id string, createArchive bool) (domain.Image, error)
 }
 
 type ArchiveImage interface {
 	CreateArchiveImage(userID string, data *domain.Image) (domain.ArchiveImage, error)
-	FindArchiveImage(params domain.RequestParams) (domain.Response[domain.ArchiveImage], error)
+	FindArchiveImage(params *domain.ArchiveImageFilter) (domain.Response[domain.ArchiveImage], error)
 	DeleteArchiveImage(id string) (domain.ArchiveImage, error)
 }
 
@@ -211,6 +230,7 @@ type Post interface {
 }
 
 type Services struct {
+	Analytic
 	AppError
 	Post
 	Authorization
@@ -239,6 +259,8 @@ type Services struct {
 	ArchiveMessage
 	ArchiveObject
 	ArchiveNotify
+	ArchiveUser
+	ArchivePay
 }
 
 type ConfigServices struct {
@@ -287,12 +309,17 @@ func NewServices(cfgService *ConfigServices) *Services {
 	ArchiveTask := NewArchiveTaskService(cfgService.Repositories.ArchiveTask)
 	ArchiveTaskWorker := NewArchiveTaskWorkerService(cfgService.Repositories.ArchiveTaskWorker, cfgService.Hub)
 	ArchiveWorkHistory := NewArchiveWorkHistoryService(cfgService.Repositories.ArchiveWorkHistory, cfgService.Hub)
-	ArchiveImage := NewArchiveImageService(cfgService.Repositories.ArchiveImage, Image.imageConfig)
-	ArchiveMessage := NewArchiveMessageService(cfgService.Repositories.ArchiveMessage, cfgService.Hub, Image.imageConfig)
+	ArchiveImage := NewArchiveImageService(cfgService.Repositories.ArchiveImage, Image.ImageConfig)
+	ArchiveMessage := NewArchiveMessageService(cfgService.Repositories.ArchiveMessage, cfgService.Hub, Image.ImageConfig)
 	ArchiveObject := NewArchiveObjectService(cfgService.Repositories.ArchiveObject, cfgService.Hub)
 	ArchiveNotify := NewArchiveNotifyService(cfgService.Repositories.ArchiveNotify, cfgService.Hub)
+	ArchiveUser := NewArchiveUserService(cfgService.Repositories.ArchiveUser, cfgService.Hub)
+	ArchivePay := NewArchivePayService(cfgService.Repositories.ArchivePay, cfgService.Hub)
+
+	Analytic := NewAnalyticService(cfgService.Repositories.Analytic, cfgService.Hub)
 
 	services := &Services{
+		Analytic:      Analytic,
 		AppError:      NewAppErrorService(cfgService.Repositories.AppError, cfgService.Hub),
 		Authorization: Authorization,
 		Post:          Post,
@@ -321,6 +348,8 @@ func NewServices(cfgService *ConfigServices) *Services {
 		ArchiveMessage:     ArchiveMessage,
 		ArchiveObject:      ArchiveObject,
 		ArchiveNotify:      ArchiveNotify,
+		ArchiveUser:        ArchiveUser,
+		ArchivePay:         ArchivePay,
 	}
 	Task.Services = services
 	TaskWorker.Services = services
@@ -340,6 +369,9 @@ func NewServices(cfgService *ConfigServices) *Services {
 	ArchiveWorkHistory.Services = services
 	ArchiveMessage.Services = services
 	ArchiveObject.Services = services
+	Analytic.Services = services
+	ArchiveUser.Services = services
+	ArchivePay.Services = services
 
 	return services
 }

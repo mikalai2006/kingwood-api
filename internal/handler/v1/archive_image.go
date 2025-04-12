@@ -6,7 +6,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/mikalai2006/kingwood-api/internal/domain"
-	"github.com/mikalai2006/kingwood-api/internal/utils"
 	"github.com/mikalai2006/kingwood-api/pkg/app"
 )
 
@@ -27,20 +26,25 @@ import (
 
 func (h *HandlerV1) RegisterArchiveImage(router *gin.RouterGroup) {
 	route := router.Group("/archive_image")
-	route.GET("", h.findArchiveImage)
+	route.POST("/find", h.findArchiveImage)
 	route.DELETE("/:id", h.SetUserFromRequest, h.deleteArchiveImage)
 }
 
 func (h *HandlerV1) findArchiveImage(c *gin.Context) {
 	appG := app.Gin{C: c}
 
-	params, err := utils.GetParamsFromRequest(c, domain.ArchiveImageInput{}, &h.i18n)
-	if err != nil {
-		appG.ResponseError(http.StatusBadRequest, err, nil)
+	// params, err := utils.GetParamsFromRequest(c, domain.ArchiveImageInput{}, &h.i18n)
+	// if err != nil {
+	// 	appG.ResponseError(http.StatusBadRequest, err, nil)
+	// 	return
+	// }
+	var input *domain.ArchiveImageFilter
+	if er := c.BindJSON(&input); er != nil {
+		appG.ResponseError(http.StatusBadRequest, er, nil)
 		return
 	}
 
-	ArchiveImages, err := h.Services.ArchiveImage.FindArchiveImage(params)
+	ArchiveImages, err := h.Services.ArchiveImage.FindArchiveImage(input)
 	if err != nil {
 		appG.ResponseError(http.StatusBadRequest, err, nil)
 		return

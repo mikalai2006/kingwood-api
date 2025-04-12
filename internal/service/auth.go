@@ -238,3 +238,7 @@ func (s *AuthService) UpdateAuth(id string, data *domain.AuthInput) (domain.Auth
 
 	return result, err
 }
+
+func (s *AuthService) DeleteAuth(id string) (domain.Auth, error) {
+	return s.repository.DeleteAuth(id)
+}

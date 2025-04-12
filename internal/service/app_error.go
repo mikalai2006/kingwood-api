@@ -51,3 +51,7 @@ func (s *AppErrorService) DeleteAppError(id string, userID string) (*domain.AppE
 
 	return result, err
 }
+
+func (s *AppErrorService) ClearAppError(userID string) error {
+	return s.repo.ClearAppError(userID)
+}

@@ -48,14 +48,14 @@ func (r *ArchiveMessageMongo) CreateArchiveMessage(userID string, data *domain.M
 			Author:    userIDPrimitive,
 			CreatedAt: time.Now(),
 		},
-		ID:             data.ID,
-		UserID:         data.UserID,
-		ArchiveMessage: data.Message,
-		Props:          data.Props,
-		Images:         data.Images,
-		OrderID:        data.OrderID,
-		CreatedAt:      data.CreatedAt,
-		UpdatedAt:      data.UpdatedAt,
+		ID:        data.ID,
+		UserID:    data.UserID,
+		Message:   data.Message,
+		Props:     data.Props,
+		Images:    data.Images,
+		OrderID:   data.OrderID,
+		CreatedAt: data.CreatedAt,
+		UpdatedAt: data.UpdatedAt,
 	}
 
 	res, err := collection.InsertOne(ctx, newArchiveMessage)

@@ -29,7 +29,7 @@ import (
 func (h *HandlerV1) RegisterImage(router *gin.RouterGroup) {
 	route := router.Group("/image")
 	route.POST("", h.SetUserFromRequest, h.createImage)
-	route.GET("", h.findImage)
+	route.POST("/find", h.findImage)
 	route.GET("/:id", h.getImage)
 	route.GET("/:id/dir", h.SetUserFromRequest, h.getImageDirs)
 	route.DELETE("/:id", h.SetUserFromRequest, h.deleteImage)
@@ -64,13 +64,18 @@ func (h *HandlerV1) getImageDirs(c *gin.Context) {
 func (h *HandlerV1) findImage(c *gin.Context) {
 	appG := app.Gin{C: c}
 
-	params, err := utils.GetParamsFromRequest(c, domain.ImageInput{}, &h.i18n)
-	if err != nil {
-		appG.ResponseError(http.StatusBadRequest, err, nil)
+	// params, err := utils.GetParamsFromRequest(c, domain.ImageInput{}, &h.i18n)
+	// if err != nil {
+	// 	appG.ResponseError(http.StatusBadRequest, err, nil)
+	// 	return
+	// }
+	var input *domain.ImageFilter
+	if er := c.BindJSON(&input); er != nil {
+		appG.ResponseError(http.StatusBadRequest, er, nil)
 		return
 	}
 
-	images, err := h.Services.Image.FindImage(params)
+	images, err := h.Services.Image.FindImage(input)
 	if err != nil {
 		appG.ResponseError(http.StatusBadRequest, err, nil)
 		return
@@ -175,7 +180,7 @@ func (h *HandlerV1) deleteImage(c *gin.Context) {
 	// 	// }
 	// }
 
-	image, err := h.Services.Image.DeleteImage(userID, id)
+	image, err := h.Services.Image.DeleteImage(userID, id, false)
 	if err != nil {
 		appG.ResponseError(http.StatusBadRequest, err, nil)
 		return

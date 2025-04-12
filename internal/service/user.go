@@ -3,7 +3,6 @@ package service
 import (
 	"github.com/mikalai2006/kingwood-api/internal/domain"
 	"github.com/mikalai2006/kingwood-api/internal/repository"
-	"go.mongodb.org/mongo-driver/bson"
 )
 
 type UserService struct {
@@ -32,13 +31,14 @@ func (s *UserService) DeleteUser(id string, userID string) (domain.User, error) 
 	var result domain.User
 
 	// delete images.
-	allImages, err := s.Services.Image.FindImage(domain.RequestParams{Filter: bson.D{{"serviceId", id}}})
+	allImages, err := s.Services.Image.FindImage(&domain.ImageFilter{ServiceId: []string{id}})
+	//domain.RequestParams{Filter: bson.D{{"serviceId", id}}}
 	if err != nil {
 		return result, err
 	}
 	for i := range allImages.Data {
 		// fmt.Println("Remove image: ", allImages.Data[i].ID)
-		_, err = s.Services.Image.DeleteImage(userID, allImages.Data[i].ID.Hex())
+		_, err = s.Services.Image.DeleteImage(userID, allImages.Data[i].ID.Hex(), true)
 	}
 
 	// delete taskWorkers.
@@ -78,10 +78,14 @@ func (s *UserService) DeleteUser(id string, userID string) (domain.User, error) 
 	}
 	for i := range allNotify.Data {
 		// fmt.Println("Remove Notify: ", allNotify.Data[i].ID)
-		_, err = s.Services.Notify.DeleteNotify(allNotify.Data[i].ID.Hex(), userID)
+		_, err = s.Services.Notify.DeleteNotify(allNotify.Data[i].ID.Hex(), userID, false)
 	}
 
 	result, err = s.repo.DeleteUser(id)
+
+	s.Hub.HandleMessage(domain.MessageSocket{Type: "message", Method: "DELETE", Sender: "userID", Recipient: "", Content: result, ID: "room1", Service: "user"})
+
+	_, err = s.Services.CreateArchiveUser(userID, &result)
 
 	return result, err
 }

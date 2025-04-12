@@ -62,3 +62,13 @@ type IImagePaths struct {
 	Ext  string
 	Path string
 }
+
+type ImageFilter struct {
+	ID        []string            `json:"id" bson:"id"`
+	UserId    []string            `json:"userId" bson:"userId"`
+	ServiceId []string            `json:"serviceId" bson:"serviceId"`
+	Service   []string            `json:"service" bson:"service"`
+	Sort      []*FilterSortParams `json:"sort,omitempty"`
+	Limit     *int                `json:"$limit,omitempty"`
+	Skip      *int                `json:"$skip,omitempty"`
+}

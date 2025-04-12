@@ -5,7 +5,6 @@ import (
 
 	"github.com/mikalai2006/kingwood-api/internal/domain"
 	"github.com/mikalai2006/kingwood-api/internal/repository"
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -179,12 +178,13 @@ func (s *OrderService) DeleteOrder(id string, userID string) (*domain.Order, err
 	var result *domain.Order
 
 	// delete images.
-	allImages, err := s.Services.Image.FindImage(domain.RequestParams{Filter: bson.D{{"serviceId", id}}})
+	allImages, err := s.Services.Image.FindImage(&domain.ImageFilter{ServiceId: []string{id}})
+	// domain.RequestParams{Filter: bson.D{{"serviceId", id}}}
 	if err != nil {
 		return result, err
 	}
 	for i := range allImages.Data {
-		_, err = s.Services.Image.DeleteImage(userID, allImages.Data[i].ID.Hex())
+		_, err = s.Services.Image.DeleteImage(userID, allImages.Data[i].ID.Hex(), true)
 		if err != nil {
 			return result, err
 		}

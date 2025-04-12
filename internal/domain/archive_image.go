@@ -25,7 +25,7 @@ type ArchiveImage struct {
 type ArchiveImageInput struct {
 	ID          primitive.ObjectID `json:"id" bson:"_id,omitempty"`
 	UserID      primitive.ObjectID `json:"userId" bson:"userId"`
-	ServiceID   string             `json:"serviceId" bson:"serviceId"`
+	ServiceID   string             `json:"serviceId" bson:"serviceId" form:"serviceId"`
 	Service     string             `json:"service" bson:"service"`
 	Path        string             `json:"path" bson:"path"`
 	Ext         string             `json:"ext" bson:"ext"`
@@ -36,4 +36,14 @@ type ArchiveImageInput struct {
 	UpdatedAt   time.Time          `json:"updatedAt" bson:"updatedAt"`
 
 	Meta ArchiveMeta `json:"meta" bson:"meta"`
+}
+
+type ArchiveImageFilter struct {
+	ID        []string            `json:"id" bson:"id"`
+	UserId    []string            `json:"userId" bson:"userId"`
+	ServiceId []string            `json:"serviceId" bson:"serviceId"`
+	Service   []string            `json:"service" bson:"service"`
+	Sort      []*FilterSortParams `json:"sort,omitempty"`
+	Limit     *int                `json:"$limit,omitempty"`
+	Skip      *int                `json:"$skip,omitempty"`
 }

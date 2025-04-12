@@ -57,7 +57,7 @@ func UploadResizeMultipleFile(c *gin.Context, info *domain.ImageInput, nameField
 		fileExt := filepath.Ext(file.Filename)
 
 		// add original.
-		originalFileName := strings.TrimSuffix(filepath.Base(file.Filename), filepath.Ext(file.Filename))
+		originalFileName := EncodeRus(strings.TrimSuffix(filepath.Base(file.Filename), filepath.Ext(file.Filename)))
 
 		now := time.Now()
 		filenameOriginal := strings.ReplaceAll(strings.ToLower(originalFileName), " ", "-") + "-" + fmt.Sprintf("%v", now.Unix())
@@ -104,7 +104,7 @@ func UploadResizeMultipleFile(c *gin.Context, info *domain.ImageInput, nameField
 			// log.Fatal(err)
 			return filePaths, err
 		}
-		fmt.Println(filePaths)
+		// fmt.Println(filePaths)
 
 		// create images.
 		for i := range objImages.Images {
@@ -232,7 +232,7 @@ func UploadResizeMultipleFileForMessage(c *gin.Context, info *domain.MessageImag
 		fileExt := filepath.Ext(file.Filename)
 
 		// add original.
-		originalFileName := strings.TrimSuffix(filepath.Base(file.Filename), filepath.Ext(file.Filename))
+		originalFileName := EncodeRus(strings.TrimSuffix(filepath.Base(file.Filename), filepath.Ext(file.Filename)))
 
 		now := time.Now()
 		filenameOriginal := strings.ReplaceAll(strings.ToLower(originalFileName), " ", "-") + "-" + fmt.Sprintf("%v", now.Unix())

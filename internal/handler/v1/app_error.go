@@ -19,6 +19,7 @@ func (h *HandlerV1) registerAppError(router *gin.RouterGroup) {
 	route.POST("/populate", h.FindAppError)
 	route.PATCH("/:id", h.SetUserFromRequest, h.UpdateAppError)
 	route.DELETE("/:id", h.DeleteAppError)
+	route.POST("/clear", h.ClearAppError)
 }
 
 func (h *HandlerV1) CreateAppError(c *gin.Context) {
@@ -174,4 +175,25 @@ func (h *HandlerV1) CreateOrExistAppError(c *gin.Context, input *domain.AppError
 		return result, err
 	}
 	return result, nil
+}
+
+func (h *HandlerV1) ClearAppError(c *gin.Context) {
+	appG := app.Gin{C: c}
+
+	userID, err := middleware.GetUID(c)
+	if err != nil {
+		// c.AbortWithError(http.StatusUnauthorized, err)
+		appG.ResponseError(http.StatusUnauthorized, err, gin.H{"hello": "world"})
+		return
+	}
+	user, err := h.Services.User.GetUser(userID)
+
+	if user.RoleObject.Code == "systemrole" {
+		err = h.Services.AppError.ClearAppError(userID)
+	} else {
+		appG.ResponseError(http.StatusUnauthorized, err, gin.H{"hello": "world"})
+		return
+	}
+
+	c.JSON(http.StatusOK, nil)
 }

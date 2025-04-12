@@ -421,3 +421,17 @@ func (r *NotifyMongo) DeleteNotify(id string) (*domain.Notify, error) {
 
 	return result, nil
 }
+
+func (r *NotifyMongo) ClearNotify(userID string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
+	defer cancel()
+
+	collection := r.db.Collection(tblNotify)
+
+	_, err := collection.DeleteMany(ctx, bson.D{})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

@@ -10,10 +10,10 @@ type ArchiveMessage struct {
 	ID     primitive.ObjectID `json:"id" bson:"_id,omitempty"`
 	UserID primitive.ObjectID `json:"userId" bson:"userId"`
 	// ProductID primitive.ObjectID     `json:"productId" bson:"productId"`
-	OrderID        primitive.ObjectID     `json:"orderId" bson:"orderId"`
-	Status         int                    `json:"status" bson:"status"`
-	ArchiveMessage string                 `json:"ArchiveMessage" bson:"ArchiveMessage"`
-	Props          map[string]interface{} `json:"props" bson:"props"`
+	OrderID primitive.ObjectID     `json:"orderId" bson:"orderId"`
+	Status  int                    `json:"status" bson:"status"`
+	Message string                 `json:"message" bson:"message"`
+	Props   map[string]interface{} `json:"props" bson:"props"`
 
 	Images []MessageImage `json:"images" bson:"images"`
 	// Statuses []ArchiveMessageStatus `json:"statuses" bson:"statuses"`
@@ -32,8 +32,8 @@ type ArchiveMessageInput struct {
 	// ProductID primitive.ObjectID     `json:"productId" bson:"productId"`
 	OrderID primitive.ObjectID `json:"orderId" bson:"orderId"`
 	// Status  int                    `json:"status" bson:"status"`
-	ArchiveMessage string                 `json:"ArchiveMessage" bson:"ArchiveMessage"`
-	Props          map[string]interface{} `json:"props" bson:"props"`
+	Message string                 `json:"message" bson:"message"`
+	Props   map[string]interface{} `json:"props" bson:"props"`
 
 	Images []MessageImage `json:"images" bson:"images"`
 	// Statuses []ArchiveMessageStatus `json:"statuses" bson:"statuses"`

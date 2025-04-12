@@ -22,6 +22,7 @@ func (h *HandlerV1) registerNotify(router *gin.RouterGroup) {
 	route.POST("/populate", h.FindNotifyPopulate)
 	route.PATCH("/:id", h.SetUserFromRequest, h.UpdateNotify)
 	route.DELETE("/:id", h.DeleteNotify)
+	route.POST("/clear", h.ClearNotify)
 }
 
 func (h *HandlerV1) CreateNotify(c *gin.Context) {
@@ -227,7 +228,7 @@ func (h *HandlerV1) DeleteNotify(c *gin.Context) {
 		return
 	}
 
-	user, err := h.Services.Notify.DeleteNotify(id, userID) // , input
+	user, err := h.Services.Notify.DeleteNotify(id, userID, false) // , input
 	if err != nil {
 		// c.AbortWithError(http.StatusBadRequest, err)
 		appG.ResponseError(http.StatusBadRequest, err, nil)
@@ -235,4 +236,25 @@ func (h *HandlerV1) DeleteNotify(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, user)
+}
+
+func (h *HandlerV1) ClearNotify(c *gin.Context) {
+	appG := app.Gin{C: c}
+
+	userID, err := middleware.GetUID(c)
+	if err != nil {
+		// c.AbortWithError(http.StatusUnauthorized, err)
+		appG.ResponseError(http.StatusUnauthorized, err, gin.H{"hello": "world"})
+		return
+	}
+	user, err := h.Services.User.GetUser(userID)
+
+	if user.RoleObject.Code == "systemrole" {
+		err = h.Services.Notify.ClearNotify(userID)
+	} else {
+		appG.ResponseError(http.StatusUnauthorized, err, gin.H{"hello": "world"})
+		return
+	}
+
+	c.JSON(http.StatusOK, nil)
 }

@@ -10,6 +10,10 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+type Analytic interface {
+	GetAnalytic() (domain.Analytic, error)
+}
+
 type Authorization interface {
 	CreateAuth(auth *domain.AuthInputMongo) (string, error)
 	GetAuth(id string) (domain.Auth, error)
@@ -20,6 +24,7 @@ type Authorization interface {
 	RefreshToken(refreshToken string) (domain.Auth, error)
 	RemoveRefreshToken(refreshToken string) (string, error)
 	UpdateAuth(id string, auth *domain.AuthInput) (domain.Auth, error)
+	DeleteAuth(id string) (domain.Auth, error)
 }
 
 type Message interface {
@@ -49,6 +54,7 @@ type Notify interface {
 	FindNotifyPopulate(input *domain.NotifyFilter) (domain.Response[domain.Notify], error)
 	UpdateNotify(id string, userID string, data *domain.NotifyInput) (*domain.Notify, error)
 	DeleteNotify(id string) (*domain.Notify, error)
+	ClearNotify(userID string) error
 }
 
 type ArchiveNotify interface {
@@ -141,11 +147,18 @@ type Pay interface {
 	DeletePay(id string, userID string) (*domain.Pay, error)
 }
 
+type ArchivePay interface {
+	FindArchivePay(input *domain.ArchivePayFilter) (domain.Response[domain.ArchivePay], error)
+	CreateArchivePay(userID string, Order *domain.Pay) (*domain.ArchivePay, error)
+	DeleteArchivePay(id string, userID string) (*domain.ArchivePay, error)
+}
+
 type AppError interface {
 	FindAppError(input *domain.AppErrorFilter) (domain.Response[domain.AppError], error)
 	CreateAppError(userID string, Order *domain.AppError) (*domain.AppError, error)
 	UpdateAppError(id string, userID string, data *domain.AppErrorInput) (*domain.AppError, error)
 	DeleteAppError(id string, userID string) (*domain.AppError, error)
+	ClearAppError(userID string) error
 }
 
 type PayTemplate interface {
@@ -171,17 +184,23 @@ type User interface {
 	Iam(userID string) (domain.User, error)
 }
 
+type ArchiveUser interface {
+	CreateArchiveUser(userID string, user *domain.User) (*domain.ArchiveUser, error)
+	FindArchiveUser(filter *domain.ArchiveUserFilter) (domain.Response[domain.ArchiveUser], error)
+	DeleteArchiveUser(id string) (domain.ArchiveUser, error)
+}
+
 type Image interface {
 	CreateImage(userID string, data *domain.ImageInput) (domain.Image, error)
 	GetImage(id string) (domain.Image, error)
 	GetImageDirs(id string) ([]interface{}, error)
-	FindImage(params domain.RequestParams) (domain.Response[domain.Image], error)
+	FindImage(params *domain.ImageFilter) (domain.Response[domain.Image], error)
 	DeleteImage(id string) (domain.Image, error)
 }
 
 type ArchiveImage interface {
 	CreateArchiveImage(userID string, data *domain.Image) (domain.ArchiveImage, error)
-	FindArchiveImage(params domain.RequestParams) (domain.Response[domain.ArchiveImage], error)
+	FindArchiveImage(params *domain.ArchiveImageFilter) (domain.Response[domain.ArchiveImage], error)
 	DeleteArchiveImage(id string) (domain.ArchiveImage, error)
 }
 
@@ -240,6 +259,10 @@ type Repositories struct {
 	ArchiveMessage
 	ArchiveObject
 	ArchiveNotify
+	ArchiveUser
+	ArchivePay
+
+	Analytic
 }
 
 func NewRepositories(mongodb *mongo.Database, i18n config.I18nConfig) *Repositories {
@@ -272,6 +295,10 @@ func NewRepositories(mongodb *mongo.Database, i18n config.I18nConfig) *Repositor
 		ArchiveMessage:     NewArchiveMessageMongo(mongodb, i18n),
 		ArchiveObject:      NewArchiveObjectMongo(mongodb, i18n),
 		ArchiveNotify:      NewArchiveNotifyMongo(mongodb, i18n),
+		ArchiveUser:        NewArchiveUserMongo(mongodb, i18n),
+		ArchivePay:         NewArchivePayMongo(mongodb, i18n),
+
+		Analytic: NewAnalyticMongo(mongodb, i18n),
 	}
 }
 

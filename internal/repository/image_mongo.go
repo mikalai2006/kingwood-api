@@ -10,7 +10,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type ImageMongo struct {
@@ -130,7 +129,7 @@ func (r *ImageMongo) GetImageDirs(id string) ([]interface{}, error) {
 	return result, nil
 }
 
-func (r *ImageMongo) FindImage(params domain.RequestParams) (domain.Response[domain.Image], error) {
+func (r *ImageMongo) FindImage(input *domain.ImageFilter) (domain.Response[domain.Image], error) {
 	var results []domain.Image
 	var response domain.Response[domain.Image]
 
@@ -139,10 +138,60 @@ func (r *ImageMongo) FindImage(params domain.RequestParams) (domain.Response[dom
 
 	collection := r.db.Collection(tblImage)
 
-	pipe, err := CreatePipeline(params, &r.i18n)
-	if err != nil {
-		return domain.Response[domain.Image]{}, err
+	// pipe, err := CreatePipeline(params, &r.i18n)
+	// if err != nil {
+	// 	return domain.Response[domain.Image]{}, err
+	// }
+
+	// Filters
+	q := bson.D{}
+	if input.ID != nil && len(input.ID) > 0 {
+		ids := []primitive.ObjectID{}
+		for i, _ := range input.ID {
+			iDPrimitive, err := primitive.ObjectIDFromHex(input.ID[i])
+			if err != nil {
+				return response, err
+			}
+
+			ids = append(ids, iDPrimitive)
+		}
+
+		q = append(q, bson.E{"_id", bson.D{{"$in", ids}}})
 	}
+	if input.ServiceId != nil && len(input.ServiceId) > 0 {
+		ids := []string{}
+		for i, _ := range input.ServiceId {
+			ids = append(ids, input.ServiceId[i])
+		}
+
+		q = append(q, bson.E{"serviceId", bson.D{{"$in", ids}}})
+	}
+
+	if input.UserId != nil && len(input.UserId) > 0 {
+		ids := []primitive.ObjectID{}
+		for i, _ := range input.UserId {
+			idPrimitive, err := primitive.ObjectIDFromHex(input.UserId[i])
+			if err != nil {
+				return response, err
+			}
+
+			ids = append(ids, idPrimitive)
+		}
+
+		q = append(q, bson.E{"userId", bson.D{{"$in", ids}}})
+	}
+
+	if input.Service != nil && len(input.Service) > 0 {
+		ids := []string{}
+		for i, _ := range input.Service {
+			ids = append(ids, input.Service[i])
+		}
+
+		q = append(q, bson.E{"service", bson.D{{"$in", ids}}})
+	}
+
+	pipe := mongo.Pipeline{}
+	pipe = append(pipe, bson.D{{"$match", q}})
 
 	cursor, err := collection.Aggregate(ctx, pipe)
 	if err != nil {
@@ -157,18 +206,18 @@ func (r *ImageMongo) FindImage(params domain.RequestParams) (domain.Response[dom
 	resultSlice := make([]domain.Image, len(results))
 	copy(resultSlice, results)
 
-	var options options.CountOptions
-	// options.SetLimit(params.Limit)
-	// options.SetSkip(params.Skip)
-	count, err := collection.CountDocuments(ctx, params.Filter, &options)
-	if err != nil {
-		return response, err
-	}
+	// var options options.CountOptions
+	// // options.SetLimit(params.Limit)
+	// // options.SetSkip(params.Skip)
+	// count, err := collection.CountDocuments(ctx, params.Filter, &options)
+	// if err != nil {
+	// 	return response, err
+	// }
 
 	response = domain.Response[domain.Image]{
-		Total: int(count),
-		Skip:  int(params.Options.Skip),
-		Limit: int(params.Options.Limit),
+		Total: 0,
+		Skip:  0,
+		Limit: 0,
 		Data:  resultSlice,
 	}
 	return response, nil

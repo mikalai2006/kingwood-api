@@ -9,7 +9,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type ArchiveImageMongo struct {
@@ -65,7 +64,7 @@ func (r *ArchiveImageMongo) CreateArchiveImage(userID string, data *domain.Image
 	return result, nil
 }
 
-func (r *ArchiveImageMongo) FindArchiveImage(params domain.RequestParams) (domain.Response[domain.ArchiveImage], error) {
+func (r *ArchiveImageMongo) FindArchiveImage(input *domain.ArchiveImageFilter) (domain.Response[domain.ArchiveImage], error) {
 	var results []domain.ArchiveImage
 	var response domain.Response[domain.ArchiveImage]
 
@@ -74,10 +73,60 @@ func (r *ArchiveImageMongo) FindArchiveImage(params domain.RequestParams) (domai
 
 	collection := r.db.Collection(TblArchiveImage)
 
-	pipe, err := CreatePipeline(params, &r.i18n)
-	if err != nil {
-		return domain.Response[domain.ArchiveImage]{}, err
+	// pipe, err := CreatePipeline(params, &r.i18n)
+	// if err != nil {
+	// 	return domain.Response[domain.ArchiveImage]{}, err
+	// }
+
+	// Filters
+	q := bson.D{}
+	if input.ID != nil && len(input.ID) > 0 {
+		ids := []primitive.ObjectID{}
+		for i, _ := range input.ID {
+			iDPrimitive, err := primitive.ObjectIDFromHex(input.ID[i])
+			if err != nil {
+				return response, err
+			}
+
+			ids = append(ids, iDPrimitive)
+		}
+
+		q = append(q, bson.E{"_id", bson.D{{"$in", ids}}})
 	}
+	if input.ServiceId != nil && len(input.ServiceId) > 0 {
+		ids := []string{}
+		for i, _ := range input.ServiceId {
+			ids = append(ids, input.ServiceId[i])
+		}
+
+		q = append(q, bson.E{"serviceId", bson.D{{"$in", ids}}})
+	}
+
+	if input.UserId != nil && len(input.UserId) > 0 {
+		ids := []primitive.ObjectID{}
+		for i, _ := range input.UserId {
+			idPrimitive, err := primitive.ObjectIDFromHex(input.UserId[i])
+			if err != nil {
+				return response, err
+			}
+
+			ids = append(ids, idPrimitive)
+		}
+
+		q = append(q, bson.E{"userId", bson.D{{"$in", ids}}})
+	}
+
+	if input.Service != nil && len(input.Service) > 0 {
+		ids := []string{}
+		for i, _ := range input.Service {
+			ids = append(ids, input.Service[i])
+		}
+
+		q = append(q, bson.E{"service", bson.D{{"$in", ids}}})
+	}
+
+	pipe := mongo.Pipeline{}
+	pipe = append(pipe, bson.D{{"$match", q}})
 
 	cursor, err := collection.Aggregate(ctx, pipe)
 	if err != nil {
@@ -89,22 +138,22 @@ func (r *ArchiveImageMongo) FindArchiveImage(params domain.RequestParams) (domai
 		return response, er
 	}
 
-	resultSlice := make([]domain.ArchiveImage, len(results))
-	copy(resultSlice, results)
+	// resultSlice := make([]domain.ArchiveImage, len(results))
+	// copy(resultSlice, results)
 
-	var options options.CountOptions
+	// var options options.CountOptions
 	// options.SetLimit(params.Limit)
 	// options.SetSkip(params.Skip)
-	count, err := collection.CountDocuments(ctx, params.Filter, &options)
-	if err != nil {
-		return response, err
-	}
+	// count, err := collection.CountDocuments(ctx, pipe, &options)
+	// if err != nil {
+	// 	return response, err
+	// }
 
 	response = domain.Response[domain.ArchiveImage]{
-		Total: int(count),
-		Skip:  int(params.Options.Skip),
-		Limit: int(params.Options.Limit),
-		Data:  resultSlice,
+		Total: 0,
+		Skip:  0,
+		Limit: 0,
+		Data:  results,
 	}
 	return response, nil
 }

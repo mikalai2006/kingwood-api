@@ -779,12 +779,6 @@ func (r *UserMongo) DeleteUser(id string) (domain.User, error) {
 		return result, err
 	}
 
-	// remove auth.
-	_, err = r.db.Collection(TblAuth).DeleteOne(ctx, bson.D{{"_id", result.UserID}})
-	if err != nil {
-		return result, err
-	}
-
 	return result, nil
 }
 

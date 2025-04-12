@@ -90,7 +90,7 @@ func (s *NotifyService) UpdateNotify(id string, userID string, data *domain.Noti
 	return result, err
 }
 
-func (s *NotifyService) DeleteNotify(id string, userID string) (*domain.Notify, error) {
+func (s *NotifyService) DeleteNotify(id string, userID string, createArchive bool) (*domain.Notify, error) {
 	// result, err := s.repo.DeleteNotify(id)
 	// if err != nil {
 	// 	return result, err
@@ -101,7 +101,13 @@ func (s *NotifyService) DeleteNotify(id string, userID string) (*domain.Notify, 
 
 	s.Hub.HandleMessage(domain.MessageSocket{Type: "message", Method: "DELETE", Sender: "userID", Recipient: result.UserTo.Hex(), Content: result, ID: "room1", Service: "notify"})
 
-	_, err = s.Services.ArchiveNotify.CreateArchiveNotify(userID, result)
+	if createArchive {
+		_, err = s.Services.ArchiveNotify.CreateArchiveNotify(userID, result)
+	}
 
 	return result, err
+}
+
+func (s *NotifyService) ClearNotify(userID string) error {
+	return s.repo.ClearNotify(userID)
 }

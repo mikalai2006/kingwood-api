@@ -237,6 +237,12 @@ func (s *PayService) DeletePay(id string, userID string) (*domain.Pay, error) {
 			return nil, err
 		}
 		s.Hub.HandleMessage(domain.MessageSocket{Type: "message", Method: "DELETE", Sender: userID, Recipient: "", Content: result, ID: "room1", Service: "pay"})
+
+		// to archive.
+		_, err = s.Services.CreateArchivePay(userID, result)
+		if err != nil {
+			return result, err
+		}
 	}
 
 	return result, err

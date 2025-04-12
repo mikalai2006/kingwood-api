@@ -11,41 +11,29 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-type AppErrorMongo struct {
+type ArchivePayMongo struct {
 	db   *mongo.Database
 	i18n config.I18nConfig
 }
 
-func NewAppErrorMongo(db *mongo.Database, i18n config.I18nConfig) *AppErrorMongo {
-	return &AppErrorMongo{db: db, i18n: i18n}
+func NewArchivePayMongo(db *mongo.Database, i18n config.I18nConfig) *ArchivePayMongo {
+	return &ArchivePayMongo{db: db, i18n: i18n}
 }
 
-func (r *AppErrorMongo) FindAppError(input *domain.AppErrorFilter) (domain.Response[domain.AppError], error) {
+func (r *ArchivePayMongo) FindArchivePay(input *domain.ArchivePayFilter) (domain.Response[domain.ArchivePay], error) {
 	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
 	defer cancel()
 
-	var results []domain.AppError
-	var response domain.Response[domain.AppError]
+	var results []domain.ArchivePay
+	var response domain.Response[domain.ArchivePay]
 
 	// Filters
 	q := bson.D{}
-	if input.Code != "" {
-		q = append(q, bson.E{"code", input.Code})
+	if input.Month != nil {
+		q = append(q, bson.E{"month", &input.Month})
 	}
-	if input.From != nil && !input.From.IsZero() {
-		q = append(q, bson.E{"createdAt", bson.D{{"$gte", primitive.NewDateTimeFromTime(*input.From)}}})
-	}
-	if input.To != nil && !input.To.IsZero() {
-		q = append(q, bson.E{"createdAt", bson.D{{"$lte", primitive.NewDateTimeFromTime(*input.To)}}})
-	}
-	if input.Error != "" {
-		q = append(q, bson.E{"error", bson.E{"$regex", input.Error}})
-	}
-	if input.Stack != "" {
-		q = append(q, bson.E{"stack", bson.E{"$regex", input.Stack}})
-	}
-	if input.Status != nil {
-		q = append(q, bson.E{"status", *input.Status})
+	if input.Year != nil {
+		q = append(q, bson.E{"year", &input.Year})
 	}
 	if input.ID != nil && len(input.ID) > 0 {
 		ids := []primitive.ObjectID{}
@@ -60,26 +48,26 @@ func (r *AppErrorMongo) FindAppError(input *domain.AppErrorFilter) (domain.Respo
 
 		q = append(q, bson.E{"_id", bson.D{{"$in", ids}}})
 	}
-	if input.UserId != nil && len(input.UserId) > 0 {
-		ids := []primitive.ObjectID{}
-		for i, _ := range input.UserId {
-			iDPrimitive, err := primitive.ObjectIDFromHex(input.UserId[i])
+	if input.WorkerId != nil && len(input.WorkerId) > 0 {
+		workerIds := []primitive.ObjectID{}
+		for i, _ := range input.WorkerId {
+			workerIDPrimitive, err := primitive.ObjectIDFromHex(input.WorkerId[i])
 			if err != nil {
 				return response, err
 			}
 
-			ids = append(ids, iDPrimitive)
+			workerIds = append(workerIds, workerIDPrimitive)
 		}
 
-		q = append(q, bson.E{"_id", bson.D{{"$in", ids}}})
+		q = append(q, bson.E{"workerId", bson.D{{"$in", workerIds}}})
 	}
 
 	pipe := mongo.Pipeline{}
 	pipe = append(pipe, bson.D{{"$match", q}})
 
-	// user.
+	// worker.
 	pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
-		"from": tblUsers,
+		"from": TblArchiveUser,
 		"as":   "usera",
 		"let":  bson.D{{Key: "workerId", Value: "$workerId"}},
 		"pipeline": mongo.Pipeline{
@@ -96,20 +84,20 @@ func (r *AppErrorMongo) FindAppError(input *domain.AppErrorFilter) (domain.Respo
 					},
 				},
 			}},
-			// add populate auth.
-			bson.D{{
-				Key: "$lookup",
-				Value: bson.M{
-					"from":         TblAuth,
-					"as":           "auths",
-					"localField":   "userId",
-					"foreignField": "_id",
-					// "let": bson.D{{Key: "roleId", Value: bson.D{{"$toString", "$roleId"}}}},
-					// "pipeline": mongo.Pipeline{
-					// 	bson.D{{Key: "$match", Value: bson.M{"$_id": bson.M{"$eq": [2]string{"$roleId", "$$_id"}}}}},
-					// },
-				},
-			}},
+			// // add populate auth.
+			// bson.D{{
+			// 	Key: "$lookup",
+			// 	Value: bson.M{
+			// 		"from":         TblAuth,
+			// 		"as":           "auths",
+			// 		"localField":   "userId",
+			// 		"foreignField": "_id",
+			// 		// "let": bson.D{{Key: "roleId", Value: bson.D{{"$toString", "$roleId"}}}},
+			// 		// "pipeline": mongo.Pipeline{
+			// 		// 	bson.D{{Key: "$match", Value: bson.M{"$_id": bson.M{"$eq": [2]string{"$roleId", "$$_id"}}}}},
+			// 		// },
+			// 	},
+			// }},
 			bson.D{{Key: "$set", Value: bson.M{"auth": bson.M{"$first": "$auths"}}}},
 			bson.D{{Key: "$set", Value: bson.M{"authPrivate": bson.M{"$first": "$auths"}}}},
 
@@ -166,7 +154,7 @@ func (r *AppErrorMongo) FindAppError(input *domain.AppErrorFilter) (domain.Respo
 		limit = *input.Limit
 	}
 
-	cursor, err := r.db.Collection(tblAppError).Aggregate(ctx, pipe) // Find(ctx, params.Filter, opts)
+	cursor, err := r.db.Collection(TblArchivePay).Aggregate(ctx, pipe) // Find(ctx, params.Filter, opts)
 	// cursor, err := r.db.Collection(TblNode).Find(ctx, filter, opts)
 	if err != nil {
 		return response, err
@@ -177,7 +165,7 @@ func (r *AppErrorMongo) FindAppError(input *domain.AppErrorFilter) (domain.Respo
 		return response, er
 	}
 
-	response = domain.Response[domain.AppError]{
+	response = domain.Response[domain.ArchivePay]{
 		Total: 0,
 		Skip:  skip,
 		Limit: limit,
@@ -186,10 +174,10 @@ func (r *AppErrorMongo) FindAppError(input *domain.AppErrorFilter) (domain.Respo
 	return response, nil
 }
 
-func (r *AppErrorMongo) CreateAppError(userID string, data *domain.AppError) (*domain.AppError, error) {
-	var result *domain.AppError
+func (r *ArchivePayMongo) CreateArchivePay(userID string, data *domain.Pay) (*domain.ArchivePay, error) {
+	var result *domain.ArchivePay
 
-	collection := r.db.Collection(tblAppError)
+	collection := r.db.Collection(TblArchivePay)
 
 	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
 	defer cancel()
@@ -199,94 +187,60 @@ func (r *AppErrorMongo) CreateAppError(userID string, data *domain.AppError) (*d
 		return nil, err
 	}
 
-	// var existAppError domain.AppError
-	// r.db.Collection(TblAppError).FindOne(ctx, bson.M{"node_id": AppError.NodeID, "userId": userIDPrimitive}).Decode(&existAppError)
+	// var existArchivePay domain.ArchivePay
+	// r.db.Collection(TblArchivePay).FindOne(ctx, bson.M{"node_id": ArchivePay.NodeID, "userId": userIDPrimitive}).Decode(&existArchivePay)
 
-	// if existAppError.NodeID.IsZero() {
+	// if existArchivePay.NodeID.IsZero() {
 	updatedAt := data.UpdatedAt
 	if updatedAt.IsZero() {
 		updatedAt = time.Now()
 	}
 
-	newAppError := domain.AppErrorInput{
-		UserID: userIDPrimitive,
-		Error:  data.Error,
-		Status: &data.Status,
-		Code:   data.Code,
-		Stack:  data.Stack,
-
-		CreatedAt: updatedAt,
-		UpdatedAt: updatedAt,
+	newArchivePay := domain.ArchivePayInput{
+		Meta: domain.ArchiveMeta{
+			Author:    userIDPrimitive,
+			CreatedAt: time.Now(),
+		},
+		ID:        data.ID,
+		Props:     data.Props,
+		UserID:    data.UserID,
+		Name:      data.Name,
+		WorkerId:  data.WorkerId,
+		Year:      &data.Year,
+		Month:     &data.Month,
+		Total:     data.Total,
+		CreatedAt: data.CreatedAt,
+		UpdatedAt: data.UpdatedAt,
 	}
 
-	res, err := collection.InsertOne(ctx, newAppError)
+	res, err := collection.InsertOne(ctx, newArchivePay)
 	if err != nil {
 		return nil, err
 	}
 
-	// err = r.db.Collection(tblAppError).FindOne(ctx, bson.M{"_id": res.InsertedID}).Decode(&result)
+	// err = r.db.Collection(tblArchivePay).FindOne(ctx, bson.M{"_id": res.InsertedID}).Decode(&result)
 	// if err != nil {
 	// 	return nil, err
 	// }
 
 	insertedID := res.InsertedID.(primitive.ObjectID)
-	AppErrors, err := r.FindAppError(&domain.AppErrorFilter{ID: []string{insertedID.Hex()}})
+	ArchivePays, err := r.FindArchivePay(&domain.ArchivePayFilter{ID: []string{insertedID.Hex()}})
 	if err != nil {
 		return nil, err
 	}
-	if len(AppErrors.Data) > 0 {
-		result = &AppErrors.Data[0]
+	if len(ArchivePays.Data) > 0 {
+		result = &ArchivePays.Data[0]
 	}
 
 	return result, nil
 }
 
-func (r *AppErrorMongo) UpdateAppError(id string, userID string, data *domain.AppErrorInput) (*domain.AppError, error) {
-	var result *domain.AppError
+func (r *ArchivePayMongo) DeleteArchivePay(id string, userID string) (*domain.ArchivePay, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
 	defer cancel()
 
-	collection := r.db.Collection(tblAppError)
-
-	idPrimitive, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return result, err
-	}
-
-	filter := bson.M{"_id": idPrimitive}
-
-	newData := bson.M{}
-	if data.Error != "" {
-		newData["error"] = data.Error
-	}
-
-	if data.Status != nil {
-		newData["status"] = &data.Status
-	}
-	newData["updatedAt"] = time.Now()
-
-	_, err = collection.UpdateOne(ctx, filter, bson.M{"$set": newData})
-	if err != nil {
-		return result, err
-	}
-
-	AppErrors, err := r.FindAppError(&domain.AppErrorFilter{ID: []string{id}})
-	if err != nil {
-		return nil, err
-	}
-	if len(AppErrors.Data) > 0 {
-		result = &AppErrors.Data[0]
-	}
-
-	return result, nil
-}
-
-func (r *AppErrorMongo) DeleteAppError(id string, userID string) (*domain.AppError, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
-	defer cancel()
-
-	var result = &domain.AppError{}
-	collection := r.db.Collection(tblAppError)
+	var result = &domain.ArchivePay{}
+	collection := r.db.Collection(TblArchivePay)
 
 	idPrimitive, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
@@ -306,17 +260,4 @@ func (r *AppErrorMongo) DeleteAppError(id string, userID string) (*domain.AppErr
 	}
 
 	return result, nil
-}
-func (r *AppErrorMongo) ClearAppError(userID string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
-	defer cancel()
-
-	collection := r.db.Collection(tblAppError)
-
-	_, err := collection.DeleteMany(ctx, bson.D{})
-	if err != nil {
-		return err
-	}
-
-	return nil
 }

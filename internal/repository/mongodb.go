@@ -56,6 +56,7 @@ const (
 	TblArchivePay           = "archive_pay"
 	TblArchiveObject        = "archive_object"
 	TblArchiveNotify        = "archive_notify"
+	TblArchiveUser          = "archive_user"
 
 	MongoQueryTimeout = 10 * time.Second
 )

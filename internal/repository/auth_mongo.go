@@ -375,3 +375,30 @@ func (r *AuthMongo) UpdateAuth(id string, data *domain.AuthInput) (domain.Auth, 
 
 	return result, nil
 }
+
+func (r *AuthMongo) DeleteAuth(id string) (domain.Auth, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
+	defer cancel()
+
+	var result = domain.Auth{}
+	collection := r.db.Collection(TblAuth)
+
+	idPrimitive, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return result, err
+	}
+
+	filter := bson.M{"_id": idPrimitive}
+
+	err = collection.FindOne(ctx, filter).Decode(&result)
+	if err != nil {
+		return result, err
+	}
+
+	_, err = collection.DeleteOne(ctx, filter)
+	if err != nil {
+		return result, err
+	}
+
+	return result, nil
+}

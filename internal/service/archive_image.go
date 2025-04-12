@@ -9,7 +9,6 @@ import (
 	"github.com/mikalai2006/kingwood-api/internal/domain"
 	"github.com/mikalai2006/kingwood-api/internal/repository"
 	"github.com/mikalai2006/kingwood-api/internal/utils"
-	"go.mongodb.org/mongo-driver/bson"
 )
 
 type ArchiveImageService struct {
@@ -21,7 +20,7 @@ func NewArchiveImageService(repo repository.ArchiveImage, ImageConfig config.IIm
 	return &ArchiveImageService{repo: repo, ImageConfig: ImageConfig}
 }
 
-func (s *ArchiveImageService) FindArchiveImage(params domain.RequestParams) (domain.Response[domain.ArchiveImage], error) {
+func (s *ArchiveImageService) FindArchiveImage(params *domain.ArchiveImageFilter) (domain.Response[domain.ArchiveImage], error) {
 	return s.repo.FindArchiveImage(params)
 }
 
@@ -35,18 +34,23 @@ func (s *ArchiveImageService) CreateArchiveImage(userID string, data *domain.Ima
 
 func (s *ArchiveImageService) DeleteArchiveImage(id string) (domain.ArchiveImage, error) {
 	result := domain.ArchiveImage{}
-	ArchiveImagesForRemove, err := s.FindArchiveImage(domain.RequestParams{Filter: bson.D{{"_id", id}}})
-	if err != nil {
-		return result, err
-	}
-	var imageForRemove domain.ArchiveImage
-	if len(ArchiveImagesForRemove.Data) > 0 {
-		imageForRemove = ArchiveImagesForRemove.Data[0]
-	}
+
+	result, err := s.repo.DeleteArchiveImage(id)
+
+	// ArchiveImagesForRemove, err := s.FindArchiveImage(&domain.ArchiveImageFilter{ServiceId: []string{result.ServiceID}})
+	// if err != nil {
+	// 	return result, err
+	// }
+	// var imageForRemove domain.ArchiveImage
+	// if len(ArchiveImagesForRemove.Data) > 0 {
+	// 	imageForRemove = ArchiveImagesForRemove.Data[0]
+	// }
+	imageForRemove := result
 	if imageForRemove.Service == "" {
 		return result, errors.New("not found item for remove")
 	} else {
 		pathOfRemove := fmt.Sprintf("public/%s", imageForRemove.Service)
+		fmt.Println("path for remove: archiveiamge: ", pathOfRemove)
 
 		if imageForRemove.ServiceID != "" {
 			pathOfRemove = fmt.Sprintf("%s/%s", pathOfRemove, imageForRemove.ServiceID)
@@ -92,5 +96,5 @@ func (s *ArchiveImageService) DeleteArchiveImage(id string) (domain.ArchiveImage
 		// }
 	}
 
-	return s.repo.DeleteArchiveImage(id)
+	return result, err
 }
