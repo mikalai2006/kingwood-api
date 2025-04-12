@@ -584,6 +584,18 @@ func (s *TaskWorkerService) UpdateTaskWorker(id string, userID string, data *dom
 
 		// create workHistory from.
 		s.Services.WorkHistory.CreateWorkHistory(userID, &newWorkHistory)
+	} else if result.Status == "finish" && !result.OrderId.IsZero() && userID == result.WorkerId.Hex() {
+		// создаем хоз работы для пользователя, если завершается реальный заказ, если он сам завершает.
+		s.Services.WorkHistory.CreateWorkHistory(userID, &domain.WorkHistory{
+			WorkerId:     result.WorkerId,
+			ObjectId:     primitive.NilObjectID,
+			OrderId:      primitive.NilObjectID,
+			TaskId:       primitive.NilObjectID,
+			OperationId:  primitive.NilObjectID,
+			TaskWorkerId: primitive.NilObjectID,
+			Oklad:        result.Worker.Oklad,
+			From:         time.Now(),
+		})
 	}
 	//  else {
 	// 	// close wortHistory to.

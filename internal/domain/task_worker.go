@@ -85,3 +85,12 @@ type TaskWorkerFilter struct {
 	Limit       *int                `json:"$limit,omitempty"`
 	Skip        *int                `json:"$skip,omitempty"`
 }
+
+type ResultMetadataTaskWorker struct {
+	ID    interface{} `json:"_id" bson:"_id"`
+	Total int         `json:"total" bson:"total"`
+}
+type ResultFacetTaskWorker struct {
+	Metadata []ResultMetadataTaskWorker `json:"metadata" bson:"metadata"`
+	Data     []TaskWorker               `json:"data" bson:"data"`
+}
