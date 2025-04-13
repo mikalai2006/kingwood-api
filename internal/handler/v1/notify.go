@@ -228,7 +228,7 @@ func (h *HandlerV1) DeleteNotify(c *gin.Context) {
 		return
 	}
 
-	user, err := h.Services.Notify.DeleteNotify(id, userID, false) // , input
+	user, err := h.Services.Notify.DeleteNotify(id, userID, true) // , input
 	if err != nil {
 		// c.AbortWithError(http.StatusBadRequest, err)
 		appG.ResponseError(http.StatusBadRequest, err, nil)

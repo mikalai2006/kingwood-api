@@ -112,6 +112,7 @@ type ArchiveWorkHistory interface {
 	CreateArchiveWorkHistory(userID string, Order *domain.WorkHistory) (*domain.ArchiveWorkHistory, error)
 	FindArchiveWorkHistory(input domain.ArchiveWorkHistoryFilter) (domain.Response[domain.ArchiveWorkHistory], error)
 	DeleteArchiveWorkHistory(id string) (*domain.ArchiveWorkHistory, error)
+	ClearArchiveWorkHistory(userID string) error
 }
 
 type Object interface {

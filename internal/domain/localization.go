@@ -41,4 +41,7 @@ var (
 	DeleteWorkHistoryNotOrder      = "%s удалил вашу рабочую сессию за %s - хоз.работы"
 	DeleteWorkHistoryAdmin         = "%s удалил рабочую сессию для %s за %s для заказа №%d - %s (объект %s)"
 	DeleteWorkHistoryAdminNotOrder = "%s удалил рабочую сессию для %s за %s - хоз.работы"
+
+	AddAppErrorTitle = "Ошибка приложения"
+	AddAppError      = "В приложении %s произошла ошибка"
 )

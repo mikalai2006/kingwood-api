@@ -14,6 +14,7 @@ func (h *HandlerV1) registerArchiveWorkHistory(router *gin.RouterGroup) {
 	route := router.Group("/archive_work_history")
 	route.POST("/find", h.FindArchiveWorkHistory)
 	route.DELETE("/:id", h.DeleteArchiveWorkHistory)
+
 }
 
 func (h *HandlerV1) FindArchiveWorkHistory(c *gin.Context) {
@@ -60,4 +61,25 @@ func (h *HandlerV1) DeleteArchiveWorkHistory(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, user)
+}
+
+func (h *HandlerV1) ClearArchiveWorkHistory(c *gin.Context) {
+	appG := app.Gin{C: c}
+
+	userID, err := middleware.GetUID(c)
+	if err != nil {
+		// c.AbortWithError(http.StatusUnauthorized, err)
+		appG.ResponseError(http.StatusUnauthorized, err, gin.H{"hello": "world"})
+		return
+	}
+	user, err := h.Services.User.GetUser(userID)
+
+	if user.RoleObject.Code == "systemrole" {
+		err = h.Services.ArchiveWorkHistory.ClearArchiveWorkHistory(userID)
+	} else {
+		appG.ResponseError(http.StatusUnauthorized, err, gin.H{"hello": "world"})
+		return
+	}
+
+	c.JSON(http.StatusOK, nil)
 }

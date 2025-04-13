@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/mikalai2006/kingwood-api/internal/domain"
 	"github.com/mikalai2006/kingwood-api/internal/repository"
@@ -98,6 +99,8 @@ func (s *NotifyService) DeleteNotify(id string, userID string, createArchive boo
 	result, err := s.repo.DeleteNotify(id)
 
 	result.Status = 1
+	result.ReadAt = time.Now()
+	result.UpdatedAt = time.Now()
 
 	s.Hub.HandleMessage(domain.MessageSocket{Type: "message", Method: "DELETE", Sender: "userID", Recipient: result.UserTo.Hex(), Content: result, ID: "room1", Service: "notify"})
 

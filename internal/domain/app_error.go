@@ -15,6 +15,8 @@ type AppError struct {
 	Stack  string `json:"stack" bson:"stack"`
 	Status int64  `json:"status" bson:"status"`
 
+	User User `json:"user,omitempty" bson:"user,omitempty"`
+
 	CreatedAt time.Time `json:"createdAt" bson:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt" bson:"updatedAt"`
 }

@@ -37,3 +37,7 @@ func (s *ArchiveWorkHistoryService) DeleteArchiveWorkHistory(id string, userID s
 
 	return result, err
 }
+
+func (s *ArchiveWorkHistoryService) ClearArchiveWorkHistory(userID string) error {
+	return s.repo.ClearArchiveWorkHistory(userID)
+}

@@ -112,6 +112,7 @@ type ArchiveWorkHistory interface {
 	CreateArchiveWorkHistory(userID string, data *domain.WorkHistory) (*domain.ArchiveWorkHistory, error)
 	FindArchiveWorkHistory(input domain.ArchiveWorkHistoryFilter) (domain.Response[domain.ArchiveWorkHistory], error)
 	DeleteArchiveWorkHistory(id string, userID string) (*domain.ArchiveWorkHistory, error)
+	ClearArchiveWorkHistory(userID string) error
 }
 
 type TaskWorker interface {
@@ -318,10 +319,11 @@ func NewServices(cfgService *ConfigServices) *Services {
 	ArchivePay := NewArchivePayService(cfgService.Repositories.ArchivePay, cfgService.Hub)
 
 	Analytic := NewAnalyticService(cfgService.Repositories.Analytic, cfgService.Hub)
+	AppError := NewAppErrorService(cfgService.Repositories.AppError, cfgService.Hub)
 
 	services := &Services{
 		Analytic:      Analytic,
-		AppError:      NewAppErrorService(cfgService.Repositories.AppError, cfgService.Hub),
+		AppError:      AppError,
 		Authorization: Authorization,
 		Post:          Post,
 		User:          User,
@@ -373,6 +375,7 @@ func NewServices(cfgService *ConfigServices) *Services {
 	Analytic.Services = services
 	ArchiveUser.Services = services
 	ArchivePay.Services = services
+	AppError.Services = services
 
 	return services
 }

@@ -386,3 +386,17 @@ func (r *ArchiveWorkHistoryMongo) DeleteArchiveWorkHistory(id string) (*domain.A
 
 	return result, nil
 }
+
+func (r *ArchiveWorkHistoryMongo) ClearArchiveWorkHistory(userID string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
+	defer cancel()
+
+	collection := r.db.Collection(tblWorkHistory)
+
+	_, err := collection.DeleteMany(ctx, bson.D{})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
