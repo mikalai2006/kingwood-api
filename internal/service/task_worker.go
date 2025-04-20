@@ -232,6 +232,17 @@ func (s *TaskWorkerService) UpdateTaskWorker(id string, userID string, data *dom
 			return result, err
 		}
 
+		// если завершает исполнитель задание, устанавливаем время To как текущее.
+		if result.Status == "finish" || result.Status == "autofinish" {
+			result, err = s.repo.UpdateTaskWorker(id, userID, &domain.TaskWorkerInput{
+				To:     time.Now(),
+				TypeGo: "range",
+			})
+			if err != nil {
+				return result, err
+			}
+		}
+
 	} else {
 		// иначе создаем фейковые данные для поддержки приложения.
 
@@ -333,7 +344,6 @@ func (s *TaskWorkerService) UpdateTaskWorker(id string, userID string, data *dom
 	// add notify.
 	// fmt.Println("workerID:", data.WorkerId)
 	// fmt.Println("userID:", userID)
-
 	statusForNoty := []string{"finish", "autofinish"}
 	// statusNotChange := []string{"finish",""}
 	if result.WorkerId.Hex() != userID && !result.OrderId.IsZero() && !utils.Contains(statusForNoty, result.Status) {
@@ -560,10 +570,14 @@ func (s *TaskWorkerService) UpdateTaskWorker(id string, userID string, data *dom
 
 	for i := range existOpenWorkHistory.Data {
 		// if len(existOpenWorkHistory.Data) > 0 {
+		timeTo := time.Now()
+		if !data.ToForWorkHistory.IsZero() {
+			timeTo = data.ToForWorkHistory
+		}
 		statusPatch := 1
 		s.Services.WorkHistory.UpdateWorkHistory(existOpenWorkHistory.Data[i].ID.Hex(), userID, &domain.WorkHistoryInput{
 			Status: &statusPatch,
-			To:     time.Now(),
+			To:     timeTo, //time.Now(),
 		})
 		// }
 	}

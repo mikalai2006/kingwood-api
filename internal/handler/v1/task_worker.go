@@ -11,6 +11,7 @@ import (
 	"github.com/mikalai2006/kingwood-api/internal/middleware"
 	"github.com/mikalai2006/kingwood-api/internal/utils"
 	"github.com/mikalai2006/kingwood-api/pkg/app"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 func (h *HandlerV1) registerTaskWorker(router *gin.RouterGroup) {
@@ -235,12 +236,29 @@ func (h *HandlerV1) DeleteTaskWorker(c *gin.Context) {
 		return
 	}
 
-	user, err := h.Services.TaskWorker.DeleteTaskWorker(id, userID, true) // , input
+	result, err := h.Services.TaskWorker.DeleteTaskWorker(id, userID, true) // , input
 	if err != nil {
 		// c.AbortWithError(http.StatusBadRequest, err)
 		appG.ResponseError(http.StatusBadRequest, err, nil)
 		return
 	}
 
-	c.JSON(http.StatusOK, user)
+	// удаляем все записи исполнителя для объекта для которого удалили taskWorker
+	allOperation, err := h.Services.Operation.FindOperation(domain.RequestParams{Filter: bson.D{}})
+	if err != nil {
+		appG.ResponseError(http.StatusBadRequest, err, nil)
+		return
+	}
+	var currentOperation *domain.Operation
+	for i := range allOperation.Data {
+		if allOperation.Data[i].ID.Hex() == result.OperationId.Hex() {
+			currentOperation = &allOperation.Data[i]
+		}
+	}
+	// fmt.Println("allOperation length: ", len(allOperation.Data), currentOperation.Group)
+	if currentOperation.Group == "5" {
+
+	}
+
+	c.JSON(http.StatusOK, result)
 }

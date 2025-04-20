@@ -75,7 +75,11 @@ func (c *Client) Read() {
 			break
 		}
 
+		fmt.Println("----->", msg)
+
 		switch msg.Type {
+		case "exit":
+			fmt.Println("Need close socket")
 		case "jwt":
 			// fmt.Println("jwt: ", &msg, err)
 			c.hub.register <- c
@@ -143,7 +147,8 @@ func (c *Client) Read() {
 
 		c.Conn.SetPongHandler(func(string) error {
 			c.Conn.SetReadDeadline(time.Now().Add(pongWait))
-			//fmt.Println("Pong");
+			// c.hub.HandleMessage(domain.MessagePingPongSocket{Type: "pong"})
+			// fmt.Println("Pong")
 			return nil
 		})
 		for {
@@ -189,6 +194,7 @@ func (c *Client) Write() {
 		case <-ticker.C:
 			c.Conn.SetWriteDeadline(time.Now().Add(writeWait))
 			// fmt.Println("Ping")
+			// c.hub.HandleMessage(domain.MessageSocket{Type: "ping", Recipient: "", ID: "room1", Content: bson.D{}})
 			if err := c.Conn.WriteMessage(websocket.PingMessage, nil); err != nil {
 				return
 			}

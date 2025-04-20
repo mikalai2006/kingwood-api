@@ -25,6 +25,7 @@ type Order struct {
 	GoComplete      *int64             `json:"goComplete" bson:"goComplete" form:"goComplete"`
 	DateOtgruzka    time.Time          `json:"dateOtgruzka" bson:"dateOtgruzka" form:"dateOtgruzka"`
 	MontajComplete  *int64             `json:"montajComplete" bson:"montajComplete" form:"montajComplete"`
+	CountTaskMontaj *int64             `json:"countTaskMontaj" bson:"countTaskMontaj" form:"countTaskMontaj"`
 	// NeedMontaj    *int64             `json:"needMontaj" bson:"needMontaj" form:"needMontaj"`
 	Status *int64   `json:"status" bson:"status" form:"status"`
 	Group  []string `json:"group" bson:"group" form:"group"`
@@ -57,6 +58,7 @@ type OrderInput struct {
 	GoComplete      *int64             `json:"goComplete" bson:"goComplete" form:"goComplete"`
 	DateOtgruzka    time.Time          `json:"dateOtgruzka" bson:"dateOtgruzka" form:"dateOtgruzka"`
 	MontajComplete  *int64             `json:"montajComplete" bson:"montajComplete" form:"montajComplete"`
+	CountTaskMontaj *int64             `json:"countTaskMontaj" bson:"countTaskMontaj" form:"countTaskMontaj"`
 	// NeedMontaj    *int64             `json:"needMontaj" bson:"needMontaj" form:"needMontaj"`
 	Status *int64   `json:"status" bson:"status" form:"status"`
 	Group  []string `json:"group" bson:"group" form:"group"`
@@ -89,6 +91,7 @@ type OrderFilter struct {
 	MalyarComplete  *int64     `json:"malyarComplete"`
 	GoComplete      *int64     `json:"goComplete"`
 	MontajComplete  *int64     `json:"montajComplete"`
+	CountTaskMontaj *int64     `json:"countTaskMontaj"`
 	Year            *int       `json:"year"`
 	From            *time.Time `json:"from,omitempty"`
 	To              *time.Time `json:"to,omitempty"`

@@ -36,17 +36,18 @@ type TaskWorkerInput struct {
 	ID     primitive.ObjectID `json:"id" bson:"_id,omitempty"`
 	UserID primitive.ObjectID `json:"userId" bson:"userId"`
 
-	ObjectId    primitive.ObjectID `json:"objectId" bson:"objectId" primitive:"true"`
-	OrderId     primitive.ObjectID `json:"orderId" bson:"orderId" primitive:"true"`
-	TaskId      primitive.ObjectID `json:"taskId" bson:"taskId" primitive:"true"`
-	WorkerId    primitive.ObjectID `json:"workerId" bson:"workerId" primitive:"true"`
-	OperationId primitive.ObjectID `json:"operationId" bson:"operationId" primitive:"true"`
-	SortOrder   *int64             `json:"sortOrder" bson:"sortOrder"`
-	StatusId    primitive.ObjectID `json:"statusId" bson:"statusId" primitive:"true"`
-	Status      string             `json:"status" bson:"status"`
-	From        time.Time          `json:"from" bson:"from"`
-	To          time.Time          `json:"to" bson:"to"`
-	TypeGo      string             `json:"typeGo" bson:"typeGo"`
+	ObjectId         primitive.ObjectID `json:"objectId" bson:"objectId" primitive:"true"`
+	OrderId          primitive.ObjectID `json:"orderId" bson:"orderId" primitive:"true"`
+	TaskId           primitive.ObjectID `json:"taskId" bson:"taskId" primitive:"true"`
+	WorkerId         primitive.ObjectID `json:"workerId" bson:"workerId" primitive:"true"`
+	OperationId      primitive.ObjectID `json:"operationId" bson:"operationId" primitive:"true"`
+	SortOrder        *int64             `json:"sortOrder" bson:"sortOrder"`
+	StatusId         primitive.ObjectID `json:"statusId" bson:"statusId" primitive:"true"`
+	Status           string             `json:"status" bson:"status"`
+	From             time.Time          `json:"from" bson:"from"`
+	To               time.Time          `json:"to" bson:"to"`
+	ToForWorkHistory time.Time          `json:"toWorkHistory" bson:"toWorkHistory"`
+	TypeGo           string             `json:"typeGo" bson:"typeGo"`
 
 	CreatedAt time.Time `json:"createdAt" bson:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt" bson:"updatedAt"`

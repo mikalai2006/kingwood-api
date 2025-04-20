@@ -70,7 +70,7 @@ func UploadResizeMultipleFile(c *gin.Context, info *domain.ImageInput, nameField
 			Name:    filenameOriginal,
 			Ext:     fileExt,
 			Resize:  true,
-			Size:    2000,
+			Size:    500,
 		})
 
 		// add adaptive.
@@ -247,7 +247,7 @@ func UploadResizeMultipleFileForMessage(c *gin.Context, info *domain.MessageImag
 				Name:    filenameOriginal,
 				Ext:     fileExt,
 				Resize:  true,
-				Size:    2000,
+				Size:    1000,
 			})
 			// add adaptive.
 			for i := range imageConfig.Sizes {

@@ -263,9 +263,10 @@ func (s *TaskService) CheckStatusOrder(userID string, result *domain.Task) (*dom
 	tasksForOrder, err := s.FindTaskPopulate(domain.TaskFilter{OrderId: []string{result.OrderId.Hex()}})
 
 	type CheckedStruct struct {
-		Status      int64
-		CountFinish int
-		CountAll    int
+		Status             int64
+		CountFinish        int64
+		CountAll           int64
+		CountNotFinishTask int64
 	}
 
 	goComplete := CheckedStruct{
@@ -289,9 +290,10 @@ func (s *TaskService) CheckStatusOrder(userID string, result *domain.Task) (*dom
 		CountAll:    0,
 	}
 	montajComplete := CheckedStruct{
-		Status:      0,
-		CountFinish: 0,
-		CountAll:    0,
+		Status:             0,
+		CountFinish:        0,
+		CountAll:           0,
+		CountNotFinishTask: 0,
 	}
 	// var stolyarComplete int64
 	// stolyarComplete = 1
@@ -309,6 +311,8 @@ func (s *TaskService) CheckStatusOrder(userID string, result *domain.Task) (*dom
 			stolyarComplete.CountAll = stolyarComplete.CountAll + 1
 			if utils.Contains([]string{"finish", "autofinish"}, tasksForOrder.Data[i].Status) {
 				stolyarComplete.CountFinish += 1
+			} else {
+				stolyarComplete.CountNotFinishTask += 1
 			}
 			// stolyarComplete.Status = 0
 		}
@@ -316,6 +320,8 @@ func (s *TaskService) CheckStatusOrder(userID string, result *domain.Task) (*dom
 			malyarComplete.CountAll = malyarComplete.CountAll + 1
 			if utils.Contains([]string{"finish", "autofinish"}, tasksForOrder.Data[i].Status) {
 				malyarComplete.CountFinish += 1
+			} else {
+				malyarComplete.CountNotFinishTask += 1
 			}
 			// malyarComplete.Status = 0
 		}
@@ -323,6 +329,8 @@ func (s *TaskService) CheckStatusOrder(userID string, result *domain.Task) (*dom
 			shlifComplete.CountAll = shlifComplete.CountAll + 1
 			if utils.Contains([]string{"finish", "autofinish"}, tasksForOrder.Data[i].Status) {
 				shlifComplete.CountFinish += 1
+			} else {
+				shlifComplete.CountNotFinishTask += 1
 			}
 			// shlifComplete.Status = 0
 		}
@@ -330,6 +338,8 @@ func (s *TaskService) CheckStatusOrder(userID string, result *domain.Task) (*dom
 			goComplete.CountAll = goComplete.CountAll + 1
 			if utils.Contains([]string{"finish", "autofinish"}, tasksForOrder.Data[i].Status) {
 				goComplete.CountFinish += 1
+			} else {
+				goComplete.CountNotFinishTask += 1
 			}
 			// goComplete.Status = 0
 		}
@@ -337,6 +347,8 @@ func (s *TaskService) CheckStatusOrder(userID string, result *domain.Task) (*dom
 			montajComplete.CountAll = montajComplete.CountAll + 1
 			if utils.Contains([]string{"finish", "autofinish"}, tasksForOrder.Data[i].Status) {
 				montajComplete.CountFinish += 1
+			} else {
+				montajComplete.CountNotFinishTask += 1
 			}
 			// montajComplete.Status = 0
 		}
@@ -355,7 +367,8 @@ func (s *TaskService) CheckStatusOrder(userID string, result *domain.Task) (*dom
 	if goComplete.CountAll == goComplete.CountFinish && goComplete.CountAll > 0 {
 		goComplete.Status = 1
 	}
-	if montajComplete.CountFinish > 0 && montajComplete.CountAll > 0 { //montajComplete.CountAll == montajComplete.CountFinish
+	//montajComplete.CountFinish > 0
+	if montajComplete.CountAll == montajComplete.CountFinish && montajComplete.CountAll > 0 { //montajComplete.CountAll == montajComplete.CountFinish
 		montajComplete.Status = 1
 	}
 	if shlifComplete.CountAll == shlifComplete.CountFinish && shlifComplete.CountAll > 0 { // || shlifComplete.CountAll == 0
@@ -383,6 +396,9 @@ func (s *TaskService) CheckStatusOrder(userID string, result *domain.Task) (*dom
 	dataUpdateOrder.GoComplete = &goComplete.Status
 
 	dataUpdateOrder.ShlifComplete = &shlifComplete.Status
+
+	// записываем кол-во заданий для монтажа, которые не выполнены.
+	dataUpdateOrder.CountTaskMontaj = &montajComplete.CountNotFinishTask
 
 	if len(allTasksStatus) > 0 {
 		// если есть задания, меняем статус заказа на 1

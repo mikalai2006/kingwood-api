@@ -91,6 +91,9 @@ func (r *OrderMongo) FindOrder(input *domain.OrderFilter) (domain.Response[domai
 		// q = append(q, bson.E{"from", bson.D{{"$lte", primitive.NewDateTimeFromTime(*input.Date)}}})
 		q = append(q, bson.E{"dateStart", bson.D{{"$gte", primitive.NewDateTimeFromTime(*input.Date)}}})
 	}
+	if input.CountTaskMontaj != nil {
+		q = append(q, bson.E{"countTaskMontaj", bson.D{{"$gte", *input.CountTaskMontaj}}})
+	}
 	if input.Year != nil && *input.Year > 0 {
 		q = append(q, bson.E{"year", input.Year})
 	}
@@ -578,6 +581,9 @@ func (r *OrderMongo) UpdateOrder(id string, userID string, data *domain.OrderInp
 	}
 	if data.MontajComplete != nil {
 		newData["montajComplete"] = data.MontajComplete
+	}
+	if data.CountTaskMontaj != nil {
+		newData["countTaskMontaj"] = data.CountTaskMontaj
 	}
 
 	if !data.DateOtgruzka.IsZero() {

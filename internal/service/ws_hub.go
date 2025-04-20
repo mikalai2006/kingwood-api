@@ -66,7 +66,14 @@ func (h *Hub) RegisterNewClient(client *Client) {
 	}
 	h.clients[client.RoomId][client] = true
 
-	fmt.Println("RegisterNewClient: Size of clients: ", len(h.clients[client.RoomId]))
+	fmt.Println("RegisterNewClient: Size of clients: ", len(h.clients[client.RoomId]), client.UserId)
+	// clients := h.clients["room1"]
+	// for client := range clients {
+	// 	// if client.UserId == "anonymous" {
+	// 	// 	client.hub.RemoveClient(client)
+	// 	// }
+	// 	fmt.Println("=====>", client.UserId)
+	// }
 }
 
 // func (h *Hub) ValidateClient(client *Client) {
@@ -116,6 +123,16 @@ func (h *Hub) HandleMessage(message domain.MessageSocket) {
 			}
 		}
 		// fmt.Println("===========================================")
+	} else if message.Type == "ping" || message.Type == "pong" {
+		clients := h.clients["room1"]
+		for client := range clients {
+			select {
+			case client.send <- message:
+			default:
+				close(client.send)
+				delete(h.clients[message.ID], client)
+			}
+		}
 	}
 
 	//Check if the message is a type of "notification"
