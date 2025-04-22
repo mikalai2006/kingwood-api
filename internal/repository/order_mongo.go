@@ -109,6 +109,17 @@ func (r *OrderMongo) FindOrder(input *domain.OrderFilter) (domain.Response[domai
 		}
 		q = append(q, bson.E{"_id", bson.D{{"$in", ids}}})
 	}
+	if input.ConstructorId != nil && len(input.ConstructorId) > 0 {
+		ids := []primitive.ObjectID{}
+		for key, _ := range input.ConstructorId {
+			idCPrimitive, err := primitive.ObjectIDFromHex(input.ConstructorId[key])
+			if err != nil {
+				return response, err
+			}
+			ids = append(ids, idCPrimitive)
+		}
+		q = append(q, bson.E{"constructorId", bson.D{{"$in", ids}}})
+	}
 	if input.Name != "" {
 		strName := primitive.Regex{Pattern: fmt.Sprintf("%v", input.Name), Options: "i"}
 		q = append(q, bson.E{"name", bson.D{{"$regex", strName}}})
@@ -116,8 +127,8 @@ func (r *OrderMongo) FindOrder(input *domain.OrderFilter) (domain.Response[domai
 	if input.Group != nil && len(input.Group) > 0 {
 		q = append(q, bson.E{"group", bson.M{"$elemMatch": bson.D{{"$in", input.Group}}}})
 	}
-	if input.Status != nil {
-		q = append(q, bson.E{"status", input.Status})
+	if len(input.Status) > 0 {
+		q = append(q, bson.E{"status", bson.D{{"$in", input.Status}}})
 	}
 	if input.Number != nil {
 		q = append(q, bson.E{"number", input.Number})

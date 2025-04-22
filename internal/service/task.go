@@ -400,6 +400,7 @@ func (s *TaskService) CheckStatusOrder(userID string, result *domain.Task) (*dom
 	// записываем кол-во заданий для монтажа, которые не выполнены.
 	dataUpdateOrder.CountTaskMontaj = &montajComplete.CountNotFinishTask
 
+	// меняем статус заказа.
 	if len(allTasksStatus) > 0 {
 		// если есть задания, меняем статус заказа на 1
 		status := int64(1)
