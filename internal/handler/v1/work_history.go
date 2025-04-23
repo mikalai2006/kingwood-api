@@ -21,6 +21,7 @@ func (h *HandlerV1) registerWorkHistory(router *gin.RouterGroup) {
 	route.PATCH("/:id", h.SetUserFromRequest, h.UpdateWorkHistory)
 	route.POST("/list", h.CreateWorkHistoryList)
 	route.POST("/statByOrder", h.GetStatByOrder)
+	route.POST("/statByMonth", h.GetStatByMonth)
 	route.DELETE("/:id", h.DeleteWorkHistory)
 	route.POST("/clear", h.ClearWorkHistory)
 }
@@ -260,6 +261,24 @@ func (h *HandlerV1) GetStatByOrder(c *gin.Context) {
 	}
 
 	works, err := h.Services.WorkHistory.GetStatByOrder(*input)
+	if err != nil {
+		appG.ResponseError(http.StatusBadRequest, err, nil)
+		return
+	}
+
+	c.JSON(http.StatusOK, works)
+}
+
+func (h *HandlerV1) GetStatByMonth(c *gin.Context) {
+	appG := app.Gin{C: c}
+
+	var input *domain.WorkHistoryFilter
+	if er := c.BindJSON(&input); er != nil {
+		appG.ResponseError(http.StatusBadRequest, er, nil)
+		return
+	}
+
+	works, err := h.Services.WorkHistory.GetStatByMonth(*input)
 	if err != nil {
 		appG.ResponseError(http.StatusBadRequest, err, nil)
 		return

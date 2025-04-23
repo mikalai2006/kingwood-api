@@ -507,6 +507,12 @@ func (s *WorkHistoryService) GetStatByOrder(input domain.WorkHistoryFilter) ([]d
 	return result, err
 }
 
+func (s *WorkHistoryService) GetStatByMonth(input domain.WorkHistoryFilter) ([]domain.WorkHistoryStatByMonth, error) {
+	result, err := s.repo.GetStatByMonth(input)
+
+	return result, err
+}
+
 func (s *WorkHistoryService) ClearWorkHistory(userID string) error {
 	return s.repo.ClearWorkHistory(userID)
 }

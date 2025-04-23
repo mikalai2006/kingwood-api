@@ -105,6 +105,7 @@ type WorkHistory interface {
 	UpdateWorkHistory(id string, userID string, data *domain.WorkHistoryInput) (*domain.WorkHistory, error)
 	DeleteWorkHistory(id string, userID string, createNotify bool) (*domain.WorkHistory, error)
 	GetStatByOrder(input domain.WorkHistoryFilter) ([]domain.WorkHistoryStatByOrder, error)
+	GetStatByMonth(input domain.WorkHistoryFilter) ([]domain.WorkHistoryStatByMonth, error)
 	ClearWorkHistory(userID string) error
 }
 

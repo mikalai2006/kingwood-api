@@ -820,6 +820,208 @@ func (r *WorkHistoryMongo) UpdateWorkHistory(id string, userID string, data *dom
 	return result, nil
 }
 
+func (r *WorkHistoryMongo) GetStatByMonth(input domain.WorkHistoryFilter) ([]domain.WorkHistoryStatByMonth, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
+	defer cancel()
+
+	var response []domain.WorkHistoryStatByMonth
+
+	q := bson.D{}
+
+	// Filters
+	if input.OrderId != nil && len(input.OrderId) > 0 {
+		ids := []primitive.ObjectID{}
+		for i, _ := range input.OrderId {
+			idPrimitive, err := primitive.ObjectIDFromHex(input.OrderId[i])
+			if err != nil {
+				return response, err
+			}
+
+			ids = append(ids, idPrimitive)
+		}
+
+		q = append(q, bson.E{"orderId", bson.D{{"$in", ids}}})
+	}
+	if input.WorkerId != nil && len(input.WorkerId) > 0 {
+		workerIds := []primitive.ObjectID{}
+		for i, _ := range input.WorkerId {
+			workerIDPrimitive, err := primitive.ObjectIDFromHex(input.WorkerId[i])
+			if err != nil {
+				return response, err
+			}
+
+			workerIds = append(workerIds, workerIDPrimitive)
+		}
+
+		q = append(q, bson.E{"workerId", bson.D{{"$in", workerIds}}})
+	}
+
+	if input.TaskId != nil && len(input.TaskId) > 0 {
+		ids := []primitive.ObjectID{}
+		for i, _ := range input.TaskId {
+			iDPrimitive, err := primitive.ObjectIDFromHex(input.TaskId[i])
+			if err != nil {
+				return response, err
+			}
+
+			ids = append(ids, iDPrimitive)
+		}
+
+		q = append(q, bson.E{"taskId", bson.D{{"$in", ids}}})
+	}
+	if !input.From.IsZero() {
+		q = append(q, bson.E{"from", bson.D{{"$gte", primitive.NewDateTimeFromTime(input.From)}}})
+	}
+	if !input.To.IsZero() {
+		q = append(q, bson.E{"to", bson.D{{"$lte", primitive.NewDateTimeFromTime(input.To)}}})
+	}
+	if input.Status != nil {
+		q = append(q, bson.E{"status", input.Status})
+	}
+
+	pipe := mongo.Pipeline{}
+	pipe = append(pipe, bson.D{{"$match", q}})
+
+	// if input.Skip != nil {
+	// 	pipe = append(pipe, bson.D{{"$skip", input.Skip}})
+	// }
+	if input.Limit != nil {
+		pipe = append(pipe, bson.D{{"$limit", input.Limit}})
+	} else {
+		pipe = append(pipe, bson.D{{"$limit", 10000}})
+	}
+	pipe = append(pipe,
+		bson.D{
+			{"$group", bson.D{
+				{"_id", "$orderId"},
+				// {"orderId", bson.D{{"$first", "$orderId"}}},
+				// {"workerId", bson.D{{"$first", "$workerId"}}},
+				// // {"average_price", bson.D{{"$avg", "$price"}}},
+				{"count", bson.D{{"$sum", 1}}},
+				{"total", bson.D{{"$sum", "$total"}}},
+				{"totalMs", bson.D{{"$sum", "$totalTime"}}},
+				{"workers", bson.D{
+					{"$push", "$workerId"}},
+				},
+			}},
+		})
+
+	// pipe = append(pipe,
+	// 	bson.D{
+	// 		{"$group", bson.D{
+	// 			{"_id", "$_id.workerId"},
+	// 			{"workers", bson.D{
+	// 				{"$push", bson.D{
+	// 					{"workerId", "$_id.workerId"},
+	// 					// {"count", "$count"},
+	// 					// {"total", "$total"},
+	// 				}}},
+	// 			},
+	// 			// {"count", bson.D{{"$sum", "$count"}}},
+	// 			// {"total", bson.D{{"$sum", "$total"}}},
+	// 		}},
+	// 	})
+	// pipe = append(pipe,
+	// 	bson.D{
+	// 		{"$group", bson.D{
+	// 			{"_id", "$_id.workerId"},
+	// 			{"operations", bson.D{
+	// 				{"$push", bson.D{
+	// 					{"operationId", "$_id.operationId"},
+	// 					{"count", "$count"},
+	// 					{"total", "$total"},
+	// 				}}},
+	// 			},
+	// 			{"count", bson.D{{"$sum", "$count"}}},
+	// 			{"total", bson.D{{"$sum", "$total"}}},
+	// 		}},
+	// 	})
+	// pipe = append(pipe,
+	// 	bson.D{
+	// 		{"$group", bson.D{
+	// 			{"_id", "$_id.orderId"},
+	// 			{"orderId", bson.D{{"$first", "$orderId"}}},
+	// 			{"workerId", bson.D{{"$first", "$workerId"}}},
+	// 			// {"average_price", bson.D{{"$avg", "$price"}}},
+	// 			{"count", bson.D{{"$sum", 1}}},
+	// 		}}})
+
+	// // operation.
+	// pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
+	// 	"from": tblOperation,
+	// 	"as":   "operationa",
+	// 	"let":  bson.D{{Key: "operationId", Value: "$operationId"}},
+	// 	"pipeline": mongo.Pipeline{
+	// 		bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$_id", "$$operationId"}}}}},
+	// 		bson.D{{"$limit", 1}},
+	// 	}}}},
+	// 	bson.D{{Key: "$set", Value: bson.M{"operation": bson.M{"$first": "$operationa"}}}})
+
+	// order.
+	pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
+		"from": TblOrder,
+		"as":   "ordera",
+		// "localField":   "userId",
+		// "foreignField": "_id",
+		"let": bson.D{{Key: "orderId", Value: "$_id"}},
+		"pipeline": mongo.Pipeline{
+			bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$_id", "$$orderId"}}}}},
+			bson.D{{"$limit", 1}},
+			bson.D{{Key: "$lookup", Value: bson.M{
+				"from": tblObject,
+				"as":   "objecta",
+				// "localField":   "userId",
+				// "foreignField": "_id",
+				"let": bson.D{{Key: "objectId", Value: "$objectId"}},
+				"pipeline": mongo.Pipeline{
+					bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$_id", "$$objectId"}}}}},
+					bson.D{{"$limit", 1}},
+				},
+			}}},
+			bson.D{{Key: "$set", Value: bson.M{"object": bson.M{"$first": "$objecta"}}}},
+		},
+	}}})
+	pipe = append(pipe, bson.D{{Key: "$set", Value: bson.M{"order": bson.M{"$first": "$ordera"}}}})
+
+	if input.Sort != nil && len(input.Sort) > 0 {
+		sortParam := bson.D{}
+		for i := range input.Sort {
+			sortParam = append(sortParam, bson.E{input.Sort[i].Key, input.Sort[i].Value})
+		}
+		pipe = append(pipe, bson.D{{"$sort", sortParam}})
+		// fmt.Println("sortParam: ", len(input.Sort), sortParam, pipe)
+	}
+
+	// skip := 0
+	// limit := 10
+	// if input.Skip != nil {
+	// 	pipe = append(pipe, bson.D{{"$skip", input.Skip}})
+	// 	skip = *input.Skip
+	// }
+	// if input.Limit != nil {
+	// 	pipe = append(pipe, bson.D{{"$limit", input.Limit}})
+	// 	limit = *input.Limit
+	// }
+
+	cursor, err := r.db.Collection(tblWorkHistory).Aggregate(ctx, pipe) // Find(ctx, params.Filter, opts)
+	// cursor, err := r.db.Collection(TblNode).Find(ctx, filter, opts)
+	if err != nil {
+		return response, err
+	}
+	defer cursor.Close(ctx)
+
+	if er := cursor.All(ctx, &response); er != nil {
+		return response, er
+	}
+
+	// count, err := r.db.Collection(tblTaskHistory).CountDocuments(ctx, params.Filter)
+	// if err != nil {
+	// 	return response, err
+	// }
+
+	return response, nil
+}
+
 func (r *WorkHistoryMongo) DeleteWorkHistory(id string) (*domain.WorkHistory, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
 	defer cancel()

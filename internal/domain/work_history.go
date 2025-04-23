@@ -89,3 +89,20 @@ type WorkHistoryStatByOrder struct {
 	Worker     User                              `json:"worker" bson:"worker"`
 	Operations []WorkHistoryStatByOrderOperation `json:"operations" bson:"operations"`
 }
+
+// type WorkHistoryStatByMonthOrder struct {
+// 	OperationId primitive.ObjectID `json:"operationId" bson:"operationId"`
+// 	Count       int64              `json:"count" bson:"count"`
+// 	Total       int64              `json:"total" bson:"total"`
+// 	// Operation Operation          `json:"operation" bson:"operation"`
+// }
+
+type WorkHistoryStatByMonth struct {
+	ID      primitive.ObjectID `json:"orderId" bson:"_id"`
+	Count   int64              `json:"count" bson:"count"`
+	Total   int64              `json:"total" bson:"total"`
+	TotalMs int64              `json:"totalTime" bson:"totalMs"`
+	Order   Order              `json:"order" bson:"order"`
+	Workers []string           `json:"workers" bson:"workers"`
+	// Operations []WorkHistoryStatByOrderOperation `json:"operations" bson:"operations"`
+}

@@ -65,7 +65,7 @@ func (c *Client) Read() {
 		c.Conn.Close()
 	}()
 
-	fmt.Println("Read: ", c.UserId)
+	// fmt.Println("Read: ", c.UserId)
 	for {
 		var msg domain.MessageSocket
 		c.Conn.SetReadDeadline(time.Now().Add(writeWait))
@@ -75,7 +75,7 @@ func (c *Client) Read() {
 			break
 		}
 
-		fmt.Println("----->", msg)
+		// fmt.Println("----->", msg)
 
 		switch msg.Type {
 		case "exit":
