@@ -500,7 +500,7 @@ func (r *TaskWorkerMongo) CreateTaskWorker(userID string, data *domain.TaskWorke
 	if data.From != nil && !data.From.IsZero() {
 		from = *data.From
 	}
-	to := time.Now().AddDate(0, 12, 0)
+	to := time.Now().AddDate(1, 0, 0)
 	if data.To != nil && !data.From.IsZero() {
 		to = *data.To
 	}

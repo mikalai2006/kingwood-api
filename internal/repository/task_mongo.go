@@ -331,7 +331,7 @@ func (r *TaskMongo) CreateTask(userID string, data *domain.Task) (*domain.Task, 
 	if data.From != nil && !data.From.IsZero() {
 		from = *data.From
 	}
-	to := time.Now().AddDate(0, 3, 0)
+	to := time.Now().AddDate(1, 0, 0)
 	if data.To != nil && !data.From.IsZero() {
 		to = *data.To
 	}
