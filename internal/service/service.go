@@ -92,6 +92,16 @@ type Task interface {
 	DeleteTask(id string, userID string, checkStatus bool) (*domain.Task, error)
 }
 
+type Timer interface {
+	CreateTimer(userID string, data *domain.TimerShedule) (*domain.TimerShedule, error)
+	FindTimer(params domain.RequestParams) (domain.Response[domain.TimerShedule], error)
+	FindTimerPopulate(filter domain.TimerSheduleFilter) (domain.Response[domain.TimerShedule], error)
+	UpdateTimer(id string, userID string, data *domain.TimerSheduleInput) (*domain.TimerShedule, error)
+	StopTimer(id string, userID string) (*domain.TimerShedule, error)
+	DeleteTimer(id string, userID string) (*domain.TimerShedule, error)
+	RecoveryTimers() (*domain.TimerShedule, error)
+}
+
 type ArchiveTask interface {
 	CreateArchiveTask(userID string, data *domain.Task) (*domain.ArchiveTask, error)
 	FindArchiveTask(params domain.ArchiveTaskFilter) (domain.Response[domain.ArchiveTask], error)
@@ -247,6 +257,7 @@ type Services struct {
 	Task
 	TaskWorker
 	TaskStatus
+	Timer
 	Operation
 	Pay
 	PayTemplate
@@ -321,6 +332,7 @@ func NewServices(cfgService *ConfigServices) *Services {
 
 	Analytic := NewAnalyticService(cfgService.Repositories.Analytic, cfgService.Hub)
 	AppError := NewAppErrorService(cfgService.Repositories.AppError, cfgService.Hub)
+	TimerService := NewTimerService(cfgService.Repositories.Timer, cfgService.Hub)
 
 	services := &Services{
 		Analytic:      Analytic,
@@ -336,6 +348,7 @@ func NewServices(cfgService *ConfigServices) *Services {
 		Task:          Task,
 		TaskWorker:    TaskWorker,
 		Operation:     Operation,
+		Timer:         TimerService,
 		Role:          Role,
 		TaskStatus:    TaskStatus,
 		Pay:           Pay,
@@ -377,6 +390,7 @@ func NewServices(cfgService *ConfigServices) *Services {
 	ArchiveUser.Services = services
 	ArchivePay.Services = services
 	AppError.Services = services
+	TimerService.Services = services
 
 	return services
 }

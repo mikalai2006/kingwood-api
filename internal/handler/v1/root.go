@@ -73,6 +73,8 @@ func (h *HandlerV1) Init(api *gin.RouterGroup) {
 			h.RegisterAnalytic(authenticated)
 			h.RegisterArchiveUser(authenticated)
 			h.registerArchivePay(authenticated)
+			h.registerTimer(authenticated)
+
 		}
 
 		v1.GET("/", func(c *gin.Context) {

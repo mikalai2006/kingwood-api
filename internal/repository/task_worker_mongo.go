@@ -78,8 +78,22 @@ func (r *TaskWorkerMongo) FindTaskWorkerPopulate(input *domain.TaskWorkerFilter)
 		q = append(q, bson.E{"to", bson.D{{"$lte", primitive.NewDateTimeFromTime(*input.To)}}})
 	}
 	if input.Date != nil && !input.Date.IsZero() {
-		// q = append(q, bson.E{"from", bson.D{{"$lte", primitive.NewDateTimeFromTime(*input.Date)}}})
-		q = append(q, bson.E{"to", bson.D{{"$gte", primitive.NewDateTimeFromTime(*input.Date)}}})
+		// fmt.Println("from: ", primitive.NewDateTimeFromTime(*input.Date), primitive.NewDateTimeFromTime(*input.Date).Time().String())
+		// fmt.Println("to: ", primitive.NewDateTimeFromTime((*input.Date).AddDate(0, 0, 6)), primitive.NewDateTimeFromTime(*input.Date).Time().AddDate(0, 0, 6).String())
+		// q = append(q, bson.E{"from", bson.D{{"$lte", primitive.NewDateTimeFromTime((*input.Date).AddDate(0, 0, 6))}}})
+		// q = append(q, bson.E{"to", bson.D{{"$gte", primitive.NewDateTimeFromTime((*input.Date).AddDate(0, 0, 0))}}})
+
+		queryArr := []bson.M{
+			{"$and": []bson.M{
+				{"from": bson.D{{"$lte", primitive.NewDateTimeFromTime((*input.Date).AddDate(0, 0, 6))}}},
+				{"to": bson.D{{"$gte", primitive.NewDateTimeFromTime((*input.Date).AddDate(0, 0, 0))}}},
+			}},
+			{"$and": []bson.M{
+				{"from": bson.D{{"$gte", primitive.NewDateTimeFromTime((*input.Date).AddDate(0, 0, 0))}}},
+				{"to": bson.D{{"$lte", primitive.NewDateTimeFromTime((*input.Date).AddDate(0, 0, 6))}}},
+			}},
+		}
+		q = append(q, bson.E{"$or", queryArr})
 	}
 	if input.ID != nil && len(input.ID) > 0 {
 		ids := []primitive.ObjectID{}

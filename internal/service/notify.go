@@ -26,6 +26,12 @@ func (s *NotifyService) FindNotifyPopulate(input *domain.NotifyFilter) (domain.R
 func (s *NotifyService) CreateNotify(userID string, data *domain.NotifyInput) (*domain.Notify, error) {
 	var result *domain.Notify
 
+	// проверяем кто и кому отправляет уведомление.
+	// чтобы исключить отправку уведомлений самому себе.
+	if userID == data.UserTo {
+		return result, nil
+	}
+
 	result, err := s.repo.CreateNotify(userID, data)
 	if err != nil {
 		return nil, err

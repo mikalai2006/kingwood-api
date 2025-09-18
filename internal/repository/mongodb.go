@@ -29,6 +29,7 @@ const (
 	TblPost          = "post"
 	tblNotify        = "notify"
 
+	tblTimer            = "timer"
 	tblTask             = "task"
 	tblTaskMontaj       = "taskMontaj"
 	tblTaskWorker       = "taskWorker"

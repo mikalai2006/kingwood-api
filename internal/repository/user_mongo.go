@@ -732,6 +732,7 @@ func (r *UserMongo) CreateUser(userID string, data *domain.User) (*domain.User, 
 		Birthday: data.Birthday,
 		TypePay:  data.TypePay,
 		Oklad:    data.Oklad,
+		MaxTime:  data.MaxTime,
 		Blocked:  &blockedValue,
 		// Roles:     user.Roles,
 		LastTime:  time.Now(),
@@ -814,6 +815,9 @@ func (r *UserMongo) UpdateUser(id string, data *domain.UserInput) (domain.User, 
 	}
 	if data.Oklad != nil {
 		newData["oklad"] = data.Oklad
+	}
+	if data.MaxTime != nil {
+		newData["maxTime"] = data.MaxTime
 	}
 	if data.TypePay != nil {
 		newData["typePay"] = data.TypePay

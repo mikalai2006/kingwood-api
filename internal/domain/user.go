@@ -35,6 +35,7 @@ type User struct {
 	TypeWork []string               `json:"typeWork" bson:"typeWork"`
 	TypePay  *int64                 `json:"typePay" bson:"typePay"`
 	Oklad    *int64                 `json:"oklad" bson:"oklad"`
+	MaxTime  *int64                 `json:"maxTime" bson:"maxTime"`
 	Props    map[string]interface{} `json:"props" bson:"props" form:"props"`
 	Blocked  *int                   `json:"blocked" bson:"blocked" form:"blocked"`
 
@@ -75,6 +76,7 @@ type UserInput struct {
 
 	TypePay *int64 `json:"typePay" bson:"typePay" form:"typePay"`
 	Oklad   *int64 `json:"oklad" bson:"oklad" form:"oklad"`
+	MaxTime *int64 `json:"maxTime" bson:"maxTime" form:"maxTime"`
 	// Workes  *int64 `json:"workes" bson:"workes" form:"workes"`
 
 	LastTime  time.Time `json:"lastTime" bson:"lastTime"`
@@ -99,6 +101,7 @@ type UserInputMongo struct {
 
 	TypePay *int64                 `json:"typePay" bson:"typePay" form:"typePay"`
 	Oklad   *int64                 `json:"oklad" bson:"oklad" form:"oklad"`
+	MaxTime *int64                 `json:"maxTime" bson:"maxTime" form:"maxTime"`
 	Props   map[string]interface{} `json:"props" bson:"props" form:"props"`
 	Blocked *int                   `json:"blocked" bson:"blocked" form:"blocked"`
 	// Workes  *int64 `json:"workes" bson:"workes" form:"workes"`

@@ -119,6 +119,9 @@ func (h *Handler) InitRoutes(cfg *config.Config, mongoDB *mongo.Database) *gin.E
 	// 	// 	time.Sleep(time.Second)
 	// 	// }
 	// })
+
+	h.services.Timer.RecoveryTimers()
+
 	return router
 }
 

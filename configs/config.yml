@@ -6,7 +6,7 @@ mongodb:
   dbtest: "kingwood_api_db_test"
   sslmode: false
 auth:
-  accessTokenTTL: 1440m # in minutes: default 1440m
+  accessTokenTTL: 4320m # 3days in minutes (default 1440m)
   refreshTokenTTL: 43200m #30 days
 # oauth:
 #   timeExpireCookie: 86400 #24h

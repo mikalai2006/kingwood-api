@@ -30,34 +30,34 @@ services:
     # networks:
     #   - my-network
 
-  app:
-    image: mikalai2006/kingwood-api
-    container_name: kingwood-api-from-image
-    # working_dir value has to be the same of mapped volume
-    # working_dir: /app
-    # build:
-    #   dockerfile: Dockerfile
-    #   context: .
-    # target: dev
-    ports:
-      - ${PORT}:${PORT}
-    volumes:
-      - ./:/app
-    links:
-      - mongodb
-    depends_on:
-      - mongodb
-    # restart: always
-    # container_name: app
-    env_file:
-      - .env
-    # environment:
-    #   - PORT=
-    #   - MONGO_HOST=
-    #   - MONGO_USER=
-    #   - MONGO_PASSWORD=
-    #   - MONGO_PORT=
-    #   - MONGO_DATABASE=
+  # app:
+  #   image: mikalai2006/kingwood-api
+  #   container_name: kingwood-api-from-image
+  #   # working_dir value has to be the same of mapped volume
+  #   # working_dir: /app
+  #   # build:
+  #   #   dockerfile: Dockerfile
+  #   #   context: .
+  #   # target: dev
+  #   ports:
+  #     - ${PORT}:${PORT}
+  #   volumes:
+  #     - ./:/app
+  #   links:
+  #     - mongodb
+  #   depends_on:
+  #     - mongodb
+  #   # restart: always
+  #   # container_name: app
+  #   env_file:
+  #     - .env
+  #   # environment:
+  #   #   - PORT=
+  #   #   - MONGO_HOST=
+  #   #   - MONGO_USER=
+  #   #   - MONGO_PASSWORD=
+  #   #   - MONGO_PORT=
+  #   #   - MONGO_DATABASE=
 # networks:
 #   my-network:
 # volumes:

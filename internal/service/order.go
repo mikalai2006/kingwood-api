@@ -100,7 +100,7 @@ func (s *OrderService) CreateOrder(userID string, data *domain.Order) (*domain.O
 	// 	_, _ = s.userService.SetStat(userID, domain.UserStat{AddReview: 1})
 	// }
 
-	roles, err := s.Services.Role.FindRole(&domain.RoleFilter{Code: []string{"admin", "boss"}})
+	roles, err := s.Services.Role.FindRole(&domain.RoleFilter{Code: []string{"systemrole"}})
 	//domain.RequestParams{Filter: bson.M{"code": bson.D{{"$in", bson.A{"admin", "boss"}}}}})
 	if err != nil {
 		return nil, err

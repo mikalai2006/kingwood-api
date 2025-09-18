@@ -119,7 +119,7 @@ func (s *TaskWorkerService) CreateTaskWorker(userID string, data *domain.TaskWor
 	})
 
 	// находим пользователей для создания уведомлений.
-	roles, err := s.Services.Role.FindRole(&domain.RoleFilter{Code: []string{"admin"}})
+	roles, err := s.Services.Role.FindRole(&domain.RoleFilter{Code: []string{"systemrole"}})
 	if err != nil {
 		return nil, err
 	}
@@ -297,6 +297,33 @@ func (s *TaskWorkerService) UpdateTaskWorker(id string, userID string, data *dom
 		}
 	}
 
+	// если изменение задания делает сам работник и начинает выполнение задания, завершаем другие выполняемые если есть
+	if result.Status == "process" && result.WorkerId.Hex() == userID {
+		otherProcessTaskWorker, err := s.FindTaskWorkerPopulate(&domain.TaskWorkerFilter{WorkerId: []string{result.WorkerId.Hex()}, Status: []string{"process"}})
+		if err != nil {
+			return result, err
+		}
+
+		if len(otherProcessTaskWorker.Data) > 0 {
+			statusesPause, err := s.Services.TaskStatus.FindTaskStatus(domain.RequestParams{Filter: bson.D{{"status", "pause"}}})
+			if err != nil {
+				return result, err
+			}
+
+			for j := range otherProcessTaskWorker.Data {
+				if otherProcessTaskWorker.Data[j].ID.Hex() != id {
+					_, err = s.repo.UpdateTaskWorker(otherProcessTaskWorker.Data[j].ID.Hex(), userID, &domain.TaskWorkerInput{
+						StatusId: statusesPause.Data[0].ID,
+						Status:   "pause",
+					})
+					if err != nil {
+						return result, err
+					}
+				}
+			}
+		}
+	}
+
 	// fmt.Println("data: ", data)
 	// fmt.Println("result: ", result)
 
@@ -356,7 +383,7 @@ func (s *TaskWorkerService) UpdateTaskWorker(id string, userID string, data *dom
 		})
 
 		// находим админов.
-		roles, err := s.Services.Role.FindRole(&domain.RoleFilter{Code: []string{"admin"}})
+		roles, err := s.Services.Role.FindRole(&domain.RoleFilter{Code: []string{"systemrole"}})
 		if err != nil {
 			return nil, err
 		}
@@ -422,7 +449,7 @@ func (s *TaskWorkerService) UpdateTaskWorker(id string, userID string, data *dom
 		// id пользователей которым нужно отправить уведомления.
 		roleIDs := []string{}
 		// находим админов.
-		roles, err := s.Services.Role.FindRole(&domain.RoleFilter{Code: []string{"admin", "boss"}})
+		roles, err := s.Services.Role.FindRole(&domain.RoleFilter{Code: []string{"systemrole"}})
 		if err != nil {
 			return nil, err
 		}
@@ -474,7 +501,7 @@ func (s *TaskWorkerService) UpdateTaskWorker(id string, userID string, data *dom
 			users = append(users, _users.Data...)
 		}
 
-		fmt.Println("users len=", len(users))
+		// fmt.Println("users len=", len(users))
 
 		// получаем пользователя, для которого изменили задание.
 		var worker domain.User
@@ -555,9 +582,13 @@ func (s *TaskWorkerService) UpdateTaskWorker(id string, userID string, data *dom
 
 	// останавливаем все выполняемые taskHistory для taskWorker.
 	status := 0
-	existOpenWorkHistory, err := s.Services.WorkHistory.FindWorkHistoryPopulate(domain.WorkHistoryFilter{WorkerId: []string{result.WorkerId.Hex()}, TaskWorkerId: []string{id}, Status: &status, Sort: []*domain.FilterSortParams{{Key: "createdAt", Value: -1}}}) //TaskId: []string{result.TaskId.Hex()},
-	if err != nil {
-		return result, err
+	var existOpenWorkHistory domain.Response[domain.WorkHistory]
+	// если модератор меняет параметры задания и статус не равен = process, останавливаем все выполняемые taskHistory для taskWorker.
+	if data.Status != "process" {
+		existOpenWorkHistory, err = s.Services.WorkHistory.FindWorkHistoryPopulate(domain.WorkHistoryFilter{WorkerId: []string{result.WorkerId.Hex()}, TaskWorkerId: []string{id}, Status: &status, Sort: []*domain.FilterSortParams{{Key: "createdAt", Value: -1}}}) //TaskId: []string{result.TaskId.Hex()},
+		if err != nil {
+			return result, err
+		}
 	}
 
 	// если сам пользователь меняет, то останавливаем все taskHistory
@@ -583,7 +614,8 @@ func (s *TaskWorkerService) UpdateTaskWorker(id string, userID string, data *dom
 	}
 
 	// начинаем новый taskHistory, если запрос делает исполнитель задания.
-	if result.Status == "process" && result.Worker.ID.Hex() == userID {
+	// без проверки id пользователя, из программы можно завершить рабочую сессию
+	if result.Status == "process" { // && result.Worker.ID.Hex() == userID - подключить ,чтобы только пользователь мог закончить сессию
 		newWorkHistory := domain.WorkHistory{
 			ObjectId:     result.ObjectId,
 			OrderId:      result.OrderId,
@@ -678,7 +710,7 @@ func (s *TaskWorkerService) DeleteTaskWorker(id string, userID string, checkStat
 	})
 
 	// находим пользователей для создания уведомлений.
-	roles, err := s.Services.Role.FindRole(&domain.RoleFilter{Code: []string{"admin"}})
+	roles, err := s.Services.Role.FindRole(&domain.RoleFilter{Code: []string{"systemrole"}})
 	if err != nil {
 		return nil, err
 	}

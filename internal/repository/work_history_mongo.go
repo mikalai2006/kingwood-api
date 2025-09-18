@@ -197,11 +197,11 @@ func (r *WorkHistoryMongo) FindWorkHistoryPopulate(input domain.WorkHistoryFilte
 		from1 := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, eastOfUTCP)
 		to1 := time.Date(t.Year(), t.Month(), t.Day(), 23, 59, 59, 0, eastOfUTCP)
 
-		// fmt.Println("======================FIND TIME WORK====================")
-		// fmt.Println("date: ", t, "====>", t.UTC())
-		// fmt.Println("from: ", from1, "====>", from1.UTC())
-		// fmt.Println("to: ", to1, "====>", to1.UTC())
-		// fmt.Println("========================================================")
+		fmt.Println("======================FIND TIME WORK====================")
+		fmt.Println("date: ", t, "====>", t.UTC())
+		fmt.Println("from: ", from1, "====>", from1.UTC())
+		fmt.Println("to: ", to1, "====>", to1.UTC())
+		fmt.Println("========================================================")
 
 		q = append(q, bson.E{"date", bson.D{{"$gte", primitive.NewDateTimeFromTime(from1.UTC())}}})
 		q = append(q, bson.E{"date", bson.D{{"$lte", primitive.NewDateTimeFromTime(to1.UTC())}}})
@@ -734,9 +734,16 @@ func (r *WorkHistoryMongo) CreateWorkHistory(userID string, data *domain.WorkHis
 		return nil, err
 	}
 
-	err = r.db.Collection(tblWorkHistory).FindOne(ctx, bson.M{"_id": res.InsertedID}).Decode(&result)
+	// err = r.db.Collection(tblWorkHistory).FindOne(ctx, bson.M{"_id": res.InsertedID}).Decode(&result)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	updatedItems, err := r.FindWorkHistoryPopulate(domain.WorkHistoryFilter{ID: []string{res.InsertedID.(primitive.ObjectID).Hex()}})
 	if err != nil {
-		return nil, err
+		return result, err
+	}
+	if len(updatedItems.Data) > 0 {
+		result = &updatedItems.Data[0]
 	}
 
 	return result, nil

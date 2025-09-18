@@ -92,6 +92,14 @@ type Task interface {
 	DeleteTask(id string) (*domain.Task, error)
 }
 
+type Timer interface {
+	FindTimer(params domain.RequestParams) (domain.Response[domain.TimerShedule], error)
+	FindTimerPopulate(input domain.TimerSheduleFilter) (domain.Response[domain.TimerShedule], error)
+	CreateTimer(userID string, Order *domain.TimerShedule) (*domain.TimerShedule, error)
+	UpdateTimer(id string, userID string, data *domain.TimerSheduleInput) (*domain.TimerShedule, error)
+	DeleteTimer(id string) (*domain.TimerShedule, error)
+}
+
 type ArchiveTask interface {
 	CreateArchiveTask(userID string, Order *domain.Task) (*domain.ArchiveTask, error)
 	FindArchiveTask(params domain.ArchiveTaskFilter) (domain.Response[domain.ArchiveTask], error)
@@ -246,6 +254,7 @@ type Repositories struct {
 	Task
 	TaskStatus
 	TaskWorker
+	Timer
 	Operation
 	Pay
 	PayTemplate
@@ -300,6 +309,7 @@ func NewRepositories(mongodb *mongo.Database, i18n config.I18nConfig) *Repositor
 		ArchiveNotify:      NewArchiveNotifyMongo(mongodb, i18n),
 		ArchiveUser:        NewArchiveUserMongo(mongodb, i18n),
 		ArchivePay:         NewArchivePayMongo(mongodb, i18n),
+		Timer:              NewTimerMongo(mongodb, i18n),
 
 		Analytic: NewAnalyticMongo(mongodb, i18n),
 	}
