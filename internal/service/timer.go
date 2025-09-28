@@ -152,7 +152,7 @@ func (s *TimerService) StopTimer(id string, userID string) (*domain.TimerShedule
 					Title:  domain.StopTimerTitle,
 					Message: fmt.Sprintf(
 						domain.StopTimer,
-						userSender.Name,
+						// userSender.Name,
 						listWorkHistoryByDay.Data[0].Order.Name,
 						// fmt.Sprintf("%d-%d", result.Year, result.Month+1),
 						durationNewText,
