@@ -54,6 +54,7 @@ type Notify interface {
 	FindNotifyPopulate(input *domain.NotifyFilter) (domain.Response[domain.Notify], error)
 	UpdateNotify(id string, userID string, data *domain.NotifyInput) (*domain.Notify, error)
 	DeleteNotify(id string) (*domain.Notify, error)
+	DeleteNotifyList(query domain.NotifyListQuery) (*[]domain.Notify, error)
 	ClearNotify(userID string) error
 }
 
@@ -169,6 +170,7 @@ type AppError interface {
 	CreateAppError(userID string, Order *domain.AppError) (*domain.AppError, error)
 	UpdateAppError(id string, userID string, data *domain.AppErrorInput) (*domain.AppError, error)
 	DeleteAppError(id string, userID string) (*domain.AppError, error)
+	DeleteAppErrorList(query domain.AppErrorListQuery) (*[]domain.AppError, error)
 	ClearAppError(userID string) error
 }
 

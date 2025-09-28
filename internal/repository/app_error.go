@@ -307,6 +307,46 @@ func (r *AppErrorMongo) DeleteAppError(id string, userID string) (*domain.AppErr
 
 	return result, nil
 }
+
+func (r *AppErrorMongo) DeleteAppErrorList(query domain.AppErrorListQuery) (*[]domain.AppError, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
+	defer cancel()
+
+	var result = &[]domain.AppError{}
+	collection := r.db.Collection(tblAppError)
+
+	ids := bson.A{}
+
+	if len(query.ID) > 0 {
+		for i, _ := range query.ID {
+			idPrimitive, err := primitive.ObjectIDFromHex(*query.ID[i])
+			if err != nil {
+				return result, err
+			}
+			ids = append(ids, idPrimitive)
+		}
+	}
+
+	filter := bson.M{"_id": bson.D{{"$in", ids}}}
+
+	// cursor, err := collection.Find(ctx, filter)
+	// if err != nil {
+	// 	return result, err
+	// }
+	// defer cursor.Close(ctx)
+
+	// if err = cursor.All(ctx, &result); err != nil {
+	// 	return result, err
+	// }
+
+	_, err := collection.DeleteMany(ctx, filter)
+	if err != nil {
+		return result, err
+	}
+
+	return result, nil
+}
+
 func (r *AppErrorMongo) ClearAppError(userID string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
 	defer cancel()

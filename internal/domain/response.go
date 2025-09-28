@@ -1,12 +1,15 @@
 package domain
 
-import "time"
+import (
+	"time"
+)
 
 type Response[D any] struct {
 	Total int `json:"total" bson:"total"`
 	Limit int `json:"limit" bson:"limit"`
 	Skip  int `json:"skip" bson:"skip"`
 	Data  []D `json:"data" bson:"data"`
+	// Users []User `json:"users" bson:"users"`
 }
 
 type ResultMetadata struct {

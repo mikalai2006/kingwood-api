@@ -76,6 +76,10 @@ type NotifyFilter struct {
 	Skip   *int                `json:"$skip,omitempty"`
 }
 
+type NotifyListQuery struct {
+	ID []*string `json:"id,omitempty"`
+}
+
 type ResultFacetNotify struct {
 	Metadata []ResultMetadata `json:"metadata" bson:"metadata"`
 	Data     []Notify         `json:"data" bson:"data"`

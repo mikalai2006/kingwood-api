@@ -15,6 +15,7 @@ type Pay struct {
 	Year     int64              `json:"year" bson:"year"`
 	Total    *int64             `json:"total" bson:"total"`
 	Name     string             `json:"name" bson:"name"`
+	Auto     *int               `json:"auto" bson:"auto"`
 
 	Worker User                   `json:"worker" bson:"worker"`
 	Props  map[string]interface{} `json:"props" bson:"props"`
@@ -32,6 +33,7 @@ type PayInput struct {
 	Year     *int64                 `json:"year" bson:"year"`
 	Total    *int64                 `json:"total" bson:"total"`
 	Name     string                 `json:"name" bson:"name"`
+	Auto     *int                   `json:"auto" bson:"auto"`
 	Props    map[string]interface{} `json:"props" bson:"props"`
 
 	CreatedAt time.Time `json:"createdAt" bson:"createdAt"`
@@ -44,6 +46,7 @@ type PayFilter struct {
 	Month    *int                `json:"month" bson:"month"`
 	Year     *int                `json:"year" bson:"year"`
 	Name     string              `json:"name,omitempty"`
+	Auto     *int                `json:"auto" bson:"auto"`
 	Sort     []*FilterSortParams `json:"sort,omitempty"`
 	Limit    *int                `json:"$limit,omitempty"`
 	Skip     *int                `json:"$skip,omitempty"`

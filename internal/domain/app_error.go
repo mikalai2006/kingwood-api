@@ -21,6 +21,10 @@ type AppError struct {
 	UpdatedAt time.Time `json:"updatedAt" bson:"updatedAt"`
 }
 
+type AppErrorListQuery struct {
+	ID []*string `json:"id,omitempty"`
+}
+
 type AppErrorInput struct {
 	ID     primitive.ObjectID `json:"id" bson:"_id,omitempty"`
 	UserID primitive.ObjectID `json:"userId" bson:"userId"`

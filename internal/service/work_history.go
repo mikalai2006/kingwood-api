@@ -9,6 +9,7 @@ import (
 
 	"github.com/mikalai2006/kingwood-api/internal/domain"
 	"github.com/mikalai2006/kingwood-api/internal/repository"
+	"github.com/mikalai2006/kingwood-api/internal/utils"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -85,7 +86,7 @@ func (s *WorkHistoryService) CreateWorkHistory(userID string, data *domain.WorkH
 		return nil, err
 	}
 
-	s.Hub.HandleMessage(domain.MessageSocket{Type: "message", Method: "CREATE", Sender: userID, Recipient: userID, Content: result, ID: "room1", Service: "workHistory"})
+	s.Hub.HandleMessage(domain.MessageSocket{Type: "message", Method: "CREATE", Sender: userID, Recipient: result.WorkerId.Hex(), Content: result, ID: "room1", Service: "workHistory"})
 
 	// находим пользователей(администрацию) для рассылки создания раб.сессии.
 	roles, err := s.Services.Role.FindRole(&domain.RoleFilter{Code: []string{"systemrole"}})
@@ -400,6 +401,14 @@ func (s *WorkHistoryService) UpdateWorkHistory(id string, userID string, data *d
 			}
 		}
 
+		// проверяем доплаты
+		if result.Worker.Dops != nil && len(result.Worker.Dops) > 0 {
+			_, err = s.CheckDoplats(userID, id, result)
+			if err != nil {
+				return nil, err
+			}
+		}
+
 		// в сокеты отправляем информацию для работника, что начата рабочая сессия
 		s.Hub.HandleMessage(domain.MessageSocket{Type: "message", Method: "PATCH", Sender: userID, Recipient: result.WorkerId.Hex(), Content: result, ID: "room1", Service: "workHistory"})
 
@@ -501,7 +510,7 @@ func (s *WorkHistoryService) UpdateWorkHistory(id string, userID string, data *d
 		westOfUTC := time.FixedZone("UTC+3", 3*60*60)
 
 		for i := range users {
-			// отправка уведомления администраторам и нач. цеху
+			// отправка уведомления администрации
 			s.Services.Notify.CreateNotify(userID, &domain.NotifyInput{
 				UserTo: users[i].ID.Hex(),
 				Title:  domain.PatchWorkHistoryTitle,
@@ -680,6 +689,87 @@ func (s *WorkHistoryService) ClearWorkHistory(userID string) error {
 	return s.repo.ClearWorkHistory(userID)
 }
 
+func (s *WorkHistoryService) CheckDoplats(userID string, id string, item *domain.WorkHistory) (*domain.WorkHistory, error) {
+	result := item
+	var err error
+
+	if item.Worker.Dops == nil || len(item.Worker.Dops) == 0 {
+		return result, err
+	}
+
+	// если рабочая сессия завершается или просто содержит "from" и "to"
+	// достаем все рабочие сессии за сутки этой сессии
+	// проверяем общее рабочее время и если есть доплаты, проходим по ним и создаем доплаты
+	if !item.From.IsZero() && !item.To.IsZero() {
+		listWorkHistoryByDay, err := s.repo.FindWorkHistoryPopulate(domain.WorkHistoryFilter{
+			WorkerId: []string{item.WorkerId.Hex()},
+			Date:     item.Date,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		// подсчитываем общее время всех сессий за дату текущей рабочей сессии.
+		var allWorkTime int64
+		for i := range listWorkHistoryByDay.Data {
+			allWorkTime = allWorkTime + *listWorkHistoryByDay.Data[i].TotalTime
+		}
+
+		// получаем день недели.
+		weekDay := item.Date.Weekday()
+
+		// находим пользователя суперадмина, чтобы от его имени создать платежи.
+		// находим пользователей для создания уведомлений.
+		superUser, err := s.Services.User.GetSuperAdmin()
+		if err != nil {
+			return nil, err
+		}
+
+		statusAuto := 1
+
+		// проходи по всем доплатам работника.
+		for i, _ := range item.Worker.Dops {
+			// если день недели есть среди дней доплаты.
+			if utils.Contains(item.Worker.Dops[i].Days, int(weekDay)) {
+				// получаем время, которое нужно отработать, чтобы получить доплату.
+				needTimeMs := time.Duration(item.Worker.Dops[i].MinHours * int(time.Hour)).Milliseconds()
+				// размер доплаты.
+				doplata := int64(item.Worker.Dops[i].Doplata)
+				// если отработанное время больше или равно времени,
+				// которое нужно для начисления доплаты.
+				if allWorkTime >= int64(needTimeMs) {
+					name := fmt.Sprintf("Доплата за выходной день (%s)", item.Date.Format("02-01-2006"))
+					// проверяем есть уже автодоплата с таким именем или нет.
+					autoPay, err := s.Services.Pay.FindPay(&domain.PayFilter{
+						Auto: &statusAuto,
+						Name: name,
+					})
+					if err != nil {
+						return nil, err
+					}
+					if len(autoPay.Data) == 0 {
+						// создаем доплату.
+						_, err = s.Services.Pay.CreatePay(userID, &domain.Pay{
+							UserID:   superUser.ID,
+							WorkerId: item.WorkerId,
+							Month:    int64(item.Date.Month()) - 1,
+							Year:     int64(item.Date.Year()),
+							Total:    &doplata,
+							Auto:     &statusAuto,
+							Name:     name,
+						})
+						if err != nil {
+							return nil, err
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return result, err
+}
+
 func (s *WorkHistoryService) ValidWorkHistory(userID string, id string, item *domain.WorkHistory) (*domain.WorkHistory, error) {
 	result := item
 	var err error
@@ -709,7 +799,7 @@ func (s *WorkHistoryService) ValidWorkHistory(userID string, id string, item *do
 			allWorkTime = allWorkTime + timeOstatok
 			*item.TotalTime = *item.TotalTime + timeOstatok
 		}
-		fmt.Println("minNeedTime=", minNeedTime, ", allWorkTime=", allWorkTime, ", maxTime=", maxTime, ", maxTime-minNeedTime=", maxTime-minNeedTime)
+		// fmt.Println("minNeedTime=", minNeedTime, ", allWorkTime=", allWorkTime, ", maxTime=", maxTime, ", maxTime-minNeedTime=", maxTime-minNeedTime)
 
 		// если время больше положенного
 		if (allWorkTime + 1000) > maxTime {
@@ -719,7 +809,7 @@ func (s *WorkHistoryService) ValidWorkHistory(userID string, id string, item *do
 			cuteTotalTimeMinutes := cuteTotalTime.Minutes()
 			total = int64(math.Round(cuteTotalTimeMinutes * (float64(*item.Oklad) / 60)))
 			cutTo := item.From.Add(cuteTotalTime).Truncate(time.Millisecond)
-			fmt.Println("maxTime=", maxTime, " cuteTotalTime=", cuteTotalTime, " cuteTotalTimeMinutes=", cuteTotalTimeMinutes, " allWorkTimeWithoutCurrent=", allWorkTimeWithoutCurrent)
+			// fmt.Println("maxTime=", maxTime, " cuteTotalTime=", cuteTotalTime, " cuteTotalTimeMinutes=", cuteTotalTimeMinutes, " allWorkTimeWithoutCurrent=", allWorkTimeWithoutCurrent)
 
 			// заносим старые данные в пропс.
 			newProps := map[string]interface{}{}

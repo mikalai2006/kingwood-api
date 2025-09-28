@@ -44,6 +44,7 @@ func NewHandler(services *service.Services, repositories *repository.Repositorie
 
 func (h *Handler) InitRoutes(cfg *config.Config, mongoDB *mongo.Database) *gin.Engine {
 	// appG := app.Gin{C: *gin.Context}
+	gin.SetMode(gin.ReleaseMode)
 	router := gin.New() // New() // Default
 	router.Use(
 		// gzip.Gzip(gzip.DefaultCompression),
@@ -126,7 +127,7 @@ func (h *Handler) InitRoutes(cfg *config.Config, mongoDB *mongo.Database) *gin.E
 }
 
 func (h *Handler) initAPI(router *gin.Engine) {
-	fmt.Println("IImageConfig", &h.imageConfig)
+	// fmt.Println("IImageConfig", &h.imageConfig)
 	api := router.Group("/api")
 	api.Use(GetLang(&h.i18n))
 

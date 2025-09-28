@@ -7,6 +7,7 @@ import (
 	"github.com/mikalai2006/kingwood-api/internal/domain"
 	"github.com/mikalai2006/kingwood-api/internal/repository"
 	expo "github.com/oliveroneill/exponent-server-sdk-golang/sdk"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type NotifyService struct {
@@ -20,7 +21,34 @@ func NewNotifyService(repo repository.Notify, hub *Hub) *NotifyService {
 }
 
 func (s *NotifyService) FindNotifyPopulate(input *domain.NotifyFilter) (domain.Response[domain.Notify], error) {
-	return s.repo.FindNotifyPopulate(input)
+	var result domain.Response[domain.Notify]
+
+	result, err := s.repo.FindNotifyPopulate(input)
+	if err != nil {
+		return result, err
+	}
+	// достаем пользователей.
+	users := []string{}
+	for i, _ := range result.Data {
+		users = append(users, result.Data[i].UserID.Hex())
+		users = append(users, result.Data[i].UserTo.Hex())
+	}
+	resultUsers, err := s.Services.User.FindUser(&domain.UserFilter{
+		ID: users,
+	})
+	// result.Users = resultUsers.Data
+
+	usersMap := map[primitive.ObjectID]domain.User{}
+	for i, _ := range resultUsers.Data {
+		usersMap[resultUsers.Data[i].ID] = resultUsers.Data[i]
+	}
+
+	for i, _ := range result.Data {
+		result.Data[i].User = usersMap[result.Data[i].UserID]
+		result.Data[i].Recepient = usersMap[result.Data[i].UserTo]
+	}
+
+	return result, err
 }
 
 func (s *NotifyService) CreateNotify(userID string, data *domain.NotifyInput) (*domain.Notify, error) {
@@ -71,7 +99,7 @@ func (s *NotifyService) CreateNotify(userID string, data *domain.NotifyInput) (*
 		if err != nil {
 			return nil, err
 		}
-		fmt.Println("Sent push successfully!")
+		// fmt.Println("Sent push successfully!")
 	} else {
 		fmt.Println("Sent push wrong!", userData.AuthPrivate)
 	}
@@ -115,6 +143,10 @@ func (s *NotifyService) DeleteNotify(id string, userID string, createArchive boo
 	}
 
 	return result, err
+}
+
+func (s *NotifyService) DeleteNotifyList(data domain.NotifyListQuery) (*[]domain.Notify, error) {
+	return s.repo.DeleteNotifyList(data)
 }
 
 func (s *NotifyService) ClearNotify(userID string) error {

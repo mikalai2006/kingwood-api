@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/mikalai2006/kingwood-api/internal/domain"
@@ -48,7 +49,7 @@ func (s *TimerService) CreateTimer(userID string, data *domain.TimerShedule) (*d
 		// Отслеживаем таймер в контексте приложения
 		go func() {
 			<-timer1.C
-			fmt.Println("Задача "+data.IDTimer+" выполнена: workHistory=>", data.WorkHistoryId)
+			// fmt.Println("Задача "+data.IDTimer+" выполнена: workHistory=>", data.WorkHistoryId)
 			s.StopTimer(result.ID.Hex(), userID)
 		}()
 	}
@@ -94,10 +95,72 @@ func (s *TimerService) StopTimer(id string, userID string) (*domain.TimerShedule
 			taskStatus, _ := s.Services.TaskStatus.FindTaskStatus(domain.RequestParams{Filter: bson.D{{"status", "pause"}}})
 			// запускаем остановку работы для работника, для которого был создан таймер
 			if len(taskStatus.Data) > 0 {
-				s.Services.TaskWorker.UpdateTaskWorker(timerData.Data[0].TaskWorkerId.Hex(), userID, &domain.TaskWorkerInput{
+				s.Services.TaskWorker.UpdateTaskWorker(result.TaskWorkerId.Hex(), userID, &domain.TaskWorkerInput{
 					Status:   taskStatus.Data[0].Status,
 					StatusId: taskStatus.Data[0].ID,
+					WorkerId: result.WorkerId,
 				}, 1)
+
+				// достаем все сессии за текущие сутки и считаем общее время.
+				listWorkHistoryByDay, err := s.Services.WorkHistory.FindWorkHistoryPopulate(domain.WorkHistoryFilter{
+					WorkerId: []string{result.WorkerId.Hex()},
+					Date:     result.ExecuteAt,
+					Sort: []*domain.FilterSortParams{
+						{
+							Key:   "createdAt",
+							Value: -1,
+						},
+					},
+				})
+				if err != nil {
+					return nil, err
+				}
+
+				// подсчитываем общее время всех сессий за дату текущей рабочей сессии.
+				var allWorkTime int64
+				for i := range listWorkHistoryByDay.Data {
+					allWorkTime = allWorkTime + *listWorkHistoryByDay.Data[i].TotalTime
+				}
+
+				// находим пользователей(администрацию) для подписи уведомлений таймера.
+				roles, err := s.Services.Role.FindRole(&domain.RoleFilter{Code: []string{"systemrole"}})
+				if err != nil {
+					return nil, err
+				}
+				ids := []string{}
+				var userSender domain.User
+
+				if len(roles.Data) > 0 {
+					users, err := s.Services.User.FindUser(&domain.UserFilter{RoleId: ids})
+					if err != nil {
+						return nil, err
+					}
+					if len(users.Data) > 0 {
+						userSender = users.Data[0]
+					}
+				}
+
+				// протяженность рабочей сессии
+				durationNew := time.Duration(allWorkTime * int64(time.Millisecond))
+				_durationNewText, _ := time.ParseDuration(durationNew.String())
+				durationNewText := strings.Replace(_durationNewText.String(), "h", "ч.", 1)
+				durationNewText = strings.Replace(durationNewText, "m", "мин.", 1)
+				durationNewText = strings.Replace(durationNewText, "s", "сек.", 1)
+
+				_, err = s.Services.Notify.CreateNotify(userSender.ID.Hex(), &domain.NotifyInput{
+					UserTo: timerData.Data[0].WorkerId.Hex(),
+					Title:  domain.StopTimerTitle,
+					Message: fmt.Sprintf(
+						domain.StopTimer,
+						userSender.Name,
+						listWorkHistoryByDay.Data[0].Order.Name,
+						// fmt.Sprintf("%d-%d", result.Year, result.Month+1),
+						durationNewText,
+					),
+				})
+				if err != nil {
+					return nil, err
+				}
 			}
 		} else {
 			fmt.Println("Таймер сработал, но выполнение задач отменено, так как статус - УЖЕ ВЫПОЛНЕНО")

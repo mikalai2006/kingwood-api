@@ -22,6 +22,28 @@ func (s *UserService) GetUser(id string) (domain.User, error) {
 func (s *UserService) FindUser(filter *domain.UserFilter) (domain.Response[domain.User], error) {
 	return s.repo.FindUser(filter)
 }
+func (s *UserService) GetSuperAdmin() (*domain.User, error) {
+	roles, err := s.Services.Role.FindRole(&domain.RoleFilter{Code: []string{"systemrole"}})
+	if err != nil {
+		return nil, err
+	}
+	ids := []string{}
+	var users []domain.User
+
+	if len(roles.Data) > 0 {
+		for i := range roles.Data {
+			ids = append(ids, roles.Data[i].ID.Hex())
+		}
+
+		_users, err := s.Services.User.FindUser(&domain.UserFilter{RoleId: ids})
+		if err != nil {
+			return nil, err
+		}
+
+		users = _users.Data
+	}
+	return &users[0], err
+}
 
 func (s *UserService) CreateUser(userID string, user *domain.User) (*domain.User, error) {
 	return s.repo.CreateUser(userID, user)
@@ -102,6 +124,23 @@ func (s *UserService) Iam(userID string) (domain.User, error) {
 	if err != nil {
 		return user, err
 	}
+
+	// // находим роли пользователя.
+	// rolesId := []string{}
+	// for i, _ := range user.RolesId {
+	// 	rolesId = append(rolesId, user.RolesId[i].Hex())
+	// }
+	// roles := []domain.Role{}
+	// if len(rolesId) > 0 {
+	// 	rolesResult, err := s.Services.Role.FindRole(&domain.RoleFilter{
+	// 		ID: rolesId,
+	// 	})
+	// 	if err != nil {
+	// 		return user, err
+	// 	}
+	// 	roles = rolesResult.Data
+	// }
+	// user.Roles = roles
 
 	// user, err = s.UpdateUser(userID, &domain.User{Online: true})
 	// s.Hub.HandleMessage(domain.Message{Type: "message", Sender: "user1", Recipient: "user2", Content: user, ID: "room1", Service: "user"})

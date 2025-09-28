@@ -100,7 +100,7 @@ func (s *OrderService) CreateOrder(userID string, data *domain.Order) (*domain.O
 	// 	_, _ = s.userService.SetStat(userID, domain.UserStat{AddReview: 1})
 	// }
 
-	roles, err := s.Services.Role.FindRole(&domain.RoleFilter{Code: []string{"systemrole"}})
+	roles, err := s.Services.Role.FindRole(&domain.RoleFilter{Code: []string{"admin", "boss"}})
 	//domain.RequestParams{Filter: bson.M{"code": bson.D{{"$in", bson.A{"admin", "boss"}}}}})
 	if err != nil {
 		return nil, err
@@ -130,10 +130,10 @@ func (s *OrderService) CreateOrder(userID string, data *domain.Order) (*domain.O
 		})
 	}
 
-	fmt.Println("===============ORDER CREATE===================")
-	fmt.Println("ids=", ids)
-	fmt.Println("users=", len(users))
-	fmt.Println("==============================================")
+	// fmt.Println("===============ORDER CREATE===================")
+	// fmt.Println("ids=", ids)
+	// fmt.Println("users=", len(users))
+	// fmt.Println("==============================================")
 
 	return result, err
 }

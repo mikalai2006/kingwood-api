@@ -97,6 +97,11 @@ func (r *AuthMongo) CheckExistAuth(auth *domain.AuthInput) (domain.Auth, error) 
 	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
 	defer cancel()
 
+	// если не получен логин или email, бросаем ошибку
+	if auth.Email == "" && auth.Login == "" {
+		return user, errors.New("not found login")
+	}
+
 	filter := chooseProvider(auth)
 	err := r.db.Collection(TblAuth).FindOne(ctx, filter).Decode(&user)
 	if err != nil {
@@ -169,7 +174,7 @@ func (r *AuthMongo) GetByCredentials(auth *domain.AuthInput) (domain.Auth, error
 	defer cancel()
 
 	filter := chooseProvider(auth)
-	fmt.Println("GetByCredentials filter: ", filter)
+	// fmt.Println("GetByCredentials filter: ", filter)
 	// pipe := mongo.Pipeline{}
 	// pipe = append(pipe, bson.D{{"$match", filter}})
 	// pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
@@ -228,7 +233,7 @@ func (r *AuthMongo) GetByCredentials(auth *domain.AuthInput) (domain.Auth, error
 	// if err := cursor.Err(); err != nil {
 	// 	return user, err
 	// }
-	fmt.Println("user: ", user)
+	// fmt.Println("user: ", user)
 	if err := r.db.Collection(tblUsers).FindOne(ctx, bson.M{
 		"userId": user.ID,
 	}).Decode(&user.User); err != nil {

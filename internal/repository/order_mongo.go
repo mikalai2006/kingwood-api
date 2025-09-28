@@ -92,7 +92,7 @@ func (r *OrderMongo) FindOrder(input *domain.OrderFilter) (domain.Response[domai
 		q = append(q, bson.E{"dateStart", bson.D{{"$gte", primitive.NewDateTimeFromTime(*input.Date)}}})
 	}
 	if input.CountTaskMontaj != nil {
-		fmt.Println("countTaskMontaj=", *input.CountTaskMontaj)
+		// fmt.Println("countTaskMontaj=", *input.CountTaskMontaj)
 		q = append(q, bson.E{"countTaskMontaj", bson.D{{"$gt", *input.CountTaskMontaj}}})
 	}
 	if input.Year != nil && *input.Year > 0 {

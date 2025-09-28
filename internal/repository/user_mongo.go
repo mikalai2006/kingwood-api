@@ -87,6 +87,17 @@ func (r *UserMongo) Iam(userID string) (domain.User, error) {
 		},
 	}}})
 	pipe = append(pipe, bson.D{{Key: "$set", Value: bson.M{"roleObject": bson.M{"$first": "$rolea"}}}})
+	// // new roles.
+	// pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
+	// 	"from": TblRole,
+	// 	"as":   "roles",
+	// 	// "localField":   "userId",
+	// 	// "foreignField": "_id",
+	// 	"let": bson.D{{Key: "rolesId", Value: "$rolesId"}},
+	// 	"pipeline": mongo.Pipeline{
+	// 		bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$in": [2]string{"$_id", "$$rolesId"}}}}},
+	// 	},
+	// }}})
 
 	// add populate auth.
 	pipe = append(pipe, bson.D{{
@@ -723,18 +734,18 @@ func (r *UserMongo) CreateUser(userID string, data *domain.User) (*domain.User, 
 		Name:   data.Name,
 		UserID: userIDPrimitive,
 		// Online:    user.Online,
-		Phone:    data.Phone,
-		Hidden:   0,
-		RoleId:   data.RoleId,
-		PostId:   data.PostId,
-		Archive:  data.Archive,
-		TypeWork: typeWork,
-		Birthday: data.Birthday,
-		TypePay:  data.TypePay,
-		Oklad:    data.Oklad,
-		MaxTime:  data.MaxTime,
-		Blocked:  &blockedValue,
-		// Roles:     user.Roles,
+		Phone:  data.Phone,
+		Hidden: 0,
+		RoleId: data.RoleId,
+		// RolesId:   data.RolesId,
+		PostId:    data.PostId,
+		Archive:   data.Archive,
+		TypeWork:  typeWork,
+		Birthday:  data.Birthday,
+		TypePay:   data.TypePay,
+		Oklad:     data.Oklad,
+		MaxTime:   data.MaxTime,
+		Blocked:   &blockedValue,
 		LastTime:  time.Now(),
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
@@ -831,6 +842,9 @@ func (r *UserMongo) UpdateUser(id string, data *domain.UserInput) (domain.User, 
 	if data.Blocked != nil {
 		newData["blocked"] = data.Blocked
 	}
+	if data.Dops != nil {
+		newData["dops"] = data.Dops
+	}
 	if data.RoleId != "" {
 		IDPrimitive, err := primitive.ObjectIDFromHex(data.RoleId)
 		if err != nil {
@@ -838,6 +852,17 @@ func (r *UserMongo) UpdateUser(id string, data *domain.UserInput) (domain.User, 
 		}
 		newData["roleId"] = IDPrimitive
 	}
+	// if data.RolesId != nil {
+	// 	IDsPrimitive := []primitive.ObjectID{}
+	// 	for i, _ := range data.RolesId {
+	// 		IDPrimitive, err := primitive.ObjectIDFromHex(data.RolesId[i])
+	// 		if err != nil {
+	// 			return result, err
+	// 		}
+	// 		IDsPrimitive = append(IDsPrimitive, IDPrimitive)
+	// 	}
+	// 	newData["rolesId"] = IDsPrimitive
+	// }
 	// fmt.Println("user.TypeWork=", user.TypeWork)
 	if data.TypeWork != nil {
 		newData["typeWork"] = data.TypeWork

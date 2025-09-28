@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/mikalai2006/kingwood-api/internal/domain"
@@ -181,8 +182,7 @@ func (s *AuthService) CreateSession(auth *domain.Auth) (domain.ResponseTokens, e
 
 	// expiresIn := time.Now().Add(s.refreshTokenTTL)
 
-	timeDuration := s.accessTokenTTL
-	timeExpires := time.Now().Local().Add(time.Second * time.Duration(timeDuration.Seconds()))
+	timeExpires := time.Now().Local().Add(time.Duration(s.accessTokenTTL))
 	// time.Hour*time.Duration(timeDuration.Hours()) +
 	// 	time.Minute*time.Duration(timeDuration.Minutes()) +
 	// fmt.Println("expiresIn: ", timeExpires, timeExpires.UnixMilli(), s.refreshTokenTTL.Minutes(), time.Now().Add(s.refreshTokenTTL).UnixMilli())
@@ -191,7 +191,7 @@ func (s *AuthService) CreateSession(auth *domain.Auth) (domain.ResponseTokens, e
 
 	session := domain.Session{
 		RefreshToken: res.RefreshToken,
-		ExpiresAt:    time.Now().Local().Add(time.Second * time.Duration(s.refreshTokenTTL.Seconds())), // time.Now().Add(s.refreshTokenTTL),
+		ExpiresAt:    time.Now().Local().Add(time.Duration(s.refreshTokenTTL)), // time.Now().Add(s.refreshTokenTTL),
 	}
 
 	res.ExpiresInR = session.ExpiresAt.UnixMilli()
@@ -214,6 +214,7 @@ func (s *AuthService) RefreshTokens(refreshToken string) (domain.ResponseTokens,
 	var result domain.ResponseTokens
 
 	user, err := s.repository.RefreshToken(refreshToken)
+	fmt.Println("RefreshTokens service", err, refreshToken)
 	if err != nil {
 		return result, err
 	}

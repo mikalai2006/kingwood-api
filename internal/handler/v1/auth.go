@@ -347,6 +347,8 @@ func (h *HandlerV1) tokenRefresh(c *gin.Context) {
 		return
 	}
 
+	fmt.Println("Refresh token=", input.Token)
+
 	res, err := h.Services.Authorization.RefreshTokens(input.Token)
 	if err != nil && err != mongo.ErrNoDocuments {
 		appG.ResponseError(http.StatusUnauthorized, err, nil)
@@ -354,6 +356,8 @@ func (h *HandlerV1) tokenRefresh(c *gin.Context) {
 	}
 	if err == mongo.ErrNoDocuments {
 		c.SetCookie(h.auth.NameCookieRefresh, "", -1, "/", c.Request.URL.Hostname(), false, true)
+		// res.RefreshToken = "expired"
+		// res.AccessToken = "expired"
 	} else {
 		c.SetCookie(h.auth.NameCookieRefresh, res.RefreshToken, int(h.auth.RefreshTokenTTL.Seconds()), "/", c.Request.URL.Hostname(), false, true)
 	}

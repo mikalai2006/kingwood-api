@@ -76,51 +76,53 @@ func (r *NotifyMongo) FindNotifyPopulate(input *domain.NotifyFilter) (domain.Res
 	pipe := mongo.Pipeline{}
 	pipe = append(pipe, bson.D{{"$match", q}})
 
-	// user.
-	pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
-		"from": tblUsers,
-		"as":   "usera",
-		"let":  bson.D{{Key: "userId", Value: "$userId"}},
-		"pipeline": mongo.Pipeline{
-			bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$_id", "$$userId"}}}}},
-			bson.D{{"$limit", 1}},
-			bson.D{{
-				Key: "$lookup",
-				Value: bson.M{
-					"from": tblImage,
-					"as":   "images",
-					"let":  bson.D{{Key: "serviceId", Value: bson.D{{"$toString", "$_id"}}}},
-					"pipeline": mongo.Pipeline{
-						bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$serviceId", "$$serviceId"}}}}},
-					},
-				},
-			}},
-		},
-	}}})
-	pipe = append(pipe, bson.D{{Key: "$set", Value: bson.M{"user": bson.M{"$first": "$usera"}}}})
+	// // user.
+	// pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
+	// 	"from": tblUsers,
+	// 	"as":   "usera",
+	// 	"let":  bson.D{{Key: "userId", Value: "$userId"}},
+	// 	"pipeline": mongo.Pipeline{
+	// 		bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$_id", "$$userId"}}}}},
+	// 		bson.D{{"$limit", 1}},
+	// 		bson.D{{
+	// 			Key: "$lookup",
+	// 			Value: bson.M{
+	// 				"from": tblImage,
+	// 				"as":   "images",
+	// 				"let":  bson.D{{Key: "serviceId", Value: bson.D{{"$toString", "$_id"}}}},
+	// 				"pipeline": mongo.Pipeline{
+	// 					bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$serviceId", "$$serviceId"}}}}},
+	// 					bson.D{{"$limit", 1}},
+	// 				},
+	// 			},
+	// 		}},
+	// 	},
+	// }}})
+	// pipe = append(pipe, bson.D{{Key: "$set", Value: bson.M{"user": bson.M{"$first": "$usera"}}}})
 
-	// recepient.
-	pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
-		"from": tblUsers,
-		"as":   "recepienta",
-		"let":  bson.D{{Key: "userTo", Value: "$userTo"}},
-		"pipeline": mongo.Pipeline{
-			bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$_id", "$$userTo"}}}}},
-			bson.D{{"$limit", 1}},
-			bson.D{{
-				Key: "$lookup",
-				Value: bson.M{
-					"from": tblImage,
-					"as":   "images",
-					"let":  bson.D{{Key: "serviceId", Value: bson.D{{"$toString", "$_id"}}}},
-					"pipeline": mongo.Pipeline{
-						bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$serviceId", "$$serviceId"}}}}},
-					},
-				},
-			}},
-		},
-	}}})
-	pipe = append(pipe, bson.D{{Key: "$set", Value: bson.M{"recepient": bson.M{"$first": "$recepienta"}}}})
+	// // recepient.
+	// pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
+	// 	"from": tblUsers,
+	// 	"as":   "recepienta",
+	// 	"let":  bson.D{{Key: "userTo", Value: "$userTo"}},
+	// 	"pipeline": mongo.Pipeline{
+	// 		bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$_id", "$$userTo"}}}}},
+	// 		bson.D{{"$limit", 1}},
+	// 		bson.D{{
+	// 			Key: "$lookup",
+	// 			Value: bson.M{
+	// 				"from": tblImage,
+	// 				"as":   "images",
+	// 				"let":  bson.D{{Key: "serviceId", Value: bson.D{{"$toString", "$_id"}}}},
+	// 				"pipeline": mongo.Pipeline{
+	// 					bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$serviceId", "$$serviceId"}}}}},
+	// 					bson.D{{"$limit", 1}},
+	// 				},
+	// 			},
+	// 		}},
+	// 	},
+	// }}})
+	// pipe = append(pipe, bson.D{{Key: "$set", Value: bson.M{"recepient": bson.M{"$first": "$recepienta"}}}})
 
 	// // order.
 	// pipe = append(pipe, bson.D{{Key: "$lookup", Value: bson.M{
@@ -415,6 +417,45 @@ func (r *NotifyMongo) DeleteNotify(id string) (*domain.Notify, error) {
 	}
 
 	_, err = collection.DeleteOne(ctx, filter)
+	if err != nil {
+		return result, err
+	}
+
+	return result, nil
+}
+
+func (r *NotifyMongo) DeleteNotifyList(query domain.NotifyListQuery) (*[]domain.Notify, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
+	defer cancel()
+
+	var result = &[]domain.Notify{}
+	collection := r.db.Collection(tblNotify)
+
+	ids := bson.A{}
+
+	if len(query.ID) > 0 {
+		for i, _ := range query.ID {
+			idPrimitive, err := primitive.ObjectIDFromHex(*query.ID[i])
+			if err != nil {
+				return result, err
+			}
+			ids = append(ids, idPrimitive)
+		}
+	}
+
+	filter := bson.M{"_id": bson.D{{"$in", ids}}}
+
+	// cursor, err := collection.Find(ctx, filter)
+	// if err != nil {
+	// 	return result, err
+	// }
+	// defer cursor.Close(ctx)
+
+	// if err = cursor.All(ctx, &result); err != nil {
+	// 	return result, err
+	// }
+
+	_, err := collection.DeleteMany(ctx, filter)
 	if err != nil {
 		return result, err
 	}

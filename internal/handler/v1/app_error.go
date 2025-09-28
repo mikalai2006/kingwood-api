@@ -20,6 +20,7 @@ func (h *HandlerV1) registerAppError(router *gin.RouterGroup) {
 	route.PATCH("/:id", h.SetUserFromRequest, h.UpdateAppError)
 	route.DELETE("/:id", h.DeleteAppError)
 	route.POST("/clear", h.ClearAppError)
+	route.POST("/remove_list", h.RemoveAppErrorList)
 }
 
 func (h *HandlerV1) CreateAppError(c *gin.Context) {
@@ -175,6 +176,39 @@ func (h *HandlerV1) CreateOrExistAppError(c *gin.Context, input *domain.AppError
 		return result, err
 	}
 	return result, nil
+}
+
+func (h *HandlerV1) RemoveAppErrorList(c *gin.Context) {
+	appG := app.Gin{C: c}
+	var result *[]domain.AppError
+
+	userID, err := middleware.GetUID(c)
+	if err != nil {
+		// c.AbortWithError(http.StatusUnauthorized, err)
+		appG.ResponseError(http.StatusUnauthorized, err, gin.H{"hello": "world"})
+		return
+	}
+	user, err := h.Services.User.GetUser(userID)
+
+	if user.RoleObject.Code == "systemrole" {
+		var input *domain.AppErrorListQuery
+		if er := c.BindJSON(&input); er != nil {
+			appG.ResponseError(http.StatusBadRequest, er, nil)
+			return
+		}
+
+		result, err = h.Services.AppError.DeleteAppErrorList(*input)
+		if err != nil {
+			// c.AbortWithError(http.StatusUnauthorized, err)
+			appG.ResponseError(http.StatusBadRequest, err, nil)
+			return
+		}
+	} else {
+		appG.ResponseError(http.StatusUnauthorized, err, gin.H{"hello": "world"})
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
 }
 
 func (h *HandlerV1) ClearAppError(c *gin.Context) {

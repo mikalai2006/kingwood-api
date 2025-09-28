@@ -145,6 +145,7 @@ type Notify interface {
 	FindNotifyPopulate(input *domain.NotifyFilter) (domain.Response[domain.Notify], error)
 	UpdateNotify(id string, userID string, data *domain.NotifyInput) (*domain.Notify, error)
 	DeleteNotify(id string, userID string, createArchive bool) (*domain.Notify, error)
+	DeleteNotifyList(data domain.NotifyListQuery) (*[]domain.Notify, error)
 	ClearNotify(userID string) error
 }
 
@@ -168,6 +169,7 @@ type User interface {
 	DeleteUser(id string, userID string) (domain.User, error)
 	UpdateUser(id string, user *domain.UserInput) (domain.User, error)
 	Iam(userID string) (domain.User, error)
+	GetSuperAdmin() (*domain.User, error)
 }
 
 type ArchiveUser interface {
@@ -194,6 +196,7 @@ type AppError interface {
 	FindAppError(input *domain.AppErrorFilter) (domain.Response[domain.AppError], error)
 	UpdateAppError(id string, userID string, data *domain.AppErrorInput) (*domain.AppError, error)
 	DeleteAppError(id string, userID string) (*domain.AppError, error)
+	DeleteAppErrorList(data domain.AppErrorListQuery) (*[]domain.AppError, error)
 	ClearAppError(userID string) error
 }
 

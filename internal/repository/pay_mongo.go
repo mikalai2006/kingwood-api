@@ -35,6 +35,12 @@ func (r *PayMongo) FindPay(input *domain.PayFilter) (domain.Response[domain.Pay]
 	if input.Year != nil {
 		q = append(q, bson.E{"year", &input.Year})
 	}
+	if input.Auto != nil {
+		q = append(q, bson.E{"auto", &input.Auto})
+	}
+	if input.Name != "" {
+		q = append(q, bson.E{"name", input.Name})
+	}
 	if input.ID != nil && len(input.ID) > 0 {
 		ids := []primitive.ObjectID{}
 		for i, _ := range input.ID {
@@ -203,6 +209,7 @@ func (r *PayMongo) CreatePay(userID string, data *domain.Pay) (*domain.Pay, erro
 		Year:     &data.Year,
 		Month:    &data.Month,
 		Total:    data.Total,
+		Auto:     data.Auto,
 
 		CreatedAt: updatedAt,
 		UpdatedAt: updatedAt,
