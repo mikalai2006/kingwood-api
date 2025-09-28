@@ -1,7 +1,6 @@
 package service
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/mikalai2006/kingwood-api/internal/domain"
@@ -66,7 +65,7 @@ func (h *Hub) RegisterNewClient(client *Client) {
 	}
 	h.clients[client.RoomId][client] = true
 
-	fmt.Println("RegisterNewClient: Size of clients: ", len(h.clients[client.RoomId]), client.UserId)
+	// fmt.Println("RegisterNewClient: Size of clients: ", len(h.clients[client.RoomId]), client.UserId)
 	// clients := h.clients["room1"]
 	// for client := range clients {
 	// 	// if client.UserId == "anonymous" {
@@ -98,7 +97,7 @@ func (h *Hub) RemoveClient(client *Client) {
 
 		delete(h.clients[client.RoomId], client)
 		close(client.send)
-		fmt.Println("Removed client", client.UserId)
+		// fmt.Println("Removed client", client.UserId)
 	}
 }
 

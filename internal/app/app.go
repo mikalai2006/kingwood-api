@@ -60,9 +60,9 @@ func Run(configPath string) {
 
 	mongoDB := mongoClient.Database(cfg.Mongo.Dbname)
 
-	if cfg.Environment != "prod" {
-		logger.Info(mongoDB)
-	}
+	// if cfg.Environment != "prod" {
+	// 	logger.Info(mongoDB)
+	// }
 
 	// initialize hasher
 	hasherP := hasher.NewSHA1Hasher(cfg.Auth.Salt)

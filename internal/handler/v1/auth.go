@@ -347,7 +347,7 @@ func (h *HandlerV1) tokenRefresh(c *gin.Context) {
 		return
 	}
 
-	fmt.Println("Refresh token=", input.Token)
+	// fmt.Println("Refresh token=", input.Token)
 
 	res, err := h.Services.Authorization.RefreshTokens(input.Token)
 	if err != nil && err != mongo.ErrNoDocuments {
