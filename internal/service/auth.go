@@ -235,6 +235,13 @@ func (s *AuthService) RemoveRefreshTokens(refreshToken string) (string, error) {
 
 func (s *AuthService) UpdateAuth(id string, data *domain.AuthInput) (domain.Auth, error) {
 	result, err := s.repository.UpdateAuth(id, data)
+
+	// if data.AppInfo.VersionApp != "" || data.AppInfo.VersionBuild != "" {
+	// 	fmt.Println("Update user AppInfo from auth update", data.AppInfo)
+	// 	_, err = s.UserService.UpdateUser(result.User.ID.Hex(), &domain.UserInput{
+	// 		AppInfo: data.AppInfo,
+	// 	})
+	// }
 	// s.Hub.HandleMessage(domain.Message{Type: "message", Method: "PATCH", Sender: id, Recipient: "user2", Content: result, ID: "room1", Service: "user"})
 
 	return result, err

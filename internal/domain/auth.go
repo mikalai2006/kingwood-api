@@ -21,6 +21,7 @@ type Auth struct {
 	Verification Verification `json:"verification" bson:"verification"`
 	Session      Session      `json:"session" bson:"session"`
 	PushToken    string       `json:"pushToken" bson:"pushToken"`
+	AppInfo      AppInfo      `json:"appInfo" bson:"appInfo"`
 
 	// MaxDistance int    `json:"maxDistance" bson:"maxDistance"`
 	// Post []Post `json:"post" bson:"post,omitempty" gorm:"-"`
@@ -76,11 +77,17 @@ type AuthInput struct {
 	Verification Verification `json:"verification" bson:"verification"`
 	Session      Session      `json:"session" bson:"session"`
 	PushToken    string       `json:"pushToken" bson:"pushToken"`
+	AppInfo      AppInfo      `json:"appInfo" bson:"appInfo" form:"appInfo"`
 	// Roles        []string     `json:"roles" bson:"roles"`
 	// MaxDistance int `json:"maxDistance" bson:"max_distance"`
 
 	CreatedAt time.Time `json:"createdAt" bson:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt" bson:"updatedAt"`
+}
+
+type AppInfo struct {
+	VersionApp   string `json:"versionApp" bson:"versionApp"`
+	VersionBuild string `json:"versionBuild" bson:"versionBuild"`
 }
 
 type AuthInputMongo struct {
@@ -103,6 +110,7 @@ type AuthInputMongo struct {
 	Verification Verification `json:"verification" bson:"verification"`
 	Session      Session      `json:"session" bson:"session"`
 	PushToken    string       `json:"pushToken" bson:"pushToken"`
+	AppInfo      AppInfo      `json:"appInfo" bson:"appInfo"`
 	// Roles        []string     `json:"roles" bson:"roles"`
 	// MaxDistance int `json:"maxDistance" bson:"max_distance"`
 
@@ -123,8 +131,9 @@ type Verification struct {
 }
 
 type AuthPublicData struct {
-	Login     string `json:"login" bson:"login"`
-	PushToken string `json:"pushToken" bson:"pushToken"`
+	Login     string  `json:"login" bson:"login"`
+	PushToken string  `json:"pushToken" bson:"pushToken"`
+	AppInfo   AppInfo `json:"appInfo" bson:"appInfo"`
 }
 
 type ResetPassword struct {

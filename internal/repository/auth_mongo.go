@@ -371,6 +371,9 @@ func (r *AuthMongo) UpdateAuth(id string, data *domain.AuthInput) (domain.Auth, 
 	if data.PushToken != "" {
 		newData["pushToken"] = data.PushToken
 	}
+	if data.AppInfo.VersionApp != "" {
+		newData["appInfo"] = data.AppInfo
+	}
 	newData["updatedAt"] = time.Now()
 
 	err = collection.FindOneAndUpdate(ctx, filter, bson.M{"$set": newData}).Decode(&result)
