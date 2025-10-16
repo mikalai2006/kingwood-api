@@ -143,12 +143,24 @@ func (s *WorkHistoryService) CreateWorkHistory(userID string, data *domain.WorkH
 
 			// вычисляем сколько осталось поработать до максимально возможного времени
 			maxTimeDuration := (time.Duration(*result.Worker.MaxTime) * time.Hour).Milliseconds()
-			durationForTimer := maxTimeDuration - allWorkTime
+			durationForTimerMs := maxTimeDuration - allWorkTime
+			durationForTimer := (time.Duration(durationForTimerMs) * time.Millisecond)
+
+			// проверяем, чтобы время таймера не вышло за пределы суток (если время до полуночи меньше положенной смены, таймер ставим на полночь).
+			// eastOfUTC := time.FixedZone("UTC-3", -3*60*60)
+			// from1 := time.Date(result.From.Year(), result.From.Month(), result.From.Day(), result.From.Hour(), result.From.Minute(), result.From.Second(), 0, eastOfUTC)
+			yearPrev, monthPrev, dayPrev := result.From.Date()
+			timePolnoc := time.Date(yearPrev, monthPrev, dayPrev, 20, 59, 59, 0, time.UTC)
+
+			raznicaFromToNew := timePolnoc.Sub(result.From)
+			if durationForTimer > raznicaFromToNew {
+				durationForTimer = raznicaFromToNew
+			}
 
 			// создаем таймер с задачей
 			_, err = s.Services.Timer.CreateTimer(userID, &domain.TimerShedule{
-				IDTimer:       fmt.Sprintf("timer_%v", durationForTimer),
-				ExecuteAt:     time.Now().Add(time.Duration(durationForTimer) * time.Millisecond),
+				IDTimer:       fmt.Sprintf("timer_%v", durationForTimerMs),
+				ExecuteAt:     time.Now().Add(durationForTimer),
 				IsRunning:     1,
 				WorkerId:      result.WorkerId,
 				TaskWorkerId:  result.TaskWorkerId,
@@ -272,8 +284,8 @@ func (s *WorkHistoryService) UpdateWorkHistory(id string, userID string, data *d
 		// }
 
 		explodeDate := false
-		oldTo := result.To
-		var fromNew time.Time
+		// oldTo := result.To
+		// var fromNew time.Time
 
 		// начало - функционал обрезки рабочего времени до полуночи.
 		var toNew time.Time
@@ -327,6 +339,12 @@ func (s *WorkHistoryService) UpdateWorkHistory(id string, userID string, data *d
 				// устанавливаем общее время текущей сессии, как разницу от положенного времени и других сессий (без текущей).
 				cuteTotalTime := time.Duration(maxTime-allWorkTime) * time.Millisecond
 
+				// проверяем, чтобы время только до полуночи считалось, даже и в случае если не выйдет полная положенная смена.
+				raznicaFromToNew := toNew.Sub(result.From)
+				if cuteTotalTime > raznicaFromToNew {
+					cuteTotalTime = raznicaFromToNew
+				}
+
 				cuteTotalTimeMinutes := cuteTotalTime.Minutes()
 				totalPrev = int64(math.Round(cuteTotalTimeMinutes * (float64(*result.Oklad) / 60)))
 				newRobotUpdateData.Total = &totalPrev
@@ -355,38 +373,38 @@ func (s *WorkHistoryService) UpdateWorkHistory(id string, userID string, data *d
 			return result, err
 		}
 
-		// создаем новую запись для оставшейся части времени
-		if explodeDate {
-			year, month, day := oldTo.Date()
-			eastOfUTCPlus3 := time.FixedZone("UTC+3", 3*60*60)
-			fromNew = time.Date(year, month, day, 0, 0, 0, 0, eastOfUTCPlus3)
-			// Переносим часть рабочего времени на другой день
-			totalMinutesNext := oldTo.Sub(fromNew).Minutes()
-			totalNext := int64(math.Round(totalMinutesNext * (float64(*result.Oklad) / 60)))
-			// fmt.Println("totalMinutesNext:", totalMinutesNext, " totalNext:", totalNext, " oldTo:", oldTo)
+		// // создаем новую запись для оставшейся части времени
+		// if explodeDate {
+		// 	year, month, day := oldTo.Date()
+		// 	eastOfUTCPlus3 := time.FixedZone("UTC+3", 3*60*60)
+		// 	fromNew = time.Date(year, month, day, 0, 0, 0, 0, eastOfUTCPlus3)
+		// 	// Переносим часть рабочего времени на другой день
+		// 	totalMinutesNext := oldTo.Sub(fromNew).Minutes()
+		// 	totalNext := int64(math.Round(totalMinutesNext * (float64(*result.Oklad) / 60)))
+		// 	// fmt.Println("totalMinutesNext:", totalMinutesNext, " totalNext:", totalNext, " oldTo:", oldTo)
 
-			newWorkHistory := domain.WorkHistory{
-				UserID:       result.UserID,
-				WorkerId:     result.WorkerId,
-				ObjectId:     result.ObjectId,
-				OrderId:      result.OrderId,
-				TaskId:       result.TaskId,
-				OperationId:  result.OperationId,
-				TaskWorkerId: result.TaskWorkerId,
-				Status:       result.Status,
-				Date:         oldTo,
-				From:         fromNew,
-				To:           oldTo,
-				Oklad:        result.Oklad,
-				Total:        &totalNext,
-			}
-			// result, err = s.repo.CreateWorkHistory(userID, &newWorkHistory)
+		// 	newWorkHistory := domain.WorkHistory{
+		// 		UserID:       result.UserID,
+		// 		WorkerId:     result.WorkerId,
+		// 		ObjectId:     result.ObjectId,
+		// 		OrderId:      result.OrderId,
+		// 		TaskId:       result.TaskId,
+		// 		OperationId:  result.OperationId,
+		// 		TaskWorkerId: result.TaskWorkerId,
+		// 		Status:       result.Status,
+		// 		Date:         oldTo,
+		// 		From:         fromNew,
+		// 		To:           oldTo,
+		// 		Oklad:        result.Oklad,
+		// 		Total:        &totalNext,
+		// 	}
+		// 	// result, err = s.repo.CreateWorkHistory(userID, &newWorkHistory)
 
-			_, err := s.CreateWorkHistory(userID, &newWorkHistory)
-			if err != nil {
-				return nil, err
-			}
-		}
+		// 	_, err := s.CreateWorkHistory(userID, &newWorkHistory)
+		// 	if err != nil {
+		// 		return nil, err
+		// 	}
+		// }
 
 		// если в аккаунте задано макс. время работы, делаем округление времени,
 		// нужно достать все его рабочие сессии за день и
