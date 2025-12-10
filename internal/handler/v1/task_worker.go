@@ -236,7 +236,7 @@ func (h *HandlerV1) DeleteTaskWorker(c *gin.Context) {
 		return
 	}
 
-	result, err := h.Services.TaskWorker.DeleteTaskWorker(id, userID, true) // , input
+	result, err := h.Services.TaskWorker.DeleteTaskWorker(id, userID, true, true) // , input
 	if err != nil {
 		// c.AbortWithError(http.StatusBadRequest, err)
 		appG.ResponseError(http.StatusBadRequest, err, nil)

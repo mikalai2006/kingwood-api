@@ -49,7 +49,7 @@ func (h *Handler) InitRoutes(cfg *config.Config, mongoDB *mongo.Database) *gin.E
 	router.Use(
 		// gzip.Gzip(gzip.DefaultCompression),
 		gin.Recovery(),
-		// gin.Logger(),
+		gin.Logger(),
 		middleware.Cors,
 		// middleware.JSONAppErrorReporter(),
 	)

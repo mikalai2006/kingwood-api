@@ -119,7 +119,9 @@ func (r *MessageMongo) FindMessage(params *domain.MessageFilter) (domain.Respons
 	if params.Limit != nil {
 		limit = *params.Limit
 	}
-	dataOptions = append(dataOptions, bson.D{{"$limit", limit}})
+	if limit > 0 {
+		dataOptions = append(dataOptions, bson.D{{"$limit", limit}})
+	}
 
 	if params.Sort != nil {
 		sortParam := bson.D{}

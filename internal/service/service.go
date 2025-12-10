@@ -53,7 +53,7 @@ type MessageStatus interface {
 
 type Order interface {
 	CreateOrder(userID string, data *domain.Order) (*domain.Order, error)
-	FindOrder(input *domain.OrderFilter) (domain.Response[domain.Order], error)
+	FindOrder(input *domain.OrderFilter) (domain.ResponseOrderFlatData, error)
 	UpdateOrder(id string, userID string, data *domain.OrderInput) (*domain.Order, error)
 	DeleteOrder(id string, userID string) (*domain.Order, error)
 }
@@ -88,6 +88,7 @@ type Task interface {
 	CreateTask(userID string, data *domain.Task) (*domain.Task, error)
 	FindTask(params domain.RequestParams) (domain.Response[domain.Task], error)
 	FindTaskPopulate(filter domain.TaskFilter) (domain.Response[domain.Task], error)
+	FindTaskFlat(filter domain.TaskFilter) (domain.Response[domain.Task], error)
 	UpdateTask(id string, userID string, data *domain.TaskInput) (*domain.Task, error)
 	DeleteTask(id string, userID string, checkStatus bool) (*domain.Task, error)
 }
@@ -129,9 +130,10 @@ type ArchiveWorkHistory interface {
 type TaskWorker interface {
 	CreateTaskWorker(userID string, data *domain.TaskWorker, autoCreate int) (*domain.TaskWorker, error)
 	FindTaskWorkerPopulate(input *domain.TaskWorkerFilter) (domain.Response[domain.TaskWorker], error)
+	FindTaskWorkerFlat(input *domain.TaskWorkerFilter) (domain.Response[domain.TaskWorkerFlat], error)
 	// FindTaskWorker(params domain.RequestParams) (domain.Response[domain.TaskWorker], error)
 	UpdateTaskWorker(id string, userID string, data *domain.TaskWorkerInput, autoUpdate int) (*domain.TaskWorker, error)
-	DeleteTaskWorker(id string, userID string, checkStatus bool) (*domain.TaskWorker, error)
+	DeleteTaskWorker(id string, userID string, checkStatus bool, sendNotify bool) (*domain.TaskWorker, error)
 }
 
 type ArchiveTaskWorker interface {
@@ -165,6 +167,7 @@ type TaskStatus interface {
 type User interface {
 	GetUser(id string) (domain.User, error)
 	FindUser(filter *domain.UserFilter) (domain.Response[domain.User], error)
+	FindUserFlat(filter *domain.UserFilter) (domain.Response[domain.UserFlat], error)
 	CreateUser(userID string, user *domain.User) (*domain.User, error)
 	DeleteUser(id string, userID string) (domain.User, error)
 	UpdateUser(id string, user *domain.UserInput) (domain.User, error)

@@ -31,6 +31,10 @@ func (s *TaskService) FindTaskPopulate(filter domain.TaskFilter) (domain.Respons
 	return s.repo.FindTaskPopulate(filter)
 }
 
+func (s *TaskService) FindTaskFlat(filter domain.TaskFilter) (domain.Response[domain.Task], error) {
+	return s.repo.FindTaskFlat(filter)
+}
+
 func (s *TaskService) CreateTask(userID string, data *domain.Task) (*domain.Task, error) {
 	var result *domain.Task
 
@@ -347,7 +351,7 @@ func (s *TaskService) CheckStatusOrder(userID string, result *domain.Task) (*dom
 			montajComplete.CountAll = montajComplete.CountAll + 1
 			if utils.Contains([]string{"finish", "autofinish"}, tasksForOrder.Data[i].Status) {
 				montajComplete.CountFinish += 1
-			} else {
+			} else if len(tasksForOrder.Data[i].Workers) > 0 {
 				montajComplete.CountNotFinishTask += 1
 			}
 			// montajComplete.Status = 0

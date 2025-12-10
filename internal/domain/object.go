@@ -28,7 +28,7 @@ type ObjectInput struct {
 }
 
 type ObjectFilter struct {
-	ID    []*string           `json:"id,omitempty"`
+	ID    []string            `json:"id,omitempty"`
 	Name  *string             `json:"name,omitempty"`
 	Sort  []*FilterSortParams `json:"sort,omitempty"`
 	Limit *int                `json:"$limit,omitempty"`

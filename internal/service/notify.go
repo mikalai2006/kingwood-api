@@ -1,7 +1,6 @@
 package service
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/mikalai2006/kingwood-api/internal/domain"
@@ -100,9 +99,10 @@ func (s *NotifyService) CreateNotify(userID string, data *domain.NotifyInput) (*
 			return nil, err
 		}
 		// fmt.Println("Sent push successfully!")
-	} else {
-		fmt.Println("Sent push wrong!", userData.AuthPrivate)
 	}
+	// else {
+	// 	fmt.Println("Sent push wrong!", userData.AuthPrivate)
+	// }
 
 	return result, err
 }

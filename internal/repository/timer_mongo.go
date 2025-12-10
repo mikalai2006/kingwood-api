@@ -191,7 +191,7 @@ func (r *TimerMongo) FindTimerPopulate(input domain.TimerSheduleFilter) (domain.
 		pipe = append(pipe, bson.D{{"$skip", input.Skip}})
 		skip = *input.Skip
 	}
-	if input.Limit != nil {
+	if input.Limit != nil && *input.Limit > 0 {
 		pipe = append(pipe, bson.D{{"$limit", input.Limit}})
 		limit = *input.Limit
 	}

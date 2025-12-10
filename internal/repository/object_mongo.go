@@ -88,9 +88,20 @@ func (r *ObjectMongo) FindObject(input *domain.ObjectFilter) (domain.Response[do
 		q = append(q, bson.E{"name", bson.D{{"$regex", strName}}})
 	}
 
+	if input.ID != nil && len(input.ID) > 0 {
+		ids := []primitive.ObjectID{}
+		for key, _ := range input.ID {
+			idObjectPrimitive, err := primitive.ObjectIDFromHex(input.ID[key])
+			if err != nil {
+				return response, err
+			}
+			ids = append(ids, idObjectPrimitive)
+		}
+		q = append(q, bson.E{"_id", bson.D{{"$in", ids}}})
+	}
+
 	pipe := mongo.Pipeline{}
 	pipe = append(pipe, bson.D{{"$match", q}})
-
 	if input.Sort != nil && len(input.Sort) > 0 {
 		sortParam := bson.D{}
 		for i := range input.Sort {

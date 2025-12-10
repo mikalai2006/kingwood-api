@@ -23,9 +23,9 @@ type Task struct {
 
 	AutoCheck *int64       `json:"autoCheck" bson:"autoCheck" form:"autoCheck"`
 	Workers   []TaskWorker `json:"workers" bson:"workers"`
-	Object    Object       `json:"object" bson:"object"`
-	Operation Operation    `json:"operation" bson:"operation"`
-	Order     Order        `json:"order" bson:"order"`
+	// Object    Object       `json:"object" bson:"object"`
+	Operation Operation `json:"-" bson:"operation"`
+	// Order     Order        `json:"order" bson:"order"`
 
 	From   *time.Time `json:"from" bson:"from" form:"from"`
 	To     *time.Time `json:"to" bson:"to" form:"to"`

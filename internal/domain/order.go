@@ -31,8 +31,8 @@ type Order struct {
 	Group  []string `json:"group" bson:"group" form:"group"`
 
 	// User User `json:"user" bson:"user"`
-	Object Object `json:"object" bson:"object"`
-	Tasks  []Task `json:"tasks" bson:"tasks" form:"tasks"`
+	// Object Object `json:"object" bson:"object"`
+	// Tasks  []Task `json:"tasks" bson:"tasks" form:"tasks"`
 
 	Year      *int      `json:"year" bson:"year"`
 	CreatedAt time.Time `json:"createdAt" bson:"createdAt"`
@@ -106,4 +106,15 @@ type OrderFilter struct {
 type ResultFacetOrder struct {
 	Metadata []ResultMetadata `json:"metadata" bson:"metadata"`
 	Data     []Order          `json:"data" bson:"data"`
+}
+
+type ResponseOrderFlatData struct {
+	Total       int              `json:"total" bson:"total"`
+	Limit       int              `json:"limit" bson:"limit"`
+	Skip        int              `json:"skip" bson:"skip"`
+	Data        []Order          `json:"data" bson:"data"`
+	Users       []UserFlat       `json:"users" bson:"users"`
+	Tasks       []Task           `json:"tasks" bson:"tasks"`
+	Objects     []Object         `json:"objects" bson:"objects"`
+	TaskWorkers []TaskWorkerFlat `json:"taskWorkers" bson:"taskWorkers"`
 }

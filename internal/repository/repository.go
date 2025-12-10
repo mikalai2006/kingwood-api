@@ -65,7 +65,7 @@ type ArchiveNotify interface {
 }
 
 type Order interface {
-	FindOrder(input *domain.OrderFilter) (domain.Response[domain.Order], error)
+	FindOrder(input *domain.OrderFilter) (domain.ResponseOrderFlatData, error)
 	// GetAllOrder(params domain.RequestParams) (domain.Response[domain.Order], error)
 	CreateOrder(userID string, Order *domain.Order) (*domain.Order, error)
 	UpdateOrder(id string, userID string, data *domain.OrderInput) (*domain.Order, error)
@@ -88,6 +88,7 @@ type Operation interface {
 type Task interface {
 	FindTask(params domain.RequestParams) (domain.Response[domain.Task], error)
 	FindTaskPopulate(input domain.TaskFilter) (domain.Response[domain.Task], error)
+	FindTaskFlat(input domain.TaskFilter) (domain.Response[domain.Task], error)
 	CreateTask(userID string, Order *domain.Task) (*domain.Task, error)
 	UpdateTask(id string, userID string, data *domain.TaskInput) (*domain.Task, error)
 	DeleteTask(id string) (*domain.Task, error)
@@ -140,6 +141,7 @@ type ArchiveObject interface {
 
 type TaskWorker interface {
 	FindTaskWorkerPopulate(input *domain.TaskWorkerFilter) (domain.Response[domain.TaskWorker], error)
+	FindTaskWorkerFlat(input *domain.TaskWorkerFilter) (domain.Response[domain.TaskWorkerFlat], error)
 	// FindTaskWorker(params domain.RequestParams) (domain.Response[domain.TaskWorker], error)
 	CreateTaskWorker(userID string, Order *domain.TaskWorker) (*domain.TaskWorker, error)
 	UpdateTaskWorker(id string, userID string, data *domain.TaskWorkerInput) (*domain.TaskWorker, error)
@@ -191,6 +193,7 @@ type TaskStatus interface {
 type User interface {
 	GetUser(id string) (domain.User, error)
 	FindUser(filter *domain.UserFilter) (domain.Response[domain.User], error)
+	FindUserFlat(input *domain.UserFilter) (domain.Response[domain.UserFlat], error)
 	CreateUser(userID string, user *domain.User) (*domain.User, error)
 	DeleteUser(id string) (domain.User, error)
 	UpdateUser(id string, user *domain.UserInput) (domain.User, error)

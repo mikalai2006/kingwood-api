@@ -240,7 +240,9 @@ func (r *NotifyMongo) FindNotifyPopulate(input *domain.NotifyFilter) (domain.Res
 	if input.Limit != nil {
 		limit = *input.Limit
 	}
-	dataOptions = append(dataOptions, bson.D{{"$limit", limit}})
+	if limit > 0 {
+		dataOptions = append(dataOptions, bson.D{{"$limit", limit}})
+	}
 
 	if input.Sort != nil {
 		sortParam := bson.D{}

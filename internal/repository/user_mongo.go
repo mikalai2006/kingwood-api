@@ -392,6 +392,175 @@ func (r *UserMongo) GetUser(id string) (domain.User, error) {
 	return result, nil
 }
 
+func (r *UserMongo) FindUserFlat(input *domain.UserFilter) (domain.Response[domain.UserFlat], error) {
+	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
+	defer cancel()
+
+	var results []domain.UserFlat
+	var response domain.Response[domain.UserFlat]
+	q := bson.D{}
+
+	// Filters
+	if input.Archive != nil {
+		q = append(q, bson.E{"archive", input.Archive})
+	}
+	if input.Blocked != nil {
+		q = append(q, bson.E{"blocked", input.Blocked})
+	}
+	if input.Hidden != nil {
+		q = append(q, bson.E{"hidden", input.Hidden})
+	}
+
+	if input.ID != nil && len(input.ID) > 0 {
+		ids := []primitive.ObjectID{}
+		for i, _ := range input.ID {
+			iDPrimitive, err := primitive.ObjectIDFromHex(input.ID[i])
+			if err != nil {
+				return response, err
+			}
+
+			ids = append(ids, iDPrimitive)
+		}
+
+		q = append(q, bson.E{"_id", bson.D{{"$in", ids}}})
+	}
+	if input.UserId != nil && len(input.UserId) > 0 {
+		ids := []primitive.ObjectID{}
+		for i, _ := range input.UserId {
+			iDPrimitive, err := primitive.ObjectIDFromHex(input.UserId[i])
+			if err != nil {
+				return response, err
+			}
+
+			ids = append(ids, iDPrimitive)
+		}
+
+		q = append(q, bson.E{"userId", bson.D{{"$in", ids}}})
+	}
+	if input.RoleId != nil && len(input.RoleId) > 0 {
+		ids := []primitive.ObjectID{}
+		for i, _ := range input.RoleId {
+			iDPrimitive, err := primitive.ObjectIDFromHex(input.RoleId[i])
+			if err != nil {
+				return response, err
+			}
+
+			ids = append(ids, iDPrimitive)
+		}
+
+		q = append(q, bson.E{"roleId", bson.D{{"$in", ids}}})
+	}
+
+	pipe := mongo.Pipeline{}
+	pipe = append(pipe, bson.D{{"$match", q}})
+	// // add populate.
+	// pipe = append(pipe, bson.D{{
+	// 	Key: "$lookup",
+	// 	Value: bson.M{
+	// 		"from": tblImage,
+	// 		"as":   "images",
+	// 		// "localField":   "_id",
+	// 		// "foreignField": "serviceId",
+	// 		"let": bson.D{{Key: "serviceId", Value: bson.D{{"$toString", "$_id"}}}},
+	// 		"pipeline": mongo.Pipeline{
+	// 			bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": [2]string{"$serviceId", "$$serviceId"}}}}},
+	// 		},
+	// 	},
+	// }})
+
+	// // add populate.
+	// pipe = append(pipe, bson.D{{
+	// 	Key: "$lookup",
+	// 	Value: bson.M{
+	// 		"from":         TblRole,
+	// 		"as":           "roles",
+	// 		"localField":   "roleId",
+	// 		"foreignField": "_id",
+	// 		// "let": bson.D{{Key: "roleId", Value: bson.D{{"$toString", "$roleId"}}}},
+	// 		// "pipeline": mongo.Pipeline{
+	// 		// 	bson.D{{Key: "$match", Value: bson.M{"$_id": bson.M{"$eq": [2]string{"$roleId", "$$_id"}}}}},
+	// 		// },
+	// 	},
+	// }})
+	// pipe = append(pipe, bson.D{{Key: "$set", Value: bson.M{"roleObject": bson.M{"$first": "$roles"}}}})
+
+	// // add populate.
+	// pipe = append(pipe, bson.D{{
+	// 	Key: "$lookup",
+	// 	Value: bson.M{
+	// 		"from":         TblPost,
+	// 		"as":           "posts",
+	// 		"localField":   "postId",
+	// 		"foreignField": "_id",
+	// 		// "let": bson.D{{Key: "roleId", Value: bson.D{{"$toString", "$roleId"}}}},
+	// 		// "pipeline": mongo.Pipeline{
+	// 		// 	bson.D{{Key: "$match", Value: bson.M{"$_id": bson.M{"$eq": [2]string{"$roleId", "$$_id"}}}}},
+	// 		// },
+	// 	},
+	// }})
+	// pipe = append(pipe, bson.D{{Key: "$set", Value: bson.M{"postObject": bson.M{"$first": "$posts"}}}})
+
+	// // add populate auth.
+	// pipe = append(pipe, bson.D{{
+	// 	Key: "$lookup",
+	// 	Value: bson.M{
+	// 		"from":         TblAuth,
+	// 		"as":           "auths",
+	// 		"localField":   "userId",
+	// 		"foreignField": "_id",
+	// 		// "let": bson.D{{Key: "roleId", Value: bson.D{{"$toString", "$roleId"}}}},
+	// 		// "pipeline": mongo.Pipeline{
+	// 		// 	bson.D{{Key: "$match", Value: bson.M{"$_id": bson.M{"$eq": [2]string{"$roleId", "$$_id"}}}}},
+	// 		// },
+	// 	},
+	// }})
+	// pipe = append(pipe, bson.D{{Key: "$set", Value: bson.M{"auth": bson.M{"$first": "$auths"}}}})
+
+	skip := 0
+	limit := 10
+	if input.Skip != nil {
+		pipe = append(pipe, bson.D{{"$skip", input.Skip}})
+		skip = *input.Skip
+	}
+	if input.Limit != nil {
+		pipe = append(pipe, bson.D{{"$limit", input.Limit}})
+		limit = *input.Limit
+	}
+
+	cursor, err := r.db.Collection(tblUsers).Aggregate(ctx, pipe) // Find(ctx, params.Filter, opts)
+	if err != nil {
+		return response, err
+	}
+	defer cursor.Close(ctx)
+
+	if er := cursor.All(ctx, &results); er != nil {
+		return response, er
+	}
+
+	resultSlice := make([]domain.UserFlat, len(results))
+	copy(resultSlice, results)
+
+	// // устанавливаем работает ли пользователь.
+	// for i := range resultSlice {
+	// 	if len(resultSlice[i].WorkHistorys) > 0 {
+	// 		resultSlice[i].IsWork = 1
+	// 	}
+	// }
+
+	count, err := r.db.Collection(tblUsers).CountDocuments(ctx, bson.M{})
+	if err != nil {
+		return response, err
+	}
+
+	response = domain.Response[domain.UserFlat]{
+		Total: int(count),
+		Skip:  skip,
+		Limit: limit,
+		Data:  resultSlice,
+	}
+	return response, nil
+}
+
 func (r *UserMongo) FindUser(input *domain.UserFilter) (domain.Response[domain.User], error) {
 	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
 	defer cancel()

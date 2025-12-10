@@ -20,8 +20,50 @@ func NewOrderService(repo repository.Order, userService *UserService, hub *Hub, 
 	return &OrderService{repo: repo, userService: userService, Hub: hub, operationService: operationService}
 }
 
-func (s *OrderService) FindOrder(input *domain.OrderFilter) (domain.Response[domain.Order], error) {
-	return s.repo.FindOrder(input)
+func (s *OrderService) FindOrder(input *domain.OrderFilter) (domain.ResponseOrderFlatData, error) {
+	result, err := s.repo.FindOrder(input)
+	if err != nil {
+		return result, err
+	}
+
+	idsObjects := []string{}
+	idsOrders := []string{}
+	limit := 1000
+	for i := range result.Data {
+		idsObjects = append(idsObjects, result.Data[i].ObjectId.Hex())
+		idsOrders = append(idsOrders, result.Data[i].ID.Hex())
+	}
+
+	tasks, err := s.Services.Task.FindTaskFlat(domain.TaskFilter{OrderId: idsOrders})
+	if err != nil {
+		return result, err
+	}
+	result.Tasks = tasks.Data
+
+	objects, err := s.Services.Object.FindObject(&domain.ObjectFilter{ID: idsObjects, Limit: &limit})
+	if err != nil {
+		return result, err
+	}
+	result.Objects = objects.Data
+
+	taskWorkers, err := s.Services.TaskWorker.FindTaskWorkerFlat(&domain.TaskWorkerFilter{OrderId: idsOrders, Limit: &limit})
+	if err != nil {
+		return result, err
+	}
+	result.TaskWorkers = taskWorkers.Data
+
+	idsWorkers := []string{}
+	for i := range taskWorkers.Data {
+		idsWorkers = append(idsWorkers, taskWorkers.Data[i].WorkerId.Hex())
+	}
+
+	users, err := s.Services.User.FindUserFlat(&domain.UserFilter{ID: idsWorkers, Limit: &limit})
+	if err != nil {
+		return result, err
+	}
+	result.Users = users.Data
+
+	return result, err
 }
 
 // func (s *OrderService) GetAllOrder(params domain.RequestParams) (domain.Response[domain.Order], error) {
@@ -126,7 +168,7 @@ func (s *OrderService) CreateOrder(userID string, data *domain.Order) (*domain.O
 		_, err = s.Services.Notify.CreateNotify(userID, &domain.NotifyInput{
 			UserTo:  users[i].ID.Hex(),
 			Title:   domain.NewOrderTitle,
-			Message: fmt.Sprintf(domain.NewOrder, authorCreate.Name, result.Number, result.Name, result.Object.Name),
+			Message: fmt.Sprintf(domain.NewOrder, authorCreate.Name, result.Number, result.Name, ""), // result.Object.Name
 		})
 	}
 
@@ -176,6 +218,7 @@ func (s *OrderService) UpdateOrder(id string, userID string, data *domain.OrderI
 
 func (s *OrderService) DeleteOrder(id string, userID string) (*domain.Order, error) {
 	var result *domain.Order
+	unLim := 0
 
 	// delete images.
 	allImages, err := s.Services.Image.FindImage(&domain.ImageFilter{ServiceId: []string{id}})
@@ -190,19 +233,19 @@ func (s *OrderService) DeleteOrder(id string, userID string) (*domain.Order, err
 		}
 	}
 	// delete taskWorkers.
-	allTaskWorkers, err := s.Services.TaskWorker.FindTaskWorkerPopulate(&domain.TaskWorkerFilter{OrderId: []string{id}})
+	allTaskWorkers, err := s.Services.TaskWorker.FindTaskWorkerFlat(&domain.TaskWorkerFilter{OrderId: []string{id}, Limit: &unLim})
 	if err != nil {
 		return result, err
 	}
 	for i := range allTaskWorkers.Data {
-		_, err = s.Services.TaskWorker.DeleteTaskWorker(allTaskWorkers.Data[i].ID.Hex(), userID, false)
+		_, err = s.Services.TaskWorker.DeleteTaskWorker(allTaskWorkers.Data[i].ID.Hex(), userID, false, false)
 		if err != nil {
 			return result, err
 		}
 	}
 
 	// delete task.
-	allTasks, err := s.Services.Task.FindTaskPopulate(domain.TaskFilter{OrderId: []string{id}})
+	allTasks, err := s.Services.Task.FindTaskFlat(domain.TaskFilter{OrderId: []string{id}, Limit: &unLim})
 	if err != nil {
 		return result, err
 	}
@@ -214,7 +257,7 @@ func (s *OrderService) DeleteOrder(id string, userID string) (*domain.Order, err
 	}
 
 	// delete messages.
-	allMessages, err := s.Services.Message.FindMessage(&domain.MessageFilter{OrderID: []string{id}})
+	allMessages, err := s.Services.Message.FindMessage(&domain.MessageFilter{OrderID: []string{id}, Limit: &unLim})
 	if err != nil {
 		return result, err
 	}
@@ -226,7 +269,7 @@ func (s *OrderService) DeleteOrder(id string, userID string) (*domain.Order, err
 	}
 
 	// delete workHistory.
-	allWorkHistory, err := s.Services.WorkHistory.FindWorkHistory(domain.WorkHistoryFilter{OrderId: []string{id}})
+	allWorkHistory, err := s.Services.WorkHistory.FindWorkHistory(domain.WorkHistoryFilter{OrderId: []string{id}, Limit: &unLim})
 	if err != nil {
 		return result, err
 	}
