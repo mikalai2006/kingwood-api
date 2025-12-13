@@ -92,7 +92,6 @@ func (s *TaskWorkerService) CreateTaskWorker(userID string, data *domain.TaskWor
 	if len(_users.Data) > 0 {
 		authorCreate = _users.Data[0]
 	}
-
 	// existReview, err := s.repo.FindReview(domain.RequestParams{
 	// 	Filter:  bson.M{"node_id": review.NodeID, "userId": userIDPrimitive},
 	// 	Options: domain.Options{Limit: 1},
@@ -132,55 +131,59 @@ func (s *TaskWorkerService) CreateTaskWorker(userID string, data *domain.TaskWor
 
 	s.Hub.HandleMessage(domain.MessageSocket{Type: "message", Method: "CREATE", Sender: userID, Recipient: "", Content: result, ID: "room1", Service: "taskWorker"})
 
-	// add notify.
-	_, err = s.Services.Notify.CreateNotify(userID, &domain.NotifyInput{
-		UserTo:     result.WorkerId.Hex(),
-		Title:      domain.CreateTaskWorkerTitle,
-		Message:    fmt.Sprintf(domain.CreateTaskWorker, authorCreate.Name, result.Task.Name, result.Order.Number, result.Order.Name, result.Object.Name),
-		Link:       "/(tabs)/order",
-		LinkOption: map[string]interface{}{"orderId": result.OrderId.Hex(), "objectId": result.ObjectId.Hex()},
-	})
+	// если не суперпользователь, отправляем сообщения
+	if authorCreate.RoleObject.Code != "systemrole" {
 
-	// находим пользователей для создания уведомлений.
-	roles, err := s.Services.Role.FindRole(&domain.RoleFilter{Code: []string{"systemrole"}})
-	if err != nil {
-		return nil, err
-	}
-	ids := []string{}
-	var users []domain.User
-
-	if len(roles.Data) > 0 {
-		for i := range roles.Data {
-			ids = append(ids, roles.Data[i].ID.Hex())
-		}
-
-		_users, err := s.Services.User.FindUser(&domain.UserFilter{RoleId: ids})
-		if err != nil {
-			return nil, err
-		}
-
-		users = _users.Data
-	}
-
-	// получаем пользователя, для которого изменили рабочую сессию.
-	var worker domain.User
-	_workers, err := s.Services.User.FindUser(&domain.UserFilter{ID: []string{result.WorkerId.Hex()}})
-	if err != nil {
-		return nil, err
-	}
-	if len(_workers.Data) > 0 {
-		worker = _workers.Data[0]
-	}
-
-	// отправляем уведомления админам.
-	for i := range users {
+		// add notify.
 		_, err = s.Services.Notify.CreateNotify(userID, &domain.NotifyInput{
-			UserTo:     users[i].ID.Hex(),
+			UserTo:     result.WorkerId.Hex(),
 			Title:      domain.CreateTaskWorkerTitle,
-			Message:    fmt.Sprintf(domain.CreateTaskWorkerAdmin, authorCreate.Name, worker.Name, result.Task.Name, result.Order.Number, result.Order.Name, result.Object.Name),
+			Message:    fmt.Sprintf(domain.CreateTaskWorker, authorCreate.Name, result.Task.Name, result.Order.Number, result.Order.Name, result.Object.Name),
 			Link:       "/(tabs)/order",
 			LinkOption: map[string]interface{}{"orderId": result.OrderId.Hex(), "objectId": result.ObjectId.Hex()},
 		})
+
+		// находим пользователей для создания уведомлений.
+		roles, err := s.Services.Role.FindRole(&domain.RoleFilter{Code: []string{"systemrole"}})
+		if err != nil {
+			return nil, err
+		}
+		ids := []string{}
+		var users []domain.User
+
+		if len(roles.Data) > 0 {
+			for i := range roles.Data {
+				ids = append(ids, roles.Data[i].ID.Hex())
+			}
+
+			_users, err := s.Services.User.FindUser(&domain.UserFilter{RoleId: ids})
+			if err != nil {
+				return nil, err
+			}
+
+			users = _users.Data
+		}
+
+		// получаем пользователя, для которого изменили рабочую сессию.
+		var worker domain.User
+		_workers, err := s.Services.User.FindUser(&domain.UserFilter{ID: []string{result.WorkerId.Hex()}})
+		if err != nil {
+			return nil, err
+		}
+		if len(_workers.Data) > 0 {
+			worker = _workers.Data[0]
+		}
+
+		// отправляем уведомления админам.
+		for i := range users {
+			_, err = s.Services.Notify.CreateNotify(userID, &domain.NotifyInput{
+				UserTo:     users[i].ID.Hex(),
+				Title:      domain.CreateTaskWorkerTitle,
+				Message:    fmt.Sprintf(domain.CreateTaskWorkerAdmin, authorCreate.Name, worker.Name, result.Task.Name, result.Order.Number, result.Order.Name, result.Object.Name),
+				Link:       "/(tabs)/order",
+				LinkOption: map[string]interface{}{"orderId": result.OrderId.Hex(), "objectId": result.ObjectId.Hex()},
+			})
+		}
 	}
 
 	// add taskWorker for all task on the object for inserted worker (montaj).
@@ -201,10 +204,12 @@ func (s *TaskWorkerService) CreateTaskWorker(userID string, data *domain.TaskWor
 			if err != nil {
 				return result, err
 			}
-			fmt.Println("allTaskForObject length: ", len(allTaskForObject.Data))
+			// fmt.Println("allTaskForObject length: ", len(allTaskForObject.Data))
 			if len(allTaskForObject.Data) > 0 {
+				stopStatus := []string{"finish", "autofinish"}
 				for i := range allTaskForObject.Data {
-					if allTaskForObject.Data[i].Status != "finish" {
+					// if allTaskForObject.Data[i].Status != "finish" {
+					if !utils.Contains(stopStatus, result.Status) {
 						workerIds := []string{}
 						for j := range allTaskForObject.Data[i].Workers {
 							workerIds = append(workerIds, allTaskForObject.Data[i].Workers[j].WorkerId.Hex())
@@ -247,7 +252,7 @@ func (s *TaskWorkerService) UpdateTaskWorker(id string, userID string, data *dom
 		return result, err
 	}
 
-	// завершение задания.
+	// завершение задания, которое сейчас выполняется.
 	isFinishActiveTaskWorker := false
 
 	if len(existTaskWorker.Data) > 0 {
@@ -405,70 +410,75 @@ func (s *TaskWorkerService) UpdateTaskWorker(id string, userID string, data *dom
 	// если меняет задачу не сам работник, уведомляем его об изменениях.
 	// fmt.Println("workerID:", data.WorkerId)
 	// fmt.Println("userID:", userID)
+
 	statusForNoty := []string{"finish", "autofinish"}
-	// statusNotChange := []string{"finish",""}
-	if result.WorkerId.Hex() != userID && !result.OrderId.IsZero() && !utils.Contains(statusForNoty, result.Status) {
-		_, err = s.Services.Notify.CreateNotify(userID, &domain.NotifyInput{
-			UserTo:     result.WorkerId.Hex(),
-			Title:      domain.PatchTaskWorkerTitle,
-			Message:    fmt.Sprintf(domain.PatchTaskWorker, author.Name, result.Task.Name, result.Order.Number, result.Order.Name, result.Object.Name),
-			Link:       "/(tabs)/order",
-			LinkOption: map[string]interface{}{"orderId": result.OrderId.Hex(), "objectId": result.ObjectId.Hex()},
-		})
 
-		// // отправка уведомлений для администрации.
-		// // находим админов.
-		// roles, err := s.Services.Role.FindRole(&domain.RoleFilter{Code: []string{"systemrole"}})
-		// if err != nil {
-		// 	return nil, err
-		// }
-		// // // находим всех исполнителей на заказе.
-		// // allWorkers, err := s.Services.TaskWorker.FindTaskWorkerPopulate(&domain.TaskWorkerFilter{OrderId: []string{id}})
-		// // if err != nil {
-		// // 	return nil, err
-		// // }
+	// если не суперпользователь, отправляем сообщения
+	if author.RoleObject.Code != "systemrole" {
+		// statusNotChange := []string{"finish",""}
+		if result.WorkerId.Hex() != userID && !result.OrderId.IsZero() && !utils.Contains(statusForNoty, result.Status) {
+			_, err = s.Services.Notify.CreateNotify(userID, &domain.NotifyInput{
+				UserTo:     result.WorkerId.Hex(),
+				Title:      domain.PatchTaskWorkerTitle,
+				Message:    fmt.Sprintf(domain.PatchTaskWorker, author.Name, result.Task.Name, result.Order.Number, result.Order.Name, result.Object.Name),
+				Link:       "/(tabs)/order",
+				LinkOption: map[string]interface{}{"orderId": result.OrderId.Hex(), "objectId": result.ObjectId.Hex()},
+			})
 
-		// ids := []string{}
-		// var users []domain.User
+			// // отправка уведомлений для администрации.
+			// // находим админов.
+			// roles, err := s.Services.Role.FindRole(&domain.RoleFilter{Code: []string{"systemrole"}})
+			// if err != nil {
+			// 	return nil, err
+			// }
+			// // // находим всех исполнителей на заказе.
+			// // allWorkers, err := s.Services.TaskWorker.FindTaskWorkerPopulate(&domain.TaskWorkerFilter{OrderId: []string{id}})
+			// // if err != nil {
+			// // 	return nil, err
+			// // }
 
-		// if len(roles.Data) > 0 {
-		// 	for i := range roles.Data {
-		// 		ids = append(ids, roles.Data[i].ID.Hex())
-		// 	}
-		// 	// for i := range allWorkers.Data {
-		// 	// 	if allWorkers.Data[i].ID.Hex() != id {
-		// 	// 		ids = append(ids, allWorkers.Data[i].WorkerId.Hex())
-		// 	// 	}
-		// 	// }
+			// ids := []string{}
+			// var users []domain.User
 
-		// 	_users, err := s.Services.User.FindUser(&domain.UserFilter{RoleId: ids})
-		// 	if err != nil {
-		// 		return nil, err
-		// 	}
+			// if len(roles.Data) > 0 {
+			// 	for i := range roles.Data {
+			// 		ids = append(ids, roles.Data[i].ID.Hex())
+			// 	}
+			// 	// for i := range allWorkers.Data {
+			// 	// 	if allWorkers.Data[i].ID.Hex() != id {
+			// 	// 		ids = append(ids, allWorkers.Data[i].WorkerId.Hex())
+			// 	// 	}
+			// 	// }
 
-		// 	users = _users.Data
-		// }
+			// 	_users, err := s.Services.User.FindUser(&domain.UserFilter{RoleId: ids})
+			// 	if err != nil {
+			// 		return nil, err
+			// 	}
 
-		// // получаем пользователя, для которого изменили задание.
-		// var worker domain.User
-		// _workers, err := s.Services.User.FindUser(&domain.UserFilter{ID: []string{result.WorkerId.Hex()}})
-		// if err != nil {
-		// 	return nil, err
-		// }
-		// if len(_workers.Data) > 0 {
-		// 	worker = _workers.Data[0]
-		// }
+			// 	users = _users.Data
+			// }
 
-		// // отправляем уведомления админам.
-		// for i := range users {
-		// 	_, err = s.Services.Notify.CreateNotify(userID, &domain.NotifyInput{
-		// 		UserTo:     users[i].ID.Hex(),
-		// 		Title:      domain.PatchTaskWorkerTitle,
-		// 		Message:    fmt.Sprintf(domain.PatchTaskWorkerAdmin, author.Name, worker.Name, result.Task.Name, result.Order.Number, result.Order.Name, result.Object.Name),
-		// 		Link:       "/(tabs)/order",
-		// 		LinkOption: map[string]interface{}{"orderId": result.OrderId.Hex(), "objectId": result.ObjectId.Hex()},
-		// 	})
-		// }
+			// // получаем пользователя, для которого изменили задание.
+			// var worker domain.User
+			// _workers, err := s.Services.User.FindUser(&domain.UserFilter{ID: []string{result.WorkerId.Hex()}})
+			// if err != nil {
+			// 	return nil, err
+			// }
+			// if len(_workers.Data) > 0 {
+			// 	worker = _workers.Data[0]
+			// }
+
+			// // отправляем уведомления админам.
+			// for i := range users {
+			// 	_, err = s.Services.Notify.CreateNotify(userID, &domain.NotifyInput{
+			// 		UserTo:     users[i].ID.Hex(),
+			// 		Title:      domain.PatchTaskWorkerTitle,
+			// 		Message:    fmt.Sprintf(domain.PatchTaskWorkerAdmin, author.Name, worker.Name, result.Task.Name, result.Order.Number, result.Order.Name, result.Object.Name),
+			// 		Link:       "/(tabs)/order",
+			// 		LinkOption: map[string]interface{}{"orderId": result.OrderId.Hex(), "objectId": result.ObjectId.Hex()},
+			// 	})
+			// }
+		}
 	}
 
 	// если задание завершено и имеет номер заказа (не хозработы)
@@ -576,11 +586,12 @@ func (s *TaskWorkerService) UpdateTaskWorker(id string, userID string, data *dom
 			}
 		}
 		// fmt.Println("allOperation length: ", len(allOperation.Data), currentOperation.Group)
+		nullValue := 0
 		if currentOperation.Group == "5" {
 			objectId := result.ObjectId.Hex()
 			operationId := result.OperationId.Hex()
 			workerId := result.WorkerId.Hex()
-			allTaskWorkerForObject, err := s.Services.TaskWorker.FindTaskWorkerPopulate(&domain.TaskWorkerFilter{ObjectId: []string{objectId}, WorkerId: []string{workerId}, OperationId: []string{operationId}})
+			allTaskWorkerForObject, err := s.Services.TaskWorker.FindTaskWorkerPopulate(&domain.TaskWorkerFilter{ObjectId: []string{objectId}, WorkerId: []string{workerId}, OperationId: []string{operationId}, Limit: &nullValue})
 			if err != nil {
 				return result, err
 			}
@@ -603,6 +614,14 @@ func (s *TaskWorkerService) UpdateTaskWorker(id string, userID string, data *dom
 							To:     *result.To,
 							TypeGo: result.TypeGo,
 						}
+
+						// // если статус не равен {"finish", "autofinish"},
+						// // меняем для данного работника статус во всех taskWorker
+						// if !utils.Contains(stopStatus, result.Status) {
+						// 	newTaskWorker.Status = result.Status
+						// 	newTaskWorker.StatusId = result.StatusId
+						// }
+
 						_, err := s.UpdateTaskWorker(allTaskWorkerForObject.Data[i].ID.Hex(), userID, &newTaskWorker, 0)
 						if err != nil {
 							return result, err
@@ -634,12 +653,26 @@ func (s *TaskWorkerService) UpdateTaskWorker(id string, userID string, data *dom
 		if err != nil {
 			return result, err
 		}
+	} else if data.Status == "process" && result.WorkerId.Hex() != userID {
+		// блок работает, если изменения вносит не сам работник данного задания
+		existOpenWorkHistory, err = s.Services.WorkHistory.FindWorkHistoryPopulate(domain.WorkHistoryFilter{
+			WorkerId: []string{result.WorkerId.Hex()},
+			Status:   &status,
+			Sort:     []*domain.FilterSortParams{{Key: "createdAt", Value: -1}},
+		})
+		if err != nil {
+			return result, err
+		}
 	}
 
 	// если сам пользователь меняет, то останавливаем все taskHistory
 	// проверяем, статус taskWorker
 	// завершаем таски только, если не выполняется отметка задания как выполненное, а другое задание выполняется
-	if (result.WorkerId.Hex() == userID && result.Status != "finish") || (result.Status == "finish" && isFinishActiveTaskWorker) {
+
+	// если пользователь изменяет задание.
+	if (result.WorkerId.Hex() == userID && result.Status != "finish") ||
+		// или завершается активное задание
+		(result.Status == "finish" && isFinishActiveTaskWorker) {
 		// fmt.Println("если сам пользователь меняет, то останавливаем все taskHistory")
 		existOpenWorkHistory, err = s.Services.WorkHistory.FindWorkHistoryPopulate(domain.WorkHistoryFilter{
 			WorkerId: []string{result.WorkerId.Hex()},
@@ -650,6 +683,8 @@ func (s *TaskWorkerService) UpdateTaskWorker(id string, userID string, data *dom
 			return result, err
 		}
 	}
+
+	fmt.Println("Завершено workHistory=", len(existOpenWorkHistory.Data))
 
 	for i := range existOpenWorkHistory.Data {
 		// if len(existOpenWorkHistory.Data) > 0 {
@@ -730,13 +765,13 @@ func (s *TaskWorkerService) DeleteTaskWorker(id string, userID string, checkStat
 	}
 
 	// получаем инициатора запрос.
-	var authorCreate domain.User
+	var author domain.User
 	_users, err := s.Services.User.FindUser(&domain.UserFilter{ID: []string{userID}})
 	if err != nil {
 		return nil, err
 	}
 	if len(_users.Data) > 0 {
-		authorCreate = _users.Data[0]
+		author = _users.Data[0]
 	}
 
 	s.Hub.HandleMessage(domain.MessageSocket{Type: "message", Method: "DELETE", Sender: "userID", Recipient: "", Content: result, ID: "room1", Service: "taskWorker"})
@@ -756,11 +791,11 @@ func (s *TaskWorkerService) DeleteTaskWorker(id string, userID string, checkStat
 	}
 
 	// отправляем сообщения, если нужно
-	if sendNotify {
+	if sendNotify && author.RoleObject.Code != "systemrole" {
 		_, err = s.Services.Notify.CreateNotify(userID, &domain.NotifyInput{
 			UserTo:  result.WorkerId.Hex(),
 			Title:   domain.DeleteTaskWorkerTitle,
-			Message: fmt.Sprintf(domain.DeleteTaskWorker, authorCreate.Name, result.Task.Name, result.Order.Number, result.Order.Name, result.Object.Name),
+			Message: fmt.Sprintf(domain.DeleteTaskWorker, author.Name, result.Task.Name, result.Order.Number, result.Order.Name, result.Object.Name),
 		})
 
 		// находим пользователей для создания уведомлений.
@@ -799,7 +834,7 @@ func (s *TaskWorkerService) DeleteTaskWorker(id string, userID string, checkStat
 			_, err = s.Services.Notify.CreateNotify(userID, &domain.NotifyInput{
 				UserTo:     users[i].ID.Hex(),
 				Title:      domain.CreateTaskWorkerTitle,
-				Message:    fmt.Sprintf(domain.DeleteTaskWorkerAdmin, authorCreate.Name, worker.Name, result.Task.Name, result.Order.Number, result.Order.Name, result.Object.Name),
+				Message:    fmt.Sprintf(domain.DeleteTaskWorkerAdmin, author.Name, worker.Name, result.Task.Name, result.Order.Number, result.Order.Name, result.Object.Name),
 				Link:       "/(tabs)/order",
 				LinkOption: map[string]interface{}{"orderId": result.OrderId.Hex(), "objectId": result.ObjectId.Hex()},
 			})

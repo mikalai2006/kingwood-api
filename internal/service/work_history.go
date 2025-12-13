@@ -160,7 +160,7 @@ func (s *WorkHistoryService) CreateWorkHistory(userID string, data *domain.WorkH
 			// создаем таймер с задачей
 			_, err = s.Services.Timer.CreateTimer(userID, &domain.TimerShedule{
 				IDTimer:       fmt.Sprintf("timer_%v", durationForTimerMs),
-				ExecuteAt:     time.Now().Add(durationForTimer),
+				ExecuteAt:     time.Now().Add(durationForTimer), //.Add(5 * time.Duration(time.Second)),
 				IsRunning:     1,
 				WorkerId:      result.WorkerId,
 				TaskWorkerId:  result.TaskWorkerId,
@@ -471,71 +471,93 @@ func (s *WorkHistoryService) UpdateWorkHistory(id string, userID string, data *d
 			authorUpdate = _users.Data[0]
 		}
 
-		// находим пользователей для создания уведомлений.
-		roles, err := s.Services.Role.FindRole(&domain.RoleFilter{Code: []string{"systemrole"}}) // "admin", "boss"
-		if err != nil {
-			return nil, err
-		}
-		ids := []string{}
-		var users []domain.User
-
-		if len(roles.Data) > 0 {
-			for i := range roles.Data {
-				ids = append(ids, roles.Data[i].ID.Hex())
-			}
-
-			_users, err := s.Services.User.FindUser(&domain.UserFilter{RoleId: ids})
+		if authorUpdate.RoleObject.Code != "systemrole" {
+			// находим пользователей для создания уведомлений.
+			roles, err := s.Services.Role.FindRole(&domain.RoleFilter{Code: []string{"systemrole"}}) // "admin", "boss"
 			if err != nil {
 				return nil, err
 			}
+			ids := []string{}
+			var users []domain.User
 
-			users = _users.Data
-		}
+			if len(roles.Data) > 0 {
+				for i := range roles.Data {
+					ids = append(ids, roles.Data[i].ID.Hex())
+				}
 
-		// получаем пользователя, для которого изменили рабочую сессию.
-		var worker domain.User
-		_workers, err := s.Services.User.FindUser(&domain.UserFilter{ID: []string{existWorkHistory.Data[0].WorkerId.Hex()}})
-		if err != nil {
-			return nil, err
-		}
-		if len(_workers.Data) > 0 {
-			worker = _workers.Data[0]
-		}
+				_users, err := s.Services.User.FindUser(&domain.UserFilter{RoleId: ids})
+				if err != nil {
+					return nil, err
+				}
 
-		// протяженность рабочей сессии
-		durationNew := result.To.Sub(result.From)
-		_durationNewText, _ := time.ParseDuration(durationNew.String())
-		durationNewText := strings.Replace(_durationNewText.String(), "h", "ч.", 1)
-		durationNewText = strings.Replace(durationNewText, "m", "мин.", 1)
-		durationNewText = strings.Replace(durationNewText, "s", "сек.", 1)
-		durationOld := existWorkHistory.Data[0].To.Sub(existWorkHistory.Data[0].From)
-		_durationOldText, _ := time.ParseDuration(durationOld.String())
-		durationOldText := strings.Replace(_durationOldText.String(), "h", "ч.", 1)
-		durationOldText = strings.Replace(durationOldText, "m", "мин.", 1)
-		durationOldText = strings.Replace(durationOldText, "s", "сек.", 1)
-		// durationOldText := fmt.Sprintf("%d:%d:%d", int64(_durationOldText.Hours()), int64(_durationOldText.Minutes()), int64(_durationOldText.Seconds()))
+				users = _users.Data
+			}
 
-		// информация о заказе.
-		oldOrderInfo := fmt.Sprintf("№%d-%s", existWorkHistory.Data[0].Order.Number, existWorkHistory.Data[0].Order.Name)
-		if existWorkHistory.Data[0].Order.Number == 0 {
-			oldOrderInfo = "Хоз.работы"
-		}
-		newOrderInfo := fmt.Sprintf("№%d-%s", result.Order.Number, result.Order.Name)
-		if result.Order.Number == 0 {
-			newOrderInfo = "Хоз.работы"
-		}
-		// смещение времени.
-		westOfUTC := time.FixedZone("UTC+3", 3*60*60)
+			// получаем пользователя, для которого изменили рабочую сессию.
+			var worker domain.User
+			_workers, err := s.Services.User.FindUser(&domain.UserFilter{ID: []string{existWorkHistory.Data[0].WorkerId.Hex()}})
+			if err != nil {
+				return nil, err
+			}
+			if len(_workers.Data) > 0 {
+				worker = _workers.Data[0]
+			}
 
-		for i := range users {
-			// отправка уведомления администрации
+			// протяженность рабочей сессии
+			durationNew := result.To.Sub(result.From)
+			_durationNewText, _ := time.ParseDuration(durationNew.String())
+			durationNewText := strings.Replace(_durationNewText.String(), "h", "ч.", 1)
+			durationNewText = strings.Replace(durationNewText, "m", "мин.", 1)
+			durationNewText = strings.Replace(durationNewText, "s", "сек.", 1)
+			durationOld := existWorkHistory.Data[0].To.Sub(existWorkHistory.Data[0].From)
+			_durationOldText, _ := time.ParseDuration(durationOld.String())
+			durationOldText := strings.Replace(_durationOldText.String(), "h", "ч.", 1)
+			durationOldText = strings.Replace(durationOldText, "m", "мин.", 1)
+			durationOldText = strings.Replace(durationOldText, "s", "сек.", 1)
+			// durationOldText := fmt.Sprintf("%d:%d:%d", int64(_durationOldText.Hours()), int64(_durationOldText.Minutes()), int64(_durationOldText.Seconds()))
+
+			// информация о заказе.
+			oldOrderInfo := fmt.Sprintf("№%d-%s", existWorkHistory.Data[0].Order.Number, existWorkHistory.Data[0].Order.Name)
+			if existWorkHistory.Data[0].Order.Number == 0 {
+				oldOrderInfo = "Хоз.работы"
+			}
+			newOrderInfo := fmt.Sprintf("№%d-%s", result.Order.Number, result.Order.Name)
+			if result.Order.Number == 0 {
+				newOrderInfo = "Хоз.работы"
+			}
+			// смещение времени.
+			westOfUTC := time.FixedZone("UTC+3", 3*60*60)
+
+			for i := range users {
+				// отправка уведомления администрации
+				s.Services.Notify.CreateNotify(userID, &domain.NotifyInput{
+					UserTo: users[i].ID.Hex(),
+					Title:  domain.PatchWorkHistoryTitle,
+					Message: fmt.Sprintf(
+						domain.PatchWorkHistoryAdmin,
+						authorUpdate.Name,
+						worker.Name,
+						existWorkHistory.Data[0].Date.In(westOfUTC).Format("02.01.2006"),
+						existWorkHistory.Data[0].From.In(westOfUTC).Format("15:04:05"),
+						existWorkHistory.Data[0].To.In(westOfUTC).Format("15:04:05"),
+						durationOldText,
+						oldOrderInfo,
+						result.From.In(westOfUTC).Format("15:04:05"),
+						result.To.In(westOfUTC).Format("15:04:05"),
+						durationNewText,
+						newOrderInfo,
+					),
+					// Link:       "/(tabs)/finance",
+					// LinkOption: map[string]interface{}{},
+				})
+			}
+			// отправка уведомления сотруднику, для кого меняются данные
 			s.Services.Notify.CreateNotify(userID, &domain.NotifyInput{
-				UserTo: users[i].ID.Hex(),
+				UserTo: existWorkHistory.Data[0].WorkerId.Hex(),
 				Title:  domain.PatchWorkHistoryTitle,
 				Message: fmt.Sprintf(
-					domain.PatchWorkHistoryAdmin,
+					domain.PatchWorkHistory,
 					authorUpdate.Name,
-					worker.Name,
 					existWorkHistory.Data[0].Date.In(westOfUTC).Format("02.01.2006"),
 					existWorkHistory.Data[0].From.In(westOfUTC).Format("15:04:05"),
 					existWorkHistory.Data[0].To.In(westOfUTC).Format("15:04:05"),
@@ -550,27 +572,6 @@ func (s *WorkHistoryService) UpdateWorkHistory(id string, userID string, data *d
 				// LinkOption: map[string]interface{}{},
 			})
 		}
-		// отправка уведомления сотруднику, для кого меняются данные
-		s.Services.Notify.CreateNotify(userID, &domain.NotifyInput{
-			UserTo: existWorkHistory.Data[0].WorkerId.Hex(),
-			Title:  domain.PatchWorkHistoryTitle,
-			Message: fmt.Sprintf(
-				domain.PatchWorkHistory,
-				authorUpdate.Name,
-				existWorkHistory.Data[0].Date.In(westOfUTC).Format("02.01.2006"),
-				existWorkHistory.Data[0].From.In(westOfUTC).Format("15:04:05"),
-				existWorkHistory.Data[0].To.In(westOfUTC).Format("15:04:05"),
-				durationOldText,
-				oldOrderInfo,
-				result.From.In(westOfUTC).Format("15:04:05"),
-				result.To.In(westOfUTC).Format("15:04:05"),
-				durationNewText,
-				newOrderInfo,
-			),
-			// Link:       "/(tabs)/finance",
-			// LinkOption: map[string]interface{}{},
-		})
-
 	}
 
 	// проверяем есть ли таймер для текущей рабочей сессии.
@@ -579,6 +580,7 @@ func (s *WorkHistoryService) UpdateWorkHistory(id string, userID string, data *d
 		WorkHistoryId: []string{id},
 		IsRunning:     &isRunining,
 	})
+	fmt.Println("length workHistory: ", len(timers.Data))
 	// если есть таймеры, проходим по всем и отключаем таймеры, путем записи в базу, что таймер выполнен
 	if len(timers.Data) > 0 {
 		isRuniningStatus := 0
@@ -620,9 +622,9 @@ func (s *WorkHistoryService) DeleteWorkHistory(id string, userID string, createN
 
 	// add notify.
 	for i := range existWorkHistory.Data {
-		s.Hub.HandleMessage(domain.MessageSocket{Type: "message", Method: "DELETE", Sender: "userID", Recipient: existWorkHistory.Data[i].WorkerId.Hex(), Content: existWorkHistory.Data[i], ID: "room1", Service: "WorkHistory"})
+		s.Hub.HandleMessage(domain.MessageSocket{Type: "message", Method: "DELETE", Sender: "userID", Recipient: existWorkHistory.Data[i].WorkerId.Hex(), Content: existWorkHistory.Data[i], ID: "room1", Service: "workHistory"})
 
-		if createNotify {
+		if createNotify && authorRequest.RoleObject.Code != "systemrole" {
 			message := fmt.Sprintf(domain.DeleteWorkHistory, authorRequest.Name, existWorkHistory.Data[i].Date.Format("02.01.2006"), result.Order.Number, result.Order.Name, result.Object.Name)
 			if result.Object.Name == "" {
 				message = fmt.Sprintf(domain.DeleteWorkHistoryNotOrder, authorRequest.Name, existWorkHistory.Data[i].Date.Format("02.01.2006"))
@@ -668,9 +670,9 @@ func (s *WorkHistoryService) DeleteWorkHistory(id string, userID string, createN
 
 		// отправляем уведомления админам.
 		for i := range users {
-			s.Hub.HandleMessage(domain.MessageSocket{Type: "message", Method: "DELETE", Sender: "userID", Recipient: users[i].ID.Hex(), Content: result, ID: "room1", Service: "WorkHistory"})
+			s.Hub.HandleMessage(domain.MessageSocket{Type: "message", Method: "DELETE", Sender: "userID", Recipient: users[i].ID.Hex(), Content: result, ID: "room1", Service: "workHistory"})
 
-			if createNotify {
+			if createNotify && authorRequest.RoleObject.Code != "systemrole" {
 				message := fmt.Sprintf(domain.DeleteWorkHistoryAdmin, authorRequest.Name, worker.Name, result.Date.Format("02.01.2006"), result.Order.Number, result.Order.Name, result.Object.Name)
 				if result.Object.Name == "" {
 					message = fmt.Sprintf(domain.DeleteWorkHistoryAdminNotOrder, authorRequest.Name, worker.Name, result.Date.Format("02.01.2006"))

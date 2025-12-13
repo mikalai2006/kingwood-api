@@ -42,67 +42,70 @@ func (s *PayService) CreatePay(userID string, data *domain.Pay) (*domain.Pay, er
 		authorUpdate = _users.Data[0]
 	}
 
-	// получаем пользователя, для которого изменили рабочую сессию.
-	var worker domain.User
-	_workers, err := s.Services.User.FindUser(&domain.UserFilter{ID: []string{result.Worker.ID.Hex()}})
-	if err != nil {
-		return nil, err
-	}
-	if len(_workers.Data) > 0 {
-		worker = _workers.Data[0]
-	}
-
-	// add notify.
-	_, err = s.Services.Notify.CreateNotify(userID, &domain.NotifyInput{
-		UserTo: result.WorkerId.Hex(),
-		Title: fmt.Sprintf(
-			domain.CreatePayTitle,
-			fmt.Sprintf("%d-%d", result.Year, result.Month+1),
-		),
-		Message: fmt.Sprintf(
-			domain.CreatePay,
-			authorUpdate.Name,
-			result.Name,
-			*result.Total,
-			fmt.Sprintf("%d-%d", result.Year, result.Month+1),
-		),
-	})
-
-	// находим пользователей для создания уведомлений.
-	roles, err := s.Services.Role.FindRole(&domain.RoleFilter{Code: []string{"systemrole"}})
-	if err != nil {
-		return nil, err
-	}
-	ids := []string{}
-	var users []domain.User
-
-	if len(roles.Data) > 0 {
-		for i := range roles.Data {
-			ids = append(ids, roles.Data[i].ID.Hex())
-		}
-
-		_users, err := s.Services.User.FindUser(&domain.UserFilter{RoleId: ids})
+	// если не суперпользователь, отправляем сообщения
+	if authorUpdate.RoleObject.Code != "systemrole" {
+		// получаем пользователя, для которого изменили рабочую сессию.
+		var worker domain.User
+		_workers, err := s.Services.User.FindUser(&domain.UserFilter{ID: []string{result.Worker.ID.Hex()}})
 		if err != nil {
 			return nil, err
 		}
+		if len(_workers.Data) > 0 {
+			worker = _workers.Data[0]
+		}
 
-		users = _users.Data
-	}
-
-	for i := range users {
 		// add notify.
 		_, err = s.Services.Notify.CreateNotify(userID, &domain.NotifyInput{
-			UserTo: users[i].ID.Hex(),
-			Title:  fmt.Sprintf(domain.CreatePayTitle, fmt.Sprintf("%d-%d", result.Year, result.Month+1)),
+			UserTo: result.WorkerId.Hex(),
+			Title: fmt.Sprintf(
+				domain.CreatePayTitle,
+				fmt.Sprintf("%d-%d", result.Year, result.Month+1),
+			),
 			Message: fmt.Sprintf(
-				domain.CreatePayAdmin,
+				domain.CreatePay,
 				authorUpdate.Name,
-				worker.Name,
 				result.Name,
 				*result.Total,
 				fmt.Sprintf("%d-%d", result.Year, result.Month+1),
 			),
 		})
+
+		// находим пользователей для создания уведомлений.
+		roles, err := s.Services.Role.FindRole(&domain.RoleFilter{Code: []string{"systemrole"}})
+		if err != nil {
+			return nil, err
+		}
+		ids := []string{}
+		var users []domain.User
+
+		if len(roles.Data) > 0 {
+			for i := range roles.Data {
+				ids = append(ids, roles.Data[i].ID.Hex())
+			}
+
+			_users, err := s.Services.User.FindUser(&domain.UserFilter{RoleId: ids})
+			if err != nil {
+				return nil, err
+			}
+
+			users = _users.Data
+		}
+
+		for i := range users {
+			// add notify.
+			_, err = s.Services.Notify.CreateNotify(userID, &domain.NotifyInput{
+				UserTo: users[i].ID.Hex(),
+				Title:  fmt.Sprintf(domain.CreatePayTitle, fmt.Sprintf("%d-%d", result.Year, result.Month+1)),
+				Message: fmt.Sprintf(
+					domain.CreatePayAdmin,
+					authorUpdate.Name,
+					worker.Name,
+					result.Name,
+					*result.Total,
+					fmt.Sprintf("%d-%d", result.Year, result.Month+1),
+				),
+			})
+		}
 	}
 
 	return result, err
@@ -157,66 +160,69 @@ func (s *PayService) UpdatePay(id string, userID string, data *domain.PayInput) 
 			authorUpdate = _users.Data[0]
 		}
 
-		// получаем пользователя, для которого изменили рабочую сессию.
-		var worker domain.User
-		_workers, err := s.Services.User.FindUser(&domain.UserFilter{ID: []string{result.Worker.ID.Hex()}})
-		if err != nil {
-			return nil, err
-		}
-		if len(_workers.Data) > 0 {
-			worker = _workers.Data[0]
-		}
-
-		// добавляем уведомление пользователю, которому меняем счет.
-		_, _ = s.Services.Notify.CreateNotify(userID, &domain.NotifyInput{
-			UserTo: result.WorkerId.Hex(),
-			Title:  fmt.Sprintf(domain.PatchPayTitle, fmt.Sprintf("%d-%d", result.Year, result.Month+1)),
-			Message: fmt.Sprintf(
-				domain.PatchPay,
-				authorUpdate.Name,
-				prevResult.Name,
-				*prevResult.Total,
-				result.Name,
-				*result.Total,
-				fmt.Sprintf("%d-%d", result.Year, result.Month+1)),
-		})
-
-		// находим пользователей для создания уведомлений.
-		roles, err := s.Services.Role.FindRole(&domain.RoleFilter{Code: []string{"systemrole"}})
-		if err != nil {
-			return nil, err
-		}
-		ids := []string{}
-		var users []domain.User
-
-		if len(roles.Data) > 0 {
-			for i := range roles.Data {
-				ids = append(ids, roles.Data[i].ID.Hex())
-			}
-
-			_users, err := s.Services.User.FindUser(&domain.UserFilter{RoleId: ids})
+		// если не суперпользователь, отправляем сообщения
+		if authorUpdate.RoleObject.Code != "systemrole" {
+			// получаем пользователя, для которого изменили рабочую сессию.
+			var worker domain.User
+			_workers, err := s.Services.User.FindUser(&domain.UserFilter{ID: []string{result.Worker.ID.Hex()}})
 			if err != nil {
 				return nil, err
 			}
+			if len(_workers.Data) > 0 {
+				worker = _workers.Data[0]
+			}
 
-			users = _users.Data
-		}
-
-		for i := range users {
 			// добавляем уведомление пользователю, которому меняем счет.
 			_, _ = s.Services.Notify.CreateNotify(userID, &domain.NotifyInput{
-				UserTo: users[i].ID.Hex(),
+				UserTo: result.WorkerId.Hex(),
 				Title:  fmt.Sprintf(domain.PatchPayTitle, fmt.Sprintf("%d-%d", result.Year, result.Month+1)),
 				Message: fmt.Sprintf(
-					domain.PatchPayAdmin,
+					domain.PatchPay,
 					authorUpdate.Name,
-					worker.Name,
 					prevResult.Name,
 					*prevResult.Total,
 					result.Name,
 					*result.Total,
 					fmt.Sprintf("%d-%d", result.Year, result.Month+1)),
 			})
+
+			// находим пользователей для создания уведомлений.
+			roles, err := s.Services.Role.FindRole(&domain.RoleFilter{Code: []string{"systemrole"}})
+			if err != nil {
+				return nil, err
+			}
+			ids := []string{}
+			var users []domain.User
+
+			if len(roles.Data) > 0 {
+				for i := range roles.Data {
+					ids = append(ids, roles.Data[i].ID.Hex())
+				}
+
+				_users, err := s.Services.User.FindUser(&domain.UserFilter{RoleId: ids})
+				if err != nil {
+					return nil, err
+				}
+
+				users = _users.Data
+			}
+
+			for i := range users {
+				// добавляем уведомление пользователю, которому меняем счет.
+				_, _ = s.Services.Notify.CreateNotify(userID, &domain.NotifyInput{
+					UserTo: users[i].ID.Hex(),
+					Title:  fmt.Sprintf(domain.PatchPayTitle, fmt.Sprintf("%d-%d", result.Year, result.Month+1)),
+					Message: fmt.Sprintf(
+						domain.PatchPayAdmin,
+						authorUpdate.Name,
+						worker.Name,
+						prevResult.Name,
+						*prevResult.Total,
+						result.Name,
+						*result.Total,
+						fmt.Sprintf("%d-%d", result.Year, result.Month+1)),
+				})
+			}
 		}
 	}
 

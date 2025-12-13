@@ -152,9 +152,9 @@ func (s *TimerService) StopTimer(id string, userID string) (*domain.TimerShedule
 					Title:  domain.StopTimerTitle,
 					Message: fmt.Sprintf(
 						domain.StopTimer,
-						// userSender.Name,
-						listWorkHistoryByDay.Data[0].Order.Name,
-						// fmt.Sprintf("%d-%d", result.Year, result.Month+1),
+						// // userSender.Name,
+						// listWorkHistoryByDay.Data[0].Order.Name,
+						// // fmt.Sprintf("%d-%d", result.Year, result.Month+1),
 						durationNewText,
 					),
 				})
@@ -162,9 +162,10 @@ func (s *TimerService) StopTimer(id string, userID string) (*domain.TimerShedule
 					return nil, err
 				}
 			}
-		} else {
-			fmt.Println("Таймер сработал, но выполнение задач отменено, так как статус - УЖЕ ВЫПОЛНЕНО")
 		}
+		// else {
+		// 	fmt.Println("Таймер сработал, но выполнение задач отменено, так как статус - УЖЕ ВЫПОЛНЕНО")
+		// }
 	}
 	return result, err
 }
@@ -176,7 +177,14 @@ func (s *TimerService) DeleteTimer(id string, userID string) (*domain.TimerShedu
 }
 
 func StartTimer(task domain.TimerShedule) *time.Timer {
-	duration := time.Until(task.ExecuteAt)
+	var duration time.Duration
+
+	if task.ExecuteAt.After(time.Now()) {
+		duration = time.Until(task.ExecuteAt)
+	} else {
+		duration = time.Until(time.Now().Add(5 * time.Duration(time.Second)))
+	}
+
 	if duration > 0 {
 		timer := time.NewTimer(duration)
 		return timer
