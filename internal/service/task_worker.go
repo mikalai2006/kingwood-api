@@ -684,8 +684,6 @@ func (s *TaskWorkerService) UpdateTaskWorker(id string, userID string, data *dom
 		}
 	}
 
-	fmt.Println("Завершено workHistory=", len(existOpenWorkHistory.Data))
-
 	for i := range existOpenWorkHistory.Data {
 		// if len(existOpenWorkHistory.Data) > 0 {
 		timeTo := time.Now()

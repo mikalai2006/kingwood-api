@@ -580,7 +580,7 @@ func (s *WorkHistoryService) UpdateWorkHistory(id string, userID string, data *d
 		WorkHistoryId: []string{id},
 		IsRunning:     &isRunining,
 	})
-	fmt.Println("length workHistory: ", len(timers.Data))
+
 	// если есть таймеры, проходим по всем и отключаем таймеры, путем записи в базу, что таймер выполнен
 	if len(timers.Data) > 0 {
 		isRuniningStatus := 0
