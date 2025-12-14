@@ -61,6 +61,7 @@ type Notify interface {
 type ArchiveNotify interface {
 	CreateArchiveNotify(userID string, data *domain.Notify) (*domain.ArchiveNotify, error)
 	FindArchiveNotifyPopulate(input *domain.ArchiveNotifyFilter) (domain.Response[domain.ArchiveNotify], error)
+	DeleteArchiveNotifyList(query domain.NotifyListQuery) (*[]domain.ArchiveNotify, error)
 	DeleteArchiveNotify(id string, userID string) (*domain.ArchiveNotify, error)
 }
 

@@ -15,6 +15,7 @@ func (h *HandlerV1) registerArchiveNotify(router *gin.RouterGroup) {
 	// route.POST("", h.CreateNotify)
 	route.POST("/find", h.FindArchiveNotifyPopulate)
 	route.DELETE("/:id", h.DeleteArchiveNotify)
+	route.POST("/remove_list", h.DeleteArchiveNotifyList)
 }
 
 // func (h *HandlerV1) CreateNotify(c *gin.Context) {
@@ -74,6 +75,39 @@ func (h *HandlerV1) FindArchiveNotifyPopulate(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, Notifys)
+}
+
+func (h *HandlerV1) DeleteArchiveNotifyList(c *gin.Context) {
+	appG := app.Gin{C: c}
+	var result *[]domain.ArchiveNotify
+
+	userID, err := middleware.GetUID(c)
+	if err != nil {
+		// c.AbortWithError(http.StatusUnauthorized, err)
+		appG.ResponseError(http.StatusUnauthorized, err, gin.H{"hello": "world"})
+		return
+	}
+	user, err := h.Services.User.GetUser(userID)
+
+	if user.RoleObject.Code == "systemrole" {
+		var input *domain.NotifyListQuery
+		if er := c.BindJSON(&input); er != nil {
+			appG.ResponseError(http.StatusBadRequest, er, nil)
+			return
+		}
+
+		result, err = h.Services.ArchiveNotify.DeleteArchiveNotifyList(*input)
+		if err != nil {
+			// c.AbortWithError(http.StatusUnauthorized, err)
+			appG.ResponseError(http.StatusBadRequest, err, nil)
+			return
+		}
+	} else {
+		appG.ResponseError(http.StatusUnauthorized, err, gin.H{"hello": "world"})
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
 }
 
 // func (h *HandlerV1) CreateOrExistNotify(c *gin.Context, input *domain.NotifyInput) (*domain.Notify, error) {

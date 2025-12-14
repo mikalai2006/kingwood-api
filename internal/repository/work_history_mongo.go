@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/mikalai2006/kingwood-api/internal/config"
@@ -649,12 +648,10 @@ func (r *WorkHistoryMongo) GetStatByOrder(input domain.WorkHistoryFilter) ([]dom
 	}
 	defer cursor.Close(ctx)
 
-	var test []interface{}
 	if er := cursor.All(ctx, &response); er != nil {
 		return response, er
 	}
 
-	fmt.Println("test: ", test)
 	// count, err := r.db.Collection(tblTaskHistory).CountDocuments(ctx, params.Filter)
 	// if err != nil {
 	// 	return response, err

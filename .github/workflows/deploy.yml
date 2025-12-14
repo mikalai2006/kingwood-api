@@ -41,7 +41,7 @@ jobs:
           # password: ${{ secrets.REGISTRY_TOKEN }}
           password: ${{ secrets.GITHUB_TOKEN  }}
 
-      - name: "build & deploy template-app"
+      - name: "build & deploy"
         uses: docker/build-push-action@v4
         with:
           context: .
@@ -76,6 +76,10 @@ jobs:
           echo SALT=${{ secrets.SALT }} >> .env
           echo SIGNING_KEY=${{ secrets.SIGNING_KEY }} >> .env
           echo NAME_COOKIE_REFRESH=${{ secrets.NAME_COOKIE_REFRESH }} >> .env
+          echo SSH_SITE_HOST=${{ secrets.SSH_SITE_HOST }} >> .env
+          echo SSH_SITE_USERNAME=${{ secrets.SSH_SITE_USERNAME }} >> .env
+          echo SSH_SITE_PASSWORD=${{ secrets.SSH_SITE_PASSWORD }} >> .env
+          echo SSH_SITE_PORT=${{ secrets.SSH_SITE_PORT }} >> .env
           cat .env
       - name: copy file .env on server
         uses: garygrossgarten/github-action-scp@release

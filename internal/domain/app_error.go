@@ -15,7 +15,7 @@ type AppError struct {
 	Stack  string `json:"stack" bson:"stack"`
 	Status int64  `json:"status" bson:"status"`
 
-	User User `json:"user,omitempty" bson:"user,omitempty"`
+	// User User `json:"user,omitempty" bson:"user,omitempty"`
 
 	CreatedAt time.Time `json:"createdAt" bson:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt" bson:"updatedAt"`
@@ -48,7 +48,7 @@ type AppErrorFilter struct {
 	Code  string              `json:"code,omitempty"`
 	From  *time.Time          `json:"from,omitempty"`
 	To    *time.Time          `json:"to,omitempty"`
-	Sort  []*FilterSortParams `json:"sort,omitempty"`
+	Sort  []*FilterSortParams `json:"$sort,omitempty"`
 	Limit *int                `json:"$limit,omitempty"`
 	Skip  *int                `json:"$skip,omitempty"`
 }

@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"time"
 
 	"github.com/mikalai2006/kingwood-api/internal/domain"
@@ -41,6 +42,15 @@ func (s *TaskService) CreateTask(userID string, data *domain.Task) (*domain.Task
 	_, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {
 		return nil, err
+	}
+
+	// проверяем нет ли такого задания, для текущего заказа
+	existTasks, err := s.FindTaskPopulate(domain.TaskFilter{OrderId: []string{data.OrderId.Hex()}, OperationId: []string{data.OperationId.Hex()}})
+	if err != nil {
+		return nil, err
+	}
+	if len(existTasks.Data) > 0 {
+		return nil, errors.New("Задание - " + data.Name + " уже добавлено к изделию!")
 	}
 
 	// set default status.

@@ -3,7 +3,6 @@ package v1
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -188,8 +187,6 @@ func (h *HandlerV1) UpdateOrder(c *gin.Context) {
 		appG.ResponseError(http.StatusBadRequest, er, nil)
 		return
 	}
-
-	fmt.Println("order data: ", data.Name)
 
 	document, err := h.Services.Order.UpdateOrder(id, userID, &data)
 	if err != nil {

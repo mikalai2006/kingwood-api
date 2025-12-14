@@ -83,6 +83,19 @@ func (s *TaskWorkerService) CreateTaskWorker(userID string, data *domain.TaskWor
 		return nil, err
 	}
 
+	// if data.TaskId == primitive.NilObjectID || data.WorkerId == primitive.NilObjectID {
+	// 	return nil, errors.New("error taskWorker data")
+	// }
+
+	// проверяем нет ли задания для работника, которому пытаемся добавить текущее задание
+	existTaskWorkers, err := s.FindTaskWorkerPopulate(&domain.TaskWorkerFilter{TaskId: []string{data.TaskId.Hex()}, WorkerId: []string{data.WorkerId.Hex()}})
+	if err != nil {
+		return nil, err
+	}
+	if len(existTaskWorkers.Data) > 0 {
+		return nil, errors.New("Исполнитель уже добавлен к этому заданию!")
+	}
+
 	// получаем пользователя, который добавил задание.
 	var authorCreate domain.User
 	_users, err := s.Services.User.FindUser(&domain.UserFilter{ID: []string{userID}})
@@ -958,9 +971,13 @@ func (s *TaskWorkerService) CheckStatusTask(userID string, result *domain.TaskWo
 			}
 
 			if result.Task.Operation.Group == "5" && isFinishCount > 0 {
-				if val, ok := listStatusTask["finish"]; ok {
-					newStatus = "finish"
-					newStatusId = val.ID
+				// если активная таска завершается
+				if result.Status == "finish" {
+					// меняем статус задания
+					if val, ok := listStatusTask["finish"]; ok {
+						newStatus = "finish"
+						newStatusId = val.ID
+					}
 				}
 
 				// autofinish all taskWorker if one montaj finish
@@ -974,7 +991,9 @@ func (s *TaskWorkerService) CheckStatusTask(userID string, result *domain.TaskWo
 				}
 
 				stopStatus := []string{"finish", "process", "autofinish"}
-				if !autoFinihStatus.ID.IsZero() {
+				// если исполнитель завершает задание(finish), проходим по всем и меняем у всех статус на выполнено(autofinish)
+				// кроме тех, кто выполняет сейчас данное задание
+				if !autoFinihStatus.ID.IsZero() && result.Status == "finish" {
 					for k := range taskWorkers.Data {
 						if !utils.Contains(stopStatus, taskWorkers.Data[k].Status) {
 							_, err := s.UpdateTaskWorker(taskWorkers.Data[k].ID.Hex(), userID, &domain.TaskWorkerInput{StatusId: autoFinihStatus.ID, Status: autoFinihStatus.Status}, 0)

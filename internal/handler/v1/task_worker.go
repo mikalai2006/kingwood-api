@@ -41,7 +41,7 @@ func (h *HandlerV1) CreateTaskWorker(c *gin.Context) {
 
 	TaskWorker, err := h.CreateOrExistTaskWorker(c, input) //h.services.TaskWorker.CreateTaskWorker(userID, input)
 	if err != nil {
-		appG.ResponseError(http.StatusBadRequest, err, nil)
+		appG.ResponseError(506, err, nil)
 		return
 	}
 
@@ -213,7 +213,7 @@ func (h *HandlerV1) CreateOrExistTaskWorker(c *gin.Context, input *domain.TaskWo
 
 	result, err = h.Services.TaskWorker.CreateTaskWorker(userID, input, 1)
 	if err != nil {
-		appG.ResponseError(http.StatusBadRequest, err, nil)
+		// appG.ResponseError(http.StatusBadRequest, err, nil)
 		return result, err
 	}
 	return result, nil

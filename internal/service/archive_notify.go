@@ -3,6 +3,7 @@ package service
 import (
 	"github.com/mikalai2006/kingwood-api/internal/domain"
 	"github.com/mikalai2006/kingwood-api/internal/repository"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type ArchiveNotifyService struct {
@@ -16,7 +17,37 @@ func NewArchiveNotifyService(repo repository.ArchiveNotify, hub *Hub) *ArchiveNo
 }
 
 func (s *ArchiveNotifyService) FindArchiveNotifyPopulate(input *domain.ArchiveNotifyFilter) (domain.Response[domain.ArchiveNotify], error) {
-	return s.repo.FindArchiveNotifyPopulate(input)
+
+	// return s.repo.FindArchiveNotifyPopulate(input)
+
+	var result domain.Response[domain.ArchiveNotify]
+
+	result, err := s.repo.FindArchiveNotifyPopulate(input)
+	if err != nil {
+		return result, err
+	}
+	// достаем пользователей.
+	users := []string{}
+	for i, _ := range result.Data {
+		users = append(users, result.Data[i].UserID.Hex())
+		users = append(users, result.Data[i].UserTo.Hex())
+	}
+	resultUsers, err := s.Services.User.FindUser(&domain.UserFilter{
+		ID: users,
+	})
+	// result.Users = resultUsers.Data
+
+	usersMap := map[primitive.ObjectID]domain.User{}
+	for i, _ := range resultUsers.Data {
+		usersMap[resultUsers.Data[i].ID] = resultUsers.Data[i]
+	}
+
+	for i, _ := range result.Data {
+		result.Data[i].User = usersMap[result.Data[i].UserID]
+		result.Data[i].Recepient = usersMap[result.Data[i].UserTo]
+	}
+
+	return result, err
 }
 
 func (s *ArchiveNotifyService) CreateArchiveNotify(userID string, data *domain.Notify) (*domain.ArchiveNotify, error) {
@@ -76,4 +107,8 @@ func (s *ArchiveNotifyService) DeleteArchiveNotify(id string, userID string) (*d
 	}
 
 	return result, err
+}
+
+func (s *ArchiveNotifyService) DeleteArchiveNotifyList(data domain.NotifyListQuery) (*[]domain.ArchiveNotify, error) {
+	return s.repo.DeleteArchiveNotifyList(data)
 }

@@ -71,7 +71,7 @@ type NotifyFilter struct {
 	UserID []*string           `json:"userId,omitempty"`
 	UserTo []*string           `json:"userTo,omitempty"`
 	Status *int                `json:"status,omitempty"`
-	Sort   []*FilterSortParams `json:"sort,omitempty"`
+	Sort   []*FilterSortParams `json:"$sort,omitempty"`
 	Limit  *int                `json:"$limit,omitempty"`
 	Skip   *int                `json:"$skip,omitempty"`
 }

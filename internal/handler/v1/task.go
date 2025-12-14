@@ -41,7 +41,7 @@ func (h *HandlerV1) CreateTask(c *gin.Context) {
 
 	Task, err := h.CreateOrExistTask(c, input) //h.services.Task.CreateTask(userID, input)
 	if err != nil {
-		appG.ResponseError(http.StatusBadRequest, err, nil)
+		appG.ResponseError(506, err, nil)
 		return
 	}
 
@@ -278,7 +278,7 @@ func (h *HandlerV1) CreateOrExistTask(c *gin.Context, input *domain.Task) (*doma
 
 	result, err = h.Services.Task.CreateTask(userID, input)
 	if err != nil {
-		appG.ResponseError(http.StatusBadRequest, err, nil)
+		// appG.ResponseError(http.StatusBadRequest, err, nil)
 		return result, err
 	}
 	return result, nil
