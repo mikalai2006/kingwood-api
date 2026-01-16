@@ -27,9 +27,10 @@ type Task struct {
 	Operation Operation `json:"-" bson:"operation"`
 	// Order     Order        `json:"order" bson:"order"`
 
-	From   *time.Time `json:"from" bson:"from" form:"from"`
-	To     *time.Time `json:"to" bson:"to" form:"to"`
-	TypeGo string     `json:"typeGo" bson:"typeGo" form:"typeGo"`
+	From     *time.Time `json:"from" bson:"from" form:"from"`
+	To       *time.Time `json:"to" bson:"to" form:"to"`
+	TypeGo   string     `json:"typeGo" bson:"typeGo" form:"typeGo"`
+	MaxHours int64      `json:"maxHours" bson:"maxHours" form:"maxHours"`
 
 	CreatedAt time.Time `json:"createdAt" bson:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt" bson:"updatedAt"`
@@ -54,6 +55,7 @@ type TaskInput struct {
 	From      time.Time `json:"from" bson:"from" form:"from"`
 	To        time.Time `json:"to" bson:"to" form:"to"`
 	TypeGo    string    `json:"typeGo" bson:"typeGo" form:"typeGo"`
+	MaxHours  *int64    `json:"maxHours" bson:"maxHours" form:"maxHours"`
 
 	CreatedAt time.Time `json:"createdAt" bson:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt" bson:"updatedAt"`
@@ -72,9 +74,10 @@ type TaskInputData struct {
 	Active    *int64 `json:"active" bson:"active" form:"active"`
 	AutoCheck *int64 `json:"autoCheck" bson:"autoCheck" form:"autoCheck"`
 	// Status   string `json:"status" bson:"status"`
-	From   time.Time `json:"from" bson:"from" form:"from"`
-	To     time.Time `json:"to" bson:"to" form:"to"`
-	TypeGo string    `json:"typeGo" bson:"typeGo" form:"typeGo"`
+	From     time.Time `json:"from" bson:"from" form:"from"`
+	To       time.Time `json:"to" bson:"to" form:"to"`
+	TypeGo   string    `json:"typeGo" bson:"typeGo" form:"typeGo"`
+	MaxHours *int64    `json:"maxHours" bson:"maxHours" form:"maxHours"`
 
 	CreatedAt time.Time `json:"createdAt" bson:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt" bson:"updatedAt"`

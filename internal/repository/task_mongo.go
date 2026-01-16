@@ -474,6 +474,7 @@ func (r *TaskMongo) CreateTask(userID string, data *domain.Task) (*domain.Task, 
 		From:      from,
 		To:        to,
 		TypeGo:    data.TypeGo,
+		MaxHours:  &data.MaxHours,
 		ObjectId:  data.ObjectId,
 
 		CreatedAt: updatedAt,
@@ -522,6 +523,9 @@ func (r *TaskMongo) UpdateTask(id string, userID string, data *domain.TaskInput)
 	}
 	if !data.OrderId.IsZero() {
 		newData["orderId"] = data.OrderId
+	}
+	if data.MaxHours != nil {
+		newData["maxHours"] = data.MaxHours
 	}
 	if !data.StatusId.IsZero() {
 		newData["statusId"] = data.StatusId

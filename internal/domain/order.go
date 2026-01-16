@@ -109,12 +109,13 @@ type ResultFacetOrder struct {
 }
 
 type ResponseOrderFlatData struct {
-	Total       int              `json:"total" bson:"total"`
-	Limit       int              `json:"limit" bson:"limit"`
-	Skip        int              `json:"skip" bson:"skip"`
-	Data        []Order          `json:"data" bson:"data"`
-	Users       []UserFlat       `json:"users" bson:"users"`
-	Tasks       []Task           `json:"tasks" bson:"tasks"`
-	Objects     []Object         `json:"objects" bson:"objects"`
-	TaskWorkers []TaskWorkerFlat `json:"taskWorkers" bson:"taskWorkers"`
+	Total        int               `json:"total" bson:"total"`
+	Limit        int               `json:"limit" bson:"limit"`
+	Skip         int               `json:"skip" bson:"skip"`
+	Data         []Order           `json:"data" bson:"data"`
+	Users        []UserFlat        `json:"users" bson:"users"`
+	Tasks        []Task            `json:"tasks" bson:"tasks"`
+	Objects      []Object          `json:"objects" bson:"objects"`
+	TaskWorkers  []TaskWorkerFlat  `json:"taskWorkers" bson:"taskWorkers"`
+	WorkHistorys []WorkHistoryFlat `json:"workHistorys" bson:"workHistorys"`
 }

@@ -35,6 +35,29 @@ type WorkHistory struct {
 	UpdatedAt time.Time `json:"updatedAt" bson:"updatedAt"`
 }
 
+type WorkHistoryFlat struct {
+	ID     primitive.ObjectID `json:"id" bson:"_id,omitempty"`
+	UserID primitive.ObjectID `json:"userId" bson:"userId" primitive:"true"`
+
+	ObjectId     primitive.ObjectID     `json:"objectId" bson:"objectId" primitive:"true"`
+	OrderId      primitive.ObjectID     `json:"orderId" bson:"orderId" primitive:"true"`
+	TaskId       primitive.ObjectID     `json:"taskId" bson:"taskId" primitive:"true"`
+	WorkerId     primitive.ObjectID     `json:"workerId" bson:"workerId" primitive:"true"`
+	OperationId  primitive.ObjectID     `json:"operationId" bson:"operationId" primitive:"true"`
+	TaskWorkerId primitive.ObjectID     `json:"taskWorkerId" bson:"taskWorkerId" primitive:"true"`
+	Status       int                    `json:"status" bson:"status"`
+	Date         time.Time              `json:"date" bson:"date"`
+	From         time.Time              `json:"from" bson:"from"`
+	To           time.Time              `json:"to" bson:"to"`
+	Oklad        *int64                 `json:"oklad" bson:"oklad"`
+	Total        *int64                 `json:"total" bson:"total"`
+	TotalTime    *int64                 `json:"totalTime" bson:"totalTime"`
+	Props        map[string]interface{} `json:"props" bson:"props" form:"props"`
+
+	CreatedAt time.Time `json:"createdAt" bson:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt" bson:"updatedAt"`
+}
+
 type WorkHistoryInput struct {
 	ID     primitive.ObjectID `json:"id" bson:"_id,omitempty"`
 	UserID primitive.ObjectID `json:"userId" bson:"userId"`

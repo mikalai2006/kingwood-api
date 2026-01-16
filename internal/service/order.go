@@ -63,6 +63,43 @@ func (s *OrderService) FindOrder(input *domain.OrderFilter) (domain.ResponseOrde
 	}
 	result.Users = users.Data
 
+	// проходим по всем заданиям и выбираем workHistory для задания если у него указано maxHours.
+	idsTasksForQueryWorkHistorys := []string{}
+	for i := range result.Tasks {
+		if result.Tasks[i].MaxHours > 0 {
+			idsTasksForQueryWorkHistorys = append(idsTasksForQueryWorkHistorys, result.Tasks[i].ID.Hex())
+		}
+	}
+
+	workHistorys, err := s.Services.WorkHistory.FindWorkHistory(domain.WorkHistoryFilter{TaskId: idsTasksForQueryWorkHistorys, Limit: &limit})
+	if err != nil {
+		return result, err
+	}
+	outputWorkHistory := domain.Response[domain.WorkHistoryFlat]{}
+	for i := range workHistorys.Data {
+		outputWorkHistory.Data = append(outputWorkHistory.Data, domain.WorkHistoryFlat{
+			ID:           workHistorys.Data[i].ID,
+			UserID:       workHistorys.Data[i].UserID,
+			ObjectId:     workHistorys.Data[i].ObjectId,
+			OrderId:      workHistorys.Data[i].OrderId,
+			TaskId:       workHistorys.Data[i].TaskId,
+			WorkerId:     workHistorys.Data[i].WorkerId,
+			OperationId:  workHistorys.Data[i].OperationId,
+			TaskWorkerId: workHistorys.Data[i].TaskWorkerId,
+			Status:       workHistorys.Data[i].Status,
+			Date:         workHistorys.Data[i].Date,
+			From:         workHistorys.Data[i].From,
+			To:           workHistorys.Data[i].To,
+			Oklad:        workHistorys.Data[i].Oklad,
+			Total:        workHistorys.Data[i].Total,
+			TotalTime:    workHistorys.Data[i].TotalTime,
+			Props:        workHistorys.Data[i].Props,
+			CreatedAt:    workHistorys.Data[i].CreatedAt,
+			UpdatedAt:    workHistorys.Data[i].UpdatedAt,
+		})
+	}
+	result.WorkHistorys = outputWorkHistory.Data
+
 	return result, err
 }
 

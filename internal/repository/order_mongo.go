@@ -487,6 +487,16 @@ func (r *OrderMongo) CreateOrder(userID string, data *domain.Order) (*domain.Ord
 		year = *data.Year
 	}
 
+	dateStart := time.Now()
+	if !data.DateStart.IsZero() {
+		dateStart = data.DateStart
+	}
+
+	dateOtgruzka := time.Now()
+	if !data.DateOtgruzka.IsZero() {
+		dateOtgruzka = data.DateOtgruzka
+	}
+
 	defaultStatus := int64(0)
 	newOrder := domain.OrderInput{
 		UserID:          userIDPrimitive,
@@ -506,6 +516,8 @@ func (r *OrderMongo) CreateOrder(userID string, data *domain.Order) (*domain.Ord
 		GoComplete:      &defaultStatus,
 		MontajComplete:  &defaultStatus,
 		Year:            year,
+		DateStart:       dateStart,
+		DateOtgruzka:    dateOtgruzka,
 
 		CreatedAt: updatedAt,
 		UpdatedAt: updatedAt,

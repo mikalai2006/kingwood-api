@@ -779,6 +779,9 @@ func (r *WorkHistoryMongo) UpdateWorkHistory(id string, userID string, data *dom
 	if data.OperationId != nil {
 		newData["operationId"] = data.OperationId
 	}
+	if data.Oklad != nil {
+		newData["oklad"] = data.Oklad
+	}
 	if !data.WorkerId.IsZero() {
 		newData["workerId"] = data.WorkerId
 	}
