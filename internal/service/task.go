@@ -272,6 +272,31 @@ func (s *TaskService) DeleteTask(id string, userID string, checkStatus bool) (*d
 	return result, err
 }
 
+func (s *TaskService) UpdateTimeForTask(id string, userID string) (*domain.Task, error) {
+	data := domain.TaskInput{}
+
+	// находим все рабочие сессии для текущего задания, чтобы посчитать общее отработанное время.
+	workHistorys, err := s.Services.WorkHistory.FindWorkHistory(domain.WorkHistoryFilter{
+		TaskId: []string{id},
+	})
+
+	totalMs := int64(0)
+	for i := range workHistorys.Data {
+		totalMs = totalMs + *workHistorys.Data[i].TotalTime
+	}
+
+	data.WorkedMs = &totalMs
+
+	result, err := s.repo.UpdateTimeForTask(id, userID, &data)
+	if err != nil {
+		return result, err
+	}
+
+	s.Hub.HandleMessage(domain.MessageSocket{Type: "message", Method: "PATCH", Sender: userID, Recipient: "", Content: result, ID: "room1", Service: "task"})
+
+	return result, err
+}
+
 func (s *TaskService) CheckStatusOrder(userID string, result *domain.Task) (*domain.Task, error) {
 	// check all tasks for change status order.
 	tasksForOrder, err := s.FindTaskPopulate(domain.TaskFilter{OrderId: []string{result.OrderId.Hex()}})

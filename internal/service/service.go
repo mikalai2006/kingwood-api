@@ -90,6 +90,7 @@ type Task interface {
 	FindTaskPopulate(filter domain.TaskFilter) (domain.Response[domain.Task], error)
 	FindTaskFlat(filter domain.TaskFilter) (domain.Response[domain.Task], error)
 	UpdateTask(id string, userID string, data *domain.TaskInput) (*domain.Task, error)
+	UpdateTimeForTask(id string, userID string) (*domain.Task, error)
 	DeleteTask(id string, userID string, checkStatus bool) (*domain.Task, error)
 }
 
@@ -133,6 +134,7 @@ type TaskWorker interface {
 	FindTaskWorkerFlat(input *domain.TaskWorkerFilter) (domain.Response[domain.TaskWorkerFlat], error)
 	// FindTaskWorker(params domain.RequestParams) (domain.Response[domain.TaskWorker], error)
 	UpdateTaskWorker(id string, userID string, data *domain.TaskWorkerInput, autoUpdate int) (*domain.TaskWorker, error)
+	UpdateTimeForTaskWorker(id string, userID string, taskId string) (*domain.TaskWorker, error)
 	DeleteTaskWorker(id string, userID string, checkStatus bool, sendNotify bool) (*domain.TaskWorker, error)
 }
 

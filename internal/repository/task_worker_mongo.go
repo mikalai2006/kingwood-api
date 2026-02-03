@@ -853,6 +853,42 @@ func (r *TaskWorkerMongo) UpdateTaskWorker(id string, userID string, data *domai
 	return result, nil
 }
 
+func (r *TaskWorkerMongo) UpdateTimeForTaskWorker(id string, userID string, data *domain.TaskWorkerInput) (*domain.TaskWorker, error) {
+	var result *domain.TaskWorker
+	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
+	defer cancel()
+
+	collection := r.db.Collection(tblTaskWorker)
+
+	idPrimitive, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return result, err
+	}
+
+	filter := bson.M{"_id": idPrimitive}
+
+	newData := bson.M{}
+	if data.WorkedMs != nil {
+		newData["workedMs"] = data.WorkedMs
+	}
+
+	_, err = collection.UpdateOne(ctx, filter, bson.M{"$set": newData})
+	if err != nil {
+		return result, err
+	}
+
+	taskWorkers, err := r.FindTaskWorkerPopulate(&domain.TaskWorkerFilter{ID: []string{id}})
+	if err != nil {
+		return result, err
+	}
+
+	if len(taskWorkers.Data) > 0 {
+		result = &taskWorkers.Data[0]
+	}
+
+	return result, nil
+}
+
 func (r *TaskWorkerMongo) DeleteTaskWorker(id string) (*domain.TaskWorker, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
 	defer cancel()

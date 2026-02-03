@@ -474,7 +474,7 @@ func (r *TaskMongo) CreateTask(userID string, data *domain.Task) (*domain.Task, 
 		From:      from,
 		To:        to,
 		TypeGo:    data.TypeGo,
-		MaxHours:  &data.MaxHours,
+		MaxHours:  data.MaxHours,
 		ObjectId:  data.ObjectId,
 
 		CreatedAt: updatedAt,
@@ -574,6 +574,46 @@ func (r *TaskMongo) UpdateTask(id string, userID string, data *domain.TaskInput)
 	} else {
 		fmt.Println("Len tasks.Data = ", len(tasks.Data))
 	}
+
+	return result, nil
+}
+
+func (r *TaskMongo) UpdateTimeForTask(id string, userID string, data *domain.TaskInput) (*domain.Task, error) {
+	var result *domain.Task
+	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
+	defer cancel()
+
+	collection := r.db.Collection(tblTask)
+
+	idPrimitive, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return result, err
+	}
+
+	filter := bson.M{"_id": idPrimitive}
+
+	newData := bson.M{}
+	if data.WorkedMs != nil {
+		newData["workedMs"] = data.WorkedMs
+	}
+
+	_, err = collection.UpdateOne(ctx, filter, bson.M{"$set": newData})
+	if err != nil {
+		return result, err
+	}
+
+	tasks, err := r.FindTaskPopulate(domain.TaskFilter{ID: []string{id}})
+
+	if err != nil {
+		return result, err
+	}
+
+	if len(tasks.Data) > 0 {
+		result = &tasks.Data[0]
+	}
+	//  else {
+	// 	fmt.Println("Len tasks.Data = ", len(tasks.Data))
+	// }
 
 	return result, nil
 }

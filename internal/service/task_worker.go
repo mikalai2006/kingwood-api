@@ -255,6 +255,35 @@ func (s *TaskWorkerService) CreateTaskWorker(userID string, data *domain.TaskWor
 	return result, err
 }
 
+func (s *TaskWorkerService) UpdateTimeForTaskWorker(id string, userID string, taskId string) (*domain.TaskWorker, error) {
+	// инициализация данных.
+	var result *domain.TaskWorker
+
+	data := domain.TaskWorkerInput{}
+
+	// находим все рабочие сессии для текущего работника, чтобы посчитать общее отработанное время на текущем задании.
+	workHistorys, err := s.Services.WorkHistory.FindWorkHistory(domain.WorkHistoryFilter{
+		TaskId:       []string{taskId},
+		TaskWorkerId: []string{id},
+	})
+
+	totalMs := int64(0)
+	for i := range workHistorys.Data {
+		totalMs = totalMs + *workHistorys.Data[i].TotalTime
+	}
+
+	data.WorkedMs = &totalMs
+
+	result, err = s.repo.UpdateTimeForTaskWorker(id, userID, &data)
+	if err != nil {
+		return result, err
+	}
+
+	s.Hub.HandleMessage(domain.MessageSocket{Type: "message", Method: "PATCH", Sender: userID, Recipient: "", Content: result, ID: "room1", Service: "taskWorker"})
+
+	return result, err
+}
+
 func (s *TaskWorkerService) UpdateTaskWorker(id string, userID string, data *domain.TaskWorkerInput, autoUpdate int) (*domain.TaskWorker, error) {
 	// инициализация данных.
 	var result *domain.TaskWorker

@@ -86,6 +86,21 @@ func (r *WorkHistoryMongo) FindWorkHistory(input domain.WorkHistoryFilter) (doma
 
 		q = append(q, bson.E{"taskId", bson.D{{"$in", ids}}})
 	}
+
+	if input.TaskWorkerId != nil && len(input.TaskWorkerId) > 0 {
+		ids := []primitive.ObjectID{}
+		for i, _ := range input.TaskWorkerId {
+			pid, err := primitive.ObjectIDFromHex(input.TaskWorkerId[i])
+			if err != nil {
+				return response, err
+			}
+
+			ids = append(ids, pid)
+		}
+
+		q = append(q, bson.E{"taskWorkerId", bson.D{{"$in", ids}}})
+	}
+
 	if input.OrderId != nil && len(input.OrderId) > 0 {
 		ids := []primitive.ObjectID{}
 		for i, _ := range input.OrderId {
@@ -139,6 +154,9 @@ func (r *WorkHistoryMongo) FindWorkHistory(input domain.WorkHistoryFilter) (doma
 	if input.Limit != nil && *input.Limit > 0 {
 		pipe = append(pipe, bson.D{{"$limit", input.Limit}})
 		limit = *input.Limit
+	} else {
+		pipe = append(pipe, bson.D{{"$limit", 10000}})
+		limit = 10000
 	}
 
 	cursor, err := r.db.Collection(tblWorkHistory).Aggregate(ctx, pipe) // Find(ctx, params.Filter, opts)

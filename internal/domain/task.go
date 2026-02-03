@@ -30,7 +30,9 @@ type Task struct {
 	From     *time.Time `json:"from" bson:"from" form:"from"`
 	To       *time.Time `json:"to" bson:"to" form:"to"`
 	TypeGo   string     `json:"typeGo" bson:"typeGo" form:"typeGo"`
-	MaxHours int64      `json:"maxHours" bson:"maxHours" form:"maxHours"`
+	MaxHours *int64     `json:"maxHours" bson:"maxHours" form:"maxHours"` // заданное время на задание в часах.
+	WorkedMs *int64     `json:"workedMs" bson:"workedMs" form:"workedMs"` // отработанное время в мс.
+	Total    *int64     `json:"total" bson:"total" form:"total"`          // общая сумма за выполнение заказа.
 
 	CreatedAt time.Time `json:"createdAt" bson:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt" bson:"updatedAt"`
@@ -55,7 +57,9 @@ type TaskInput struct {
 	From      time.Time `json:"from" bson:"from" form:"from"`
 	To        time.Time `json:"to" bson:"to" form:"to"`
 	TypeGo    string    `json:"typeGo" bson:"typeGo" form:"typeGo"`
-	MaxHours  *int64    `json:"maxHours" bson:"maxHours" form:"maxHours"`
+	MaxHours  *int64    `json:"maxHours" bson:"maxHours" form:"maxHours"` // заданное время на задание в часах.
+	WorkedMs  *int64    `json:"workedMs" bson:"workedMs" form:"workedMs"` // отработанное время в мс.
+	Total     *int64    `json:"total" bson:"total" form:"total"`          // общая сумма за выполнение заказа.
 
 	CreatedAt time.Time `json:"createdAt" bson:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt" bson:"updatedAt"`
@@ -77,7 +81,9 @@ type TaskInputData struct {
 	From     time.Time `json:"from" bson:"from" form:"from"`
 	To       time.Time `json:"to" bson:"to" form:"to"`
 	TypeGo   string    `json:"typeGo" bson:"typeGo" form:"typeGo"`
-	MaxHours *int64    `json:"maxHours" bson:"maxHours" form:"maxHours"`
+	MaxHours *int64    `json:"maxHours" bson:"maxHours" form:"maxHours"` // заданное время на задание в часах.
+	WorkedMs *int64    `json:"workedMs" bson:"workedMs" form:"workedMs"` // отработанное время в мс.
+	Total    *int64    `json:"total" bson:"total" form:"total"`          // общая сумма за выполнение заказа.
 
 	CreatedAt time.Time `json:"createdAt" bson:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt" bson:"updatedAt"`

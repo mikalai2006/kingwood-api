@@ -21,6 +21,7 @@ type TaskWorker struct {
 	From        *time.Time         `json:"from" bson:"from"`
 	To          *time.Time         `json:"to" bson:"to"`
 	TypeGo      string             `json:"typeGo" bson:"typeGo"`
+	WorkedMs    *int64             `json:"workedMs" bson:"workedMs" form:"workedMs"` // отработанное время в мс.
 
 	Task       Task       `json:"task" bson:"task"`
 	TaskStatus TaskStatus `json:"-" bson:"taskStatus"`
@@ -47,6 +48,7 @@ type TaskWorkerFlat struct {
 	From        *time.Time         `json:"from" bson:"from"`
 	To          *time.Time         `json:"to" bson:"to"`
 	TypeGo      string             `json:"typeGo" bson:"typeGo"`
+	WorkedMs    *int64             `json:"workedMs" bson:"workedMs" form:"workedMs"` // отработанное время в мс.
 
 	// Task       Task       `json:"task" bson:"task"`
 	// TaskStatus TaskStatus `json:"taskStatus" bson:"taskStatus"`
@@ -74,6 +76,7 @@ type TaskWorkerInput struct {
 	To               time.Time          `json:"to" bson:"to"`
 	ToForWorkHistory time.Time          `json:"toWorkHistory" bson:"toWorkHistory"`
 	TypeGo           string             `json:"typeGo" bson:"typeGo"`
+	WorkedMs         *int64             `json:"workedMs" bson:"workedMs" form:"workedMs"` // отработанное время в мс.
 
 	CreatedAt time.Time `json:"createdAt" bson:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt" bson:"updatedAt"`
@@ -91,6 +94,7 @@ type TaskWorkerInputData struct {
 	From        time.Time `json:"from" bson:"from"`
 	To          time.Time `json:"to" bson:"to"`
 	TypeGo      string    `json:"typeGo" bson:"typeGo"`
+	WorkedMs    *int64    `json:"workedMs" bson:"workedMs" form:"workedMs"` // отработанное время в мс.
 
 	CreatedAt time.Time `json:"createdAt" bson:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt" bson:"updatedAt"`

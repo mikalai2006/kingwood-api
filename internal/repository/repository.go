@@ -92,6 +92,7 @@ type Task interface {
 	FindTaskFlat(input domain.TaskFilter) (domain.Response[domain.Task], error)
 	CreateTask(userID string, Order *domain.Task) (*domain.Task, error)
 	UpdateTask(id string, userID string, data *domain.TaskInput) (*domain.Task, error)
+	UpdateTimeForTask(id string, userID string, data *domain.TaskInput) (*domain.Task, error)
 	DeleteTask(id string) (*domain.Task, error)
 }
 
@@ -146,6 +147,7 @@ type TaskWorker interface {
 	// FindTaskWorker(params domain.RequestParams) (domain.Response[domain.TaskWorker], error)
 	CreateTaskWorker(userID string, Order *domain.TaskWorker) (*domain.TaskWorker, error)
 	UpdateTaskWorker(id string, userID string, data *domain.TaskWorkerInput) (*domain.TaskWorker, error)
+	UpdateTimeForTaskWorker(id string, userID string, data *domain.TaskWorkerInput) (*domain.TaskWorker, error)
 	DeleteTaskWorker(id string) (*domain.TaskWorker, error)
 }
 

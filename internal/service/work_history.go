@@ -594,6 +594,22 @@ func (s *WorkHistoryService) UpdateWorkHistory(id string, userID string, data *d
 		}
 	}
 
+	// запускаем функцию которая собирает все рабочие сессии для текущего задания
+	// и обновляет данные времени для всего задания.
+	// go func() {
+	// 	}()
+	_, err = s.Services.Task.UpdateTimeForTask(result.TaskId.Hex(), userID)
+	if err != nil {
+		return result, err
+	}
+
+	// запускаем функцию которая собирает все рабочие сессии для текущего задания и текущего работника
+	// и обновляет данные времени для задания текущего работника.
+	_, err = s.Services.TaskWorker.UpdateTimeForTaskWorker(result.TaskWorkerId.Hex(), userID, result.TaskId.Hex())
+	if err != nil {
+		return result, err
+	}
+
 	return result, err
 }
 
