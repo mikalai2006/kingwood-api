@@ -280,12 +280,15 @@ func (s *TaskService) UpdateTimeForTask(id string, userID string) (*domain.Task,
 		TaskId: []string{id},
 	})
 
+	total := int64(0)
 	totalMs := int64(0)
 	for i := range workHistorys.Data {
 		totalMs = totalMs + *workHistorys.Data[i].TotalTime
+		total = total + *workHistorys.Data[i].Total
 	}
 
 	data.WorkedMs = &totalMs
+	data.Total = &total
 
 	result, err := s.repo.UpdateTimeForTask(id, userID, &data)
 	if err != nil {

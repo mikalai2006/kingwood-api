@@ -596,6 +596,9 @@ func (r *TaskMongo) UpdateTimeForTask(id string, userID string, data *domain.Tas
 	if data.WorkedMs != nil {
 		newData["workedMs"] = data.WorkedMs
 	}
+	if data.Total != nil {
+		newData["total"] = data.Total
+	}
 
 	_, err = collection.UpdateOne(ctx, filter, bson.M{"$set": newData})
 	if err != nil {

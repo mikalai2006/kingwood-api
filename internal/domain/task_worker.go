@@ -22,6 +22,7 @@ type TaskWorker struct {
 	To          *time.Time         `json:"to" bson:"to"`
 	TypeGo      string             `json:"typeGo" bson:"typeGo"`
 	WorkedMs    *int64             `json:"workedMs" bson:"workedMs" form:"workedMs"` // отработанное время в мс.
+	Total       *int64             `json:"total" bson:"total" form:"total"`          // общая сумма за выполнение задания.
 
 	Task       Task       `json:"task" bson:"task"`
 	TaskStatus TaskStatus `json:"-" bson:"taskStatus"`
@@ -49,6 +50,7 @@ type TaskWorkerFlat struct {
 	To          *time.Time         `json:"to" bson:"to"`
 	TypeGo      string             `json:"typeGo" bson:"typeGo"`
 	WorkedMs    *int64             `json:"workedMs" bson:"workedMs" form:"workedMs"` // отработанное время в мс.
+	Total       *int64             `json:"total" bson:"total" form:"total"`          // общая сумма за выполнение задания.
 
 	// Task       Task       `json:"task" bson:"task"`
 	// TaskStatus TaskStatus `json:"taskStatus" bson:"taskStatus"`
@@ -77,6 +79,7 @@ type TaskWorkerInput struct {
 	ToForWorkHistory time.Time          `json:"toWorkHistory" bson:"toWorkHistory"`
 	TypeGo           string             `json:"typeGo" bson:"typeGo"`
 	WorkedMs         *int64             `json:"workedMs" bson:"workedMs" form:"workedMs"` // отработанное время в мс.
+	Total            *int64             `json:"total" bson:"total" form:"total"`          // общая сумма за выполнение задания.
 
 	CreatedAt time.Time `json:"createdAt" bson:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt" bson:"updatedAt"`
@@ -95,6 +98,7 @@ type TaskWorkerInputData struct {
 	To          time.Time `json:"to" bson:"to"`
 	TypeGo      string    `json:"typeGo" bson:"typeGo"`
 	WorkedMs    *int64    `json:"workedMs" bson:"workedMs" form:"workedMs"` // отработанное время в мс.
+	Total       *int64    `json:"total" bson:"total" form:"total"`          // общая сумма за выполнение задания.
 
 	CreatedAt time.Time `json:"createdAt" bson:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt" bson:"updatedAt"`
