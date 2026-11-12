@@ -14,7 +14,7 @@ services:
   #   networks:
   #     - my-network
   mongodb:
-    image: mongo
+    image: mongo:8.0
     container_name: mongodb-api
     environment:
       - PUID=1000
@@ -27,6 +27,8 @@ services:
     ports:
       - ${MONGODB_PORT}:${MONGODB_PORT}
     restart: always
+    env_file:
+      - .env
     # networks:
     #   - my-network
 
