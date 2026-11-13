@@ -112,3 +112,7 @@ func (s *ArchiveNotifyService) DeleteArchiveNotify(id string, userID string) (*d
 func (s *ArchiveNotifyService) DeleteArchiveNotifyList(data domain.NotifyListQuery) (*[]domain.ArchiveNotify, error) {
 	return s.repo.DeleteArchiveNotifyList(data)
 }
+
+func (s *ArchiveNotifyService) ClearArchiveNotify(userID string) error {
+	return s.repo.ClearArchiveNotify(userID)
+}

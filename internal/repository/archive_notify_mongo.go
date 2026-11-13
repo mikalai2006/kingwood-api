@@ -325,3 +325,17 @@ func (r *ArchiveNotifyMongo) DeleteArchiveNotifyList(query domain.NotifyListQuer
 
 	return result, nil
 }
+
+func (r *ArchiveNotifyMongo) ClearArchiveNotify(userID string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), MongoQueryTimeout)
+	defer cancel()
+
+	collection := r.db.Collection(TblArchiveNotify)
+
+	_, err := collection.DeleteMany(ctx, bson.D{})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

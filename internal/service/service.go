@@ -158,6 +158,7 @@ type ArchiveNotify interface {
 	FindArchiveNotifyPopulate(input *domain.ArchiveNotifyFilter) (domain.Response[domain.ArchiveNotify], error)
 	DeleteArchiveNotifyList(data domain.NotifyListQuery) (*[]domain.ArchiveNotify, error)
 	DeleteArchiveNotify(id string, userID string) (*domain.ArchiveNotify, error)
+	ClearArchiveNotify(userID string) error
 }
 
 type TaskStatus interface {

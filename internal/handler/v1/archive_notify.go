@@ -16,6 +16,7 @@ func (h *HandlerV1) registerArchiveNotify(router *gin.RouterGroup) {
 	route.POST("/find", h.FindArchiveNotifyPopulate)
 	route.DELETE("/:id", h.DeleteArchiveNotify)
 	route.POST("/remove_list", h.DeleteArchiveNotifyList)
+	route.POST("/clear", h.ClearArchiveNotify)
 }
 
 // func (h *HandlerV1) CreateNotify(c *gin.Context) {
@@ -181,4 +182,25 @@ func (h *HandlerV1) DeleteArchiveNotify(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, user)
+}
+
+func (h *HandlerV1) ClearArchiveNotify(c *gin.Context) {
+	appG := app.Gin{C: c}
+
+	userID, err := middleware.GetUID(c)
+	if err != nil {
+		// c.AbortWithError(http.StatusUnauthorized, err)
+		appG.ResponseError(http.StatusUnauthorized, err, gin.H{"hello": "world"})
+		return
+	}
+	user, err := h.Services.User.GetUser(userID)
+
+	if user.RoleObject.Code == "systemrole" {
+		err = h.Services.ArchiveNotify.ClearArchiveNotify(userID)
+	} else {
+		appG.ResponseError(http.StatusUnauthorized, err, gin.H{"hello": "world"})
+		return
+	}
+
+	c.JSON(http.StatusOK, nil)
 }

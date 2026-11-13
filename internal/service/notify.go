@@ -6,7 +6,6 @@ import (
 	"github.com/mikalai2006/kingwood-api/internal/domain"
 	"github.com/mikalai2006/kingwood-api/internal/repository"
 	expo "github.com/oliveroneill/exponent-server-sdk-golang/sdk"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type NotifyService struct {
@@ -26,26 +25,28 @@ func (s *NotifyService) FindNotifyPopulate(input *domain.NotifyFilter) (domain.R
 	if err != nil {
 		return result, err
 	}
-	// достаем пользователей.
-	users := []string{}
-	for i, _ := range result.Data {
-		users = append(users, result.Data[i].UserID.Hex())
-		users = append(users, result.Data[i].UserTo.Hex())
-	}
-	resultUsers, err := s.Services.User.FindUser(&domain.UserFilter{
-		ID: users,
-	})
-	// result.Users = resultUsers.Data
+	// // достаем пользователей.
 
-	usersMap := map[primitive.ObjectID]domain.User{}
-	for i, _ := range resultUsers.Data {
-		usersMap[resultUsers.Data[i].ID] = resultUsers.Data[i]
-	}
+	// Fix long response
+	// users := []string{}
+	// for i, _ := range result.Data {
+	// 	users = append(users, result.Data[i].UserID.Hex())
+	// 	users = append(users, result.Data[i].UserTo.Hex())
+	// }
+	// resultUsers, err := s.Services.User.FindUser(&domain.UserFilter{
+	// 	ID: users,
+	// })
+	// // result.Users = resultUsers.Data
 
-	for i, _ := range result.Data {
-		result.Data[i].User = usersMap[result.Data[i].UserID]
-		result.Data[i].Recepient = usersMap[result.Data[i].UserTo]
-	}
+	// usersMap := map[primitive.ObjectID]domain.User{}
+	// for i, _ := range resultUsers.Data {
+	// 	usersMap[resultUsers.Data[i].ID] = resultUsers.Data[i]
+	// }
+
+	// for i, _ := range result.Data {
+	// 	result.Data[i].User = usersMap[result.Data[i].UserID]
+	// 	result.Data[i].Recepient = usersMap[result.Data[i].UserTo]
+	// }
 
 	return result, err
 }
